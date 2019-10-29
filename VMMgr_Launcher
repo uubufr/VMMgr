@@ -1,0 +1,44 @@
+#! /bin/bash
+#
+# script name: VMMgr_Launcher
+# autor: Sylvain Girod ( uubu at gmx dot fr )
+# version: 0.04
+# description: VMMgr_Launcher allow start/stop/create/destroy Virtual Machines
+
+
+# ToDo: on doit vérifier si un bridge n'a plus de slave, on le delete.
+# Quid d'iptables
+# Gestion des migrations?
+
+case "$1" in
+    "check")
+        # on doit vérifier que tous les outils sont installés et au bon endroit, sinon prévenir
+        ;;
+    "create")
+    
+        ;;
+    "delete")
+    
+    "start")
+    
+    "stop")
+    
+    "group")
+    
+    "status")
+    
+    "kill")
+    
+    "reset")
+    
+    "ipmistart")
+    
+    "ipmistop")
+    
+    "ipmistatus")
+    
+    "define")
+    
+    *)
+    
+esac
