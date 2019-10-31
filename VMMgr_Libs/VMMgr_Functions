@@ -1,0 +1,177 @@
+#! /bin/bash
+#
+# script name: VMMgr_Functions
+# autor: Sylvain Girod ( uubu at gmx dot fr )
+# version: 0.04
+# description: All usefull functions
+#
+# Functions:
+# Check_Softwares: try to check if all required software are installed
+# Check_System: Check system requirements
+# Set_Bridge_Brctl: Set bridges using brctl
+# Set_Bridge_Ovs: Create bridge using openvswitch
+# Set_Bridge_Nmcli: create bridge using nmcli
+# Check_MEM: Check if MEM and MAXMEM, if MAXMEM is undefined, calculate MEM * 2
+# Set_NetDev: Create tap interfaces
+# Set_MAC: Calculate MAC Address
+# Set_IPMI: Create IPMI device, using OpenIPMI-lanserv 
+
+## TODO: Create tapup and links (using brctl, ovs-brctl or nmcli)
+## Créer des units systemd
+## créer les fichiers spice
+## créer un tableau de numa
+# créer un tableau de périphériques disque
+# créer les connexions réseau
+# calculer les IP
+
+
+# Function Check_Softwares
+# Description: try to check if all required software are installed
+# Args: no args
+function Check_Softwares() {
+    qemu-system_x86_64
+    openIPMI_lanserv
+    sqlite3
+}
+
+# Function: Check_System
+# Description: Check system requirements
+# Args: no args
+# Steps:
+#   1: Check module vhost-net
+#   2: Check perms on /dev/net/tun, /dev/vhost-net and /dev/kvm
+#   3: Set cap_net_admin on qemu-system_x86_64
+function Check_System() {
+    if [ "$(sudo modinfo vhost-net -F intree)" != "Y" ]; then
+        sudo modprobe vhost vhost-net
+    fi
+    
+    ls -l /dev/net/tun | cut -d\  -f1 | grep 'crw-rw-rw-' > /dev/null
+    if [ $? -ne 0 ]; then
+        sudo chmod 0666 /dev/net/tun
+    fi
+
+    ls -l /dev/vhost-net | cut -d\  -f1 | grep 'crw-rw-rw-' > /dev/null
+    if [ $? -ne 0 ]; then
+        sudo chmod 0666 /dev/vhost-net
+    fi
+
+    ls -l /dev/kvm | cut -d\  -f1 | grep 'crw-rw-rw-' > /dev/null
+    if [ $? -ne 0 ]; then
+        sudo chmod 0666 /dev/kvm
+    fi
+
+    sudo getcap /usr/bin/qemu-system-x86_64 | grep cap_net_admin+ep > /dev/null
+    if [ $? -ne 0 ]; then
+        sudo setcap cap_net_admin+ep /usr/bin/qemu-system-x86_64
+    fi
+    
+    # On a besoin de voir comment faire dans sudo pour que ça fonctionne
+    #if [ $(cat /proc/sys/net/ipv4/ip_forward) -eq 0 ]; then
+        #sudo echo 1 > /proc/sys/net/ipv4/ip_forward
+    #fi
+    
+    modinfo openvswitch 2>/dev/null 1>/dev/null
+    if [ $? -eq 0 ]; then
+        sudo modprobe openvswitch
+        [ -d /var/run/openvswitch ] || sudo mkdir /var/run/openvswitch
+}
+
+# Function: Set_Bridge_Brctl
+# Description: Set bridges using brctl
+# Args:
+#     $1: bridge name
+function Set_Bridge_Brctl() {
+    ip address show $1 2> /dev/null 1> /dev/null
+    if [ $? -ne 0 ]; then
+        sudo ip link add $1 type bridge
+        sudo ip link set dev $1 up
+    fi
+}
+
+# function: Set_Bridge_Ovs
+# Description: Create bridge using openvswitch
+# Args:
+#    $1: Bridge name
+function Set_Bridge_Ovs() {
+ if [ "$(sudo ovs-vsctl list-br | grep $1)" == "" ]; then
+  sudo ovs-vsctl add-br $1
+  sleep 0.1
+  sudo ip link set dev $1 up
+ fi
+}
+
+# function: Set_Bridge_Nmcli
+# Description: create bridge using nmcli
+# Args:
+#    $1: Bridge name
+function Set_Bridge_Nmcli() {
+ (nmcli dev show swvpl-main 2>&1 > /dev/null
+ if [ $? -ne 0 ]; then
+  nmcli dev con add save yes type bridge ifname $1
+  nmcli con mod bridge-$1 connection.id $1
+  nmcli dev set $1 autoconnect yes managed yes 
+  nmcli dev connect $1
+  nmcli dev reapply $1
+}
+
+# Function Check_MEM
+# Description: Check if MEM and MAXMEM
+# if MAXMEM is undefined, calculate MEM * 2
+# Args:
+#   $1: $MEM
+#   $2: $MAXMEM
+function Check_MEM() {
+ if [ "$1" ]; then
+  if [ "$2" ]; thenc
+   echo $2
+  else
+   MAXMEM=$(( $1 * 2 ))
+   MAXSYS=$(( $(grep "MemTotal: " /proc/meminfo  | awk '{print $2}' ) / 1024 / 1024 ))
+   if [ $MAXMEM -gt $MAXSYS ]; then $MAXMEM == $MAXSYS; fi
+   echo $MAXMEM
+  fi
+ else
+   return 0
+ fi
+}
+
+# Function: Set_NetDev
+# Description: Create tap interfaces
+# Args:
+#   $1: Bridge name
+#   $2: Number of tap devices
+#   $3: tapupdown file path
+# Return an array of netdev declarations
+function Set_NedDev() {
+    for NETNUMBER in $(seq $(( ${#NETDEV[@]} + 1 )) $(( ${#NETDEV[@]} + $2 )) ); do
+        NETDEV[$NETNUMBER]="-netdev type=tap,id=virtio-tap$NETNUMBER,script=$3/tapup-$1,downscript=$3/tapdown-$1,vhost=on -device virtio-net-pci,netdev=virtio-tap$NETNUMBER,mac=$(Set_MAC $NETNUMBER),id=drive-virtio-tap$NETNUMBER,csum=off,gso=off,guest_tso4=off,guest_tso6=off,guest_ecn=off"
+done
+}
+
+# Function: Set_MAC
+# Description: Calculate MAC Address
+# Args:
+#   $1: Vm Name
+#   $2: network device number
+function Set_MAC() {
+        OUI="52:54:00"
+        SUBMAC=Db_Set_MAC $DB_PATH $1 $2
+        echo $OUI:${SUBMAC:0:2}:${SUBMAC:2:2}:${SUBMAC:4:2}
+}
+
+# Function: Set_IPMI
+# Description: Create IPMI device, using OpenIPMI-lanserv 
+# Args:
+#   $1: Vm Name
+#   $2: IPMI Template Path
+#   $3: IPMI Address
+#   $4: IPMI Port
+function Set_IPMI() {
+  if [ ! -f /etc/ipmi/$2.conf ]; then
+    cp $2 /etc/ipmi/$1.conf
+    sed -i "s/%%IPMIADDR%%/$3/" /etc/ipmi/$1.conf
+    sed -i "s/%%IPMIPORT%%/$4/" /etc/ipmi/$1.conf
+    sed -i "s/%%NAME%%/$1/g" /etc/ipmi/$1.conf
+  fi
+}

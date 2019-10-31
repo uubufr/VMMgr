@@ -1,0 +1,173 @@
+#! /bin/bash
+#
+# script name: VMMgr_Db
+# autor: Sylvain Girod ( uubu at gmx dot fr )
+# version: 0.04
+# description: Manage Database for VMMgr_Launcher
+#
+# Functions:
+#   Set_Db: Check and initialize DB
+#   Db_Create_VM: Declare a new vm in db
+#   Db_Delete_VM: Delete a vm in db
+#   Db_List_VMs: List all vm form db
+#   Db_Get_VM_Config: get VM config file
+#   Db_Set_IPPORT: Set IP and PORT for a service (spice, telnet or qmp)
+#   Db_Get_IPPORT: Get IP and PORT for a service (spice, telnet or qmp)
+#   Db_Set_MAC: Get mac address (without OUI PART) from db, if not exists, create new one
+#   Db_get_IP_POOL
+#   Db_Set_IP_POOL
+#   Db_Get_NEXT_IP >>>> pour ipv6 on peut calculer avec le réseau + adresse MAC, quid de l'adresse mac
+#   Db_Get_NEXT_PORT >>>> comment on récupe le dernier
+###### SELECT NAME CONFIG FROM VM ORDER BY NAME DESC, CONFIG ASC;
+#### on a pas encore de lien entre une déclaration de Réseau et l'IP:PORT (on a systématiquement le même réseau, ou on peut en créer autant qu'on veut?)
+#### Avant d'assigner une IP, dig?
+
+
+# function: Set_Db
+# description: Check and initialize DB
+# Arg:
+#   $1: path
+function Set_Db() {
+ if [ ! -x $1/VMMgr_.db ]; then
+    sqlite3 $1/VMMGR_.db <<EOF
+CREATE TABLE VM(
+    VMiD INTEGER PRIMARY KEY,
+    Name TEXT NOT NULL,
+    Config TEXT NOT NULL
+);
+
+CREATE TABLE SPICE(
+    VMiD INTEGER PRIMARY KEY,
+    IP TEXT NOT NULL,
+    PORT INTEGER NOT NULL,
+    FOREIGN KEY(VMiD) REFERENCES VM(VMiD)
+);
+
+CREATE TABLE TELNET(
+    VMiD INTEGER PRIMARY KEY,
+    IP TEXT NOT NULL,
+    PORT INTEGER NOT NULL,
+    FOREIGN KEY(VMiD) REFERENCES VM(VMiD)
+);
+
+CREATE TABLE QMP(
+    VMiD INTEGER PRIMARY KEY,
+    IP TEXT NOT NULL,
+    PORT INTEGER NOT NULL,
+    FOREIGN KEY(VMiD) REFERENCES VM(VMiD)
+);
+
+CREATE TABLE NETWORKS(
+    TYPE TEXT NOT NULL,
+    IP TEXT,
+    PREFIX INTEGER,
+    PORT INTEGER,
+    UNIQUE BOOL,    ### indique si on peut réutiliser une IP ou non ###
+    TABLE TEXT NOT NULL ### on peut l'utiliser dans plusieurs tables?
+);
+
+CREATE TABLE MAC(
+    VMiD INTEGER,
+    SUBMAC INTEGER NOT NULL,
+    NETID INTERGER NOT NULL,
+    FOREIGN KEY(VMiD) REFERENCES VM(VMiD)
+);
+EOF
+ fi
+}
+
+# Function: Db_Create_VM
+# Description: Declare a new vm in db
+# Args:
+#   $1: db path
+#   $2: VM name
+#   $3: Config path
+function Db_Create_VM() {
+ EXISTS=$(echo "select VMiD from VM where Name='$2';" | sqlite3 $1/VMMGR_.db)
+ if [ "$EXISTS" == "" ]; then
+  echo "insert into VM ( Name, Config) values ('$2', '$3');" | sqlite3 $1/VMMGR_.db
+  echo "select VMiD from VM where Name='$2';"| sqlite3 $1/VMMGR_.db
+  else
+  echo $EXISTS
+ fi
+}
+
+# Function: Db_Delete_VM
+# Description: Delete a vm fro$m db
+# Args:
+#   $1: db path
+#   $2: VM name
+function Db_Delete_VM() {
+ EXISTS=$(echo "select VMiD from VM where Name='$2';" | sqlite3 $1/VMMGR_.db)
+ if [ ! "$EXISTS" == "" ]; then
+    echo "delete from SPICE where VMiD='$EXISTS';" | sqlite3 $1/VMMGR_.db
+    echo "delete from QMP where VMiD='$EXISTS';" | sqlite3 $1/VMMGR_.db
+    echo "delete from TELNET where VMiD='$EXISTS';" | sqlite3 $1/VMMGR_.db
+    echo "delete from VM where VMiD='$EXISTS';" | sqlite3 $1/VMMGR_.db
+ fi
+}
+
+# Function: Db_List_VMs
+# Description: List all vm form db
+# Args:
+#   $1: db path
+function Db_List_VMs() {
+ echo "select Name from VM;" | sqlite3 $1/VMMGR_.db
+}
+
+# Function: Db_Get_VM_Config
+# Description: get VM config file
+# Args:
+#   $1: db path
+#   $2: VM name
+function Db_Get_VM_Config() {
+ echo "select Config from VM where Name='$2';" | sqlite3 $1/VMMGR_.db
+}
+
+# Function: Db_Set_IPPORT
+# Description: Set IP and PORT for a service (spice, telnet or qmp)
+# Args:
+#   $1: db path
+#   $2: VM name
+#   $3: service (spice, telnet, qmp)
+#   $4: IP
+#   $5: PORT
+function Db_Set_IPPORT() {
+ EXISTS=$(echo "select VMiD from VM where Name='$2';" | sqlite3 $1/VMMGR_.db)
+ if [ ! "$EXISTS" == "" ]; then
+  echo "insert into ${3^^*} (VMiD, IP, PORT ) values ( '$EXISTS', '$4', '$5');" | sqlite3 $1/VMMGR_.db
+ fi
+}
+
+
+# Function: Db_Get_IPPORT
+# Description: Get IP and PORT for a service (spice, telnet or qmp)
+# Args:
+#   $1: db path
+#   $2: VM name
+#   $3: service (spice, telnet, qmp)
+function Db_Get_IPPORT() {
+ EXISTS=$(echo "select VMiD from VM where Name='$2';" | sqlite3 $1/VMMGR_.db)
+ if [ ! "$EXISTS" == "" ]; then
+  echo "select IP, PORT from ${3^^*} where VMiD='$EXISTS';" | sqlite3 $1/VMMGR_.db
+ fi
+}
+
+# Function Db_Set_MAC
+# Description: Get mac address (without OUI PART) from db
+#              if not exists, create new one
+# Args:
+#   $1: Db Path
+#   $2: VM Name
+#   $3: Net device number
+function Db_Set_MAC() {
+ VMID=$(echo "select VMiD from VM where Name='$2';" | sqlite3 $1/VMMGR_.db)
+ EXISTS=$(echo "select printf('%06X', SUBMAC) from MAC where VMiD='$VMID' AND NETID='$3';" | sqlite3 $1/VMMGR_.db)
+ if [ ! "$EXISTS" == "" ]; then
+  echo "select SUBMAC from MAC ORDER BY V DESC LIMIT 1;" | sqlite3 $1/VMMGR_.db)
+  if [ "$SUBMAC" == "" ]; then $SUBMAC=0; else $SUBMAC=$(( $SUBMAC + 1 )); fi
+  echo "insert into MAC (VMid, SUBMAC, NETID) values ('$VMID', '$SUBMAC', '$3');" | sqlite3 $1/VMMGR_.db)
+  EXISTS=$(echo "select printf('%06X', SUBMAC) from MAC where VMiD='$VMID' AND NETID='$3';" | sqlite3 $1/VMMGR_.db)
+ fi
+ echo $EXISTS
+}
