@@ -13,16 +13,32 @@
 # Table pour gérer les disques et les déplacer?
 # fonction connect pour lancer spice,qmp et telnet.
 
+# on charge les variables et paths nécessaire à l'exécution du script
+if [ -x /usr/local/etc/VMMgr_.conf ]; then
+ . /usr/local/etc/VMMgr_.conf
+elif [ -x $(dirname $0)/VMMgr_.conf ]; then
+ . $(dirname $0)/VMMgr_.conf
+else
+ echo "No config VMMgr_.conf found, abording..."
+ return
+fi
+
+
 case "$1" in
     "check")
         # on doit vérifier que tous les outils sont installés et au bon endroit, sinon prévenir
         ;;
     "create")
         # arguments: $2=vm name $3 template
-            [ ! "$2" ] && echo "Usage $0 <vm name> <template>"
-            [ ! "$3" ] && echo "Missing Template name"
-            echo $*
-            echo $0
+            [ ! "$2" ] && echo "Usage $0 <vm name> <template>" && return
+            [ ! "$3" ] && echo "Missing Template name" && return
+            # on requête la base pour savoir si une vm existe déjà avec ce nom
+            
+            # on trouve le template:
+            if [ -r $TEMPLATEDIR/$3 ]; then
+                cp $TEMPLATEDIR/$3 $VMCONFIGDIR/$2
+                # on remplace les valeurs.
+            fi
         ;;
     "delete")
         ;;
