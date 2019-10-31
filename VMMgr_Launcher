@@ -9,36 +9,55 @@
 # ToDo: on doit vérifier si un bridge n'a plus de slave, on le delete.
 # Quid d'iptables
 # Gestion des migrations?
+# delete doit avoir l'option --data pour delete les disques
+# Table pour gérer les disques et les déplacer?
+# fonction connect pour lancer spice,qmp et telnet.
 
 case "$1" in
     "check")
         # on doit vérifier que tous les outils sont installés et au bon endroit, sinon prévenir
         ;;
     "create")
-    
+        # arguments: $2=vm name $3 template
+            [ ! "$2" ] && echo "Usage $0 <vm name> <template>"
+            [ ! "$3" ] && echo "Missing Template name"
+            echo $*
+            echo $0
         ;;
     "delete")
-    
+        ;;
     "start")
-    
+        ;;
     "stop")
-    
+        ;;
     "group")
-    
+        ;;
     "status")
-    
+        ;;
     "kill")
-    
+        ;;
     "reset")
-    
+        ;;
     "ipmistart")
-    
+        ;;
     "ipmistop")
-    
+        ;;
     "ipmistatus")
-    
+        ;;
     "define")
-    
+        ;;
+    "connect")
+        case "$2" in
+            "spice")
+                remote-viewer $VMMgr_PATH/R-SPICE/s-$3
+            ;;
+            "telnet")
+                telnet $(Db_Get_IPPORT $VMMgr_PATH $3 telnet | tr \| \  )
+            ;;
+            "qmp")
+            ;;
+        esac
+        ;;
     *)
-    
+        ;;
 esac
