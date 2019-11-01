@@ -113,13 +113,37 @@ case "$1" in
                 if [ "$VMCONF" == "" ]; then
                     echo "$2 not found in DB"
                 else
-                    if [ ! -r $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF ]; then
-                        echo "VM $2 not found"
+                    SYSD=$(Db_isEnabled_VM $VMMGR_DB_PATH $2)
+                    if [ "$SYSD" == "1" ]; then
+                        SYSDSTATUS=$(systemctl status "VM_$2.service" 2>&1>/dev/null)
+                        case "$SYSDSTATUS" in
+                            "0")
+                                echo "$2 already running!"
+                            ;;
+                            "1")
+                                echo "Unknown error"
+                            ;;
+                            "2")
+                                echo "Unknown error"
+                            ;;
+                            "3")
+                                systemctl start "VM_$2.service" 2>&1>/dev/null
+                            ;;
+                            "4")
+                                Start_VM_From_Config $2 $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF
+                            ;;
+                        esac
                     else
-                        Start_VM_From_Config $2 $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF
+                        if [ ! -r $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF ]; then
+                            echo "VM $2 not found"
+                        else
+                            Start_VM_From_Config $2 $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF
+                        fi
                     fi
                 fi
             fi
+        ;;
+    "enable")
         ;;
     "stop")
         ;;
