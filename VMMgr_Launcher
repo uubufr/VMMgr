@@ -4,8 +4,7 @@
 # autor: Sylvain Girod ( uubu at gmx dot fr )
 # version: 0.04
 # description: VMMgr_Launcher allow start/stop/create/destroy Virtual Machines
-
-
+#
 # ToDo: on doit vérifier si un bridge n'a plus de slave, on le delete.
 # Quid d'iptables
 # Gestion des migrations?
@@ -19,10 +18,6 @@
 # La Version 2.0 sera une version pleinement fonctionnelle
 #
 # STEP:
-# 0.05 on doit valider la fonction create: c'est à dire
-# 1 Une fonction qui recherche la VM dans la DB, on initialise la DB si c'est pas le cas.
-# 2 on doit créer un fichier de config VM à partir d'un template, remplacer les variables
-#
 # 0.06 on doit valider la fonction start: c'est à dire
 # 1. on doit valider que la vm existe dans la DB, pas d'initialisation de DB
 # 2. valider que la config existe, pas de création
@@ -43,8 +38,6 @@
 # 0.16 les units systemd (pour la vm, pour ipmi etc.)
 # 0.17 Gestion des groupes
 
-
-
 # on charge les variables et paths nécessaire à l'exécution du script
 if [ -x /usr/local/etc/VMMgr_.conf ]; then
  . /usr/local/etc/VMMgr_.conf
@@ -55,6 +48,10 @@ else
  return
 fi
 
+# Loading Libs
+. $VMMGR_DATA_PATH/VMMgr_Libs/*
+
+
 
 case "$1" in
     "check")
@@ -64,18 +61,48 @@ case "$1" in
             # Args:
             #   $2: Vm Name
             #   $3: Template Name
-            if [ ! "$2" ] OR [ ! "$3" ] then echo "Usage $0 <vm name> <template>"; break; fi
-            if [ ! -r $VMMGR_DATA_PATH/Templates/$3 ]; then echo "Error, template $VMMGR_DATA_PATH/Templates/$3 doesn't exists"; break; fi
-            VMCONF=$(Check_Existing_VM $2)
-            if [ -r $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF ]; then 
-             echo "Warning, config file $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF already exists"
-            else
-             cp $VMMGR_DATA_PATH/Templates/$3 $VMMGR_CONFIG_PATH/VM_CONFIGS/$2.conf
+            # Steps:
+            #   1) Check Vars, template, if vm and config file already exists
+            #   2) Declare VM in DB, copy template, and customize Vars
+            if [ ! "$2" ] || [ ! "$3" ]; then
+                echo "Usage $0 <vm name> <template>"
+            else if [ ! -r $VMMGR_DATA_PATH/Templates/$3 ]; then
+                echo "Error, template $VMMGR_DATA_PATH/Templates/$3 doesn't exists"
+                 else
+                    VMCONF=$(Check_Existing_VM $2)
+                    if [ "$VMCONF" == "" ]; then VMCONF="$2.conf"; fi
+                    if [ -r $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF ]; then 
+                        echo "Warning, config file $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF already exists"
+                    else
+                        cp $VMMGR_DATA_PATH/Templates/$3 $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF
+                        Custom_VM_Config $2 $VMCONF
+                    fi
+                    VMID=$(Db_Create_VM $VMMGR_DB_PATH $2 $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF)
+                fi
             fi
-            Db_Create_VM $VMMGR_DB_PATH $1 $2.conf
-             # on remplace les valeurs.
         ;;
     "delete")
+            # Args:
+            #   $2: Vm Name
+            #   $3: 'config' <optional>
+            # Steps:
+            #   1) Check if VM exists in DB
+            #   2) Delete from DB
+            #   3) Check $3 to know optional delete: config-file and/or disks
+            # TODO: systemd files, besoin de disable avant????
+            if [ ! "$2" ]; then
+                echo "Usage $0 <vm name>"
+            else
+                VMCONF=$(Check_Existing_VM $2)
+                if [ "$VMCONF" == "" ]; then
+                    echo "VM $2 not found in DB"
+                else
+                    Db_Delete_VM $VMMGR_DB_PATH $2
+                    if [ -r $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF ] && [ "$3" == "config" ]; then
+                        rm $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF
+                    fi
+                fi
+            fi
         ;;
     "start")
         ;;
