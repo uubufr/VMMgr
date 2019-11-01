@@ -204,5 +204,6 @@ function Custom_VM_Config() {
 #   $1: VM Name
 #   $2: VM config path
 function Start_VM_From_Config() {
+    source $2
     echo $QEMU_TEMPLATE
 }
