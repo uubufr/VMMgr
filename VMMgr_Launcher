@@ -91,7 +91,7 @@ case "$1" in
             #   3) Check $3 to know optional delete: config-file and/or disks
             # TODO: systemd files, besoin de disable avant????
             if [ ! "$2" ]; then
-                echo "Usage $0 <vm name>"
+                echo "Usage $0 delete <vm name> [config|disks|conf-disks]"
             else
                 VMCONF=$(Check_Existing_VM $2)
                 if [ "$VMCONF" == "" ]; then
@@ -105,6 +105,20 @@ case "$1" in
             fi
         ;;
     "start")
+            if [ ! "$2" ]; then
+                echo "Usage $0 start <vm name>"
+            else
+                VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
+                if [ "$VMCONF" == "" ]; then
+                    echo "$2 not found in DB"
+                else
+                    if [ ! -r $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF ]; then
+                        echo "VM $2 not found"
+                    else
+                        Start_VM_From_Config $2 $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF
+                    fi
+                fi
+            fi
         ;;
     "stop")
         ;;

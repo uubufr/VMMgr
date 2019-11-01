@@ -197,3 +197,13 @@ function Check_Existing_VM() {
 function Custom_VM_Config() {
     sed -i "s/%%NAME%%/$1/g" $2
 }
+
+# Function: Start_VM_From_Config
+# Description: Start VM using VM Config file
+# Args:
+#   $1: VM Name
+#   $2: VM config path
+function Start_VM_From_Config() {
+    
+
+}
