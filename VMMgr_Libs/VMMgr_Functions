@@ -205,5 +205,5 @@ function Custom_VM_Config() {
 #   $2: VM config path
 function Start_VM_From_Config() {
     source $2
-    echo $QEMU_TEMPLATE
+    qemu-system-x86_64 $QEMU_TEMPLATE
 }

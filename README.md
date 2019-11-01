@@ -5,9 +5,9 @@ La définition des machines virtuelles s'appuyent sur des templates, qui peuvent
 
 Pour créer une machine virtuelle, lancer simplement:
 
-./VMMgr_Launcher create linux-base MyVM
+./VMMgr_Launcher create MyVM linux-base
 
-Cela va copier le template linux-base dans VM-Availables, en personnalisant quelques variables comme le nom de la vm.
+Cela va copier le template linux-base dans VM-CONFIGS, en personnalisant les variables tel le nom de la vm.
 
 Cette copie peut donc être personnalisé, puis démarré:
 

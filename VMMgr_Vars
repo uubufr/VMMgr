@@ -9,13 +9,13 @@
 
 
 # NEEDED VARS
-$IPMIHOST
-$IPMIPORT
-$VIRTPATH
-$SPICEIP
-$SPICEPORT
-$SPICEMODE
-$SPICEPWD
+#$IPMIHOST
+#$IPMIPORT
+#$VIRTPATH
+#$SPICEIP
+#$SPICEPORT
+#$SPICEMODE
+#$SPICEPWD
 
 # Common Vars
 
@@ -24,7 +24,7 @@ $SPICEPWD
 # Note: all options can be overwrited in a specific template #
 
 
-Manque NUMA SMP TELNET SPICE QMP RAM
+###Manque NUMA SMP TELNET SPICE QMP RAM
 
 
 COMMON="-daemonize -display none -no-user-config -nodefaults -msg timestamp=on"
@@ -106,3 +106,4 @@ IPMIDEV="-device ipmi-bmc-sim,id=bmc0 -chardev socket,id=ipmi0,host=$IPMIHOST,po
 
 
 
+LXBASE="$COMMON $MACHINE $CPU $BIOS"

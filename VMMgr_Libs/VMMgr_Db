@@ -10,6 +10,9 @@
 #   Db_Create_VM: Declare a new vm in db
 #   Db_Delete_VM: Delete a vm in db
 #   Db_List_VMs: List all vm form db
+#   Db_isEnabled_VM: Check if VM is enabled
+#   Db_Enabled_VM: Mark VM as Enabled
+#   Db_Disabled_VM: Mark VM as Disabled
 #   Db_Get_VM_Config: get VM config file
 #   Db_Set_IPPORT: Set IP and PORT for a service (spice, telnet or qmp)
 #   Db_Get_IPPORT: Get IP and PORT for a service (spice, telnet or qmp)
@@ -36,7 +39,8 @@ function Set_Db() {
 CREATE TABLE VM(
     VMiD INTEGER PRIMARY KEY,
     Name TEXT NOT NULL,
-    Config TEXT NOT NULL
+    Config TEXT NOT NULL,
+    Enabled INTEGER
 );
 
 CREATE TABLE SPICE(
@@ -88,7 +92,7 @@ EOF
 function Db_Create_VM() {
  EXISTS=$(echo "select VMiD from VM where Name='$2';" | sqlite3 $1/VMMGR_.db)
  if [ "$EXISTS" == "" ]; then
-  echo "insert into VM ( Name, Config) values ('$2', '$3');" | sqlite3 $1/VMMGR_.db
+  echo "insert into VM ( Name, Config, Enabled) values ('$2', '$3','0');" | sqlite3 $1/VMMGR_.db
   echo "select VMiD from VM where Name='$2';"| sqlite3 $1/VMMGR_.db
  else
   echo $EXISTS
@@ -116,6 +120,39 @@ function Db_Delete_VM() {
 #   $1: db path
 function Db_List_VMs() {
  echo "select Name from VM;" | sqlite3 $1/VMMGR_.db
+}
+
+# Function Db_isEnabled_VM
+# Description: Check if VM is enabled
+# Args:
+#   $1: Db path
+#   $2: Vm Name
+function Db_isEnabled_VM() {
+ echo "select Enabled from VM where Name='$2';" | sqlite3 $1/VMMGR_.db
+}
+
+# Function Db_Enabled_VM
+# Description: Mark VM as Enabled
+# Args:
+#   $1: Db path
+#   $2: Vm Name
+function Db_Enable_VM() {
+ EXISTS=$(echo "select VMiD from VM where Name='$2';" | sqlite3 $1/VMMGR_.db)
+ if [ ! "$EXISTS" == "" ]; then
+    echo "update VM SET Enabled=1 where VMiD='$EXISTS';" sqlite3 $1/VMMGR_.db
+ fi
+}
+
+# Function Db_Disabled_VM
+# Description: Mark VM as Disabled
+# Args:
+#   $1: Db path
+#   $2: Vm Name
+function Db_Disable_VM() {
+ EXISTS=$(echo "select VMiD from VM where Name='$2';" | sqlite3 $1/VMMGR_.db)
+ if [ ! "$EXISTS" == "" ]; then
+    echo "update VM SET Enabled=1 where VMiD='$EXISTS';" sqlite3 $1/VMMGR_.db
+ fi
 }
 
 # Function: Db_Get_VM_Config
