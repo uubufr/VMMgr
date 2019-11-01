@@ -31,7 +31,7 @@
 # Arg:
 #   $1: path
 function Set_Db() {
- if [ ! -r $1/VMMgr_.db ]; then
+ if [ ! -r $1/VMMGR_.db ]; then
     sqlite3 $1/VMMGR_.db <<EOF
 CREATE TABLE VM(
     VMiD INTEGER PRIMARY KEY,
