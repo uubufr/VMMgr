@@ -19,6 +19,7 @@
 #
 # STEP:
 # 0.06 on doit valider la fonction start: c'est à dire
+# 0.07 on doit valider une première VM fonctionnelle, on doit donc reparcourir toutes les options de base pour créer vrai VM.
 # 1. on doit valider que la vm existe dans la DB, pas d'initialisation de DB
 # 2. valider que la config existe, pas de création
 # 3. Créer les disques nécessaire, valider l'espace disque restant avant
@@ -106,6 +107,13 @@ case "$1" in
             fi
         ;;
     "start")
+        # Args:
+        #   $2: Vm Name
+        # Steps:
+        #   1) Check if VM exists in DB
+        #   2) Check if enabled
+        #   3) if enabled, use systemctl to start vm
+        #   4) if disabled or systemctl return no unit, start manually
             if [ ! "$2" ]; then
                 echo "Usage $0 start <vm name>"
             else
