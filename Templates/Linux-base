@@ -4,7 +4,7 @@
 # autor: Sylvain Girod ( uubu at gmx dot fr )
 # version: 0.02
 # description: Template for %%NAME%%
-
+GROUP=""
 NAME="%%NAME%%"         # Unique Name
 MEM="1"                 # Initial Mem Size, in GB
 MAXMEM=""               # OPTIONAL: Max Allowed mem (defaut: $MEM * 2)
