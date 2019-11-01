@@ -14,13 +14,13 @@ MAXMEM=""               # OPTIONAL: Max Allowed mem (defaut: $MEM * 2)
 DISKPATH="/mnt/disks/%%NAME%%/"
 
 ## Note: At least 1 First disk is needed, Defaut: Virtio Disk, but if iscsi is defined and not virtio, use iscsi as first disk only
-1VDISKSIZE=""             # First virtio Disk Size. Defaut: 2GB
-1SDISKSIZE=""            # OPTIONAL: First iscsi Disk Size. Defaut: 2GB
+VDISKSIZE=""             # First virtio Disk Size. Defaut: 2GB
+SDISKSIZE=""            # OPTIONAL: First iscsi Disk Size. Defaut: 2GB
 ## Additionnals Disks
-2VDISKNUMBER=""           # OPTIONAL: number of additionals Virtio Disks
-2VDISKSIZE=""             # OPTIONAL: Size for optionals Virtio Disks
-2SDISKNUMBER=""           # OPTIONAL: number of additionals ISCSI Disks
-2SDISKSIZE=""             # OPTIONAL: Size for optionals ISCSI Disks
+sVDISKNUMBER=""           # OPTIONAL: number of additionals Virtio Disks
+sVDISKSIZE=""             # OPTIONAL: Size for optionals Virtio Disks
+sSDISKNUMBER=""           # OPTIONAL: number of additionals ISCSI Disks
+sSDISKSIZE=""             # OPTIONAL: Size for optionals ISCSI Disks
 
 ## you can set individual disk in calling function manually:
 # Set_Disk virtio 50G Disk1
@@ -40,7 +40,5 @@ EMU_AUDIO_DRV=spice
 SPICE_DEBUG_ALLOW_MC=0
 
 
-. $(dirname $0)/functions
-
-set_virtio_disk 1 50G 4G 1
-set_virtio_net swvpl-main 1
+#set_virtio_disk 1 50G 4G 1
+#set_virtio_net swvpl-main 1
