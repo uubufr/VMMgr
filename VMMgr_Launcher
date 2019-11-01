@@ -61,18 +61,19 @@ case "$1" in
         # on doit vérifier que tous les outils sont installés et au bon endroit, sinon prévenir
         ;;
     "create")
-        # arguments: $2=vm name $3 template
-            if [ ! "$2" ] OR [ ! "$3" ] then
-             echo "Usage $0 <vm name> <template>"
+            # Args:
+            #   $2: Vm Name
+            #   $3: Template Name
+            if [ ! "$2" ] OR [ ! "$3" ] then echo "Usage $0 <vm name> <template>"; break; fi
+            if [ ! -r $VMMGR_DATA_PATH/Templates/$3 ]; then echo "Error, template $VMMGR_DATA_PATH/Templates/$3 doesn't exists"; break; fi
+            VMCONF=$(Check_Existing_VM $2)
+            if [ -r $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF ]; then 
+             echo "Warning, config file $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF already exists"
             else
-            # on requête la base pour savoir si une vm existe déjà avec ce nom
-            Check_Existing_VM $2
-              Db_List_VMs()
-            # on trouve le template:
-            if [ -r $TEMPLATEDIR/$3 ]; then
-                cp $TEMPLATEDIR/$3 $VMCONFIGDIR/$2
-                # on remplace les valeurs.
+             cp $VMMGR_DATA_PATH/Templates/$3 $VMMGR_CONFIG_PATH/VM_CONFIGS/$2.conf
             fi
+            Db_Create_VM $VMMGR_DB_PATH $1 $2.conf
+             # on remplace les valeurs.
         ;;
     "delete")
         ;;

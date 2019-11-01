@@ -175,3 +175,21 @@ function Set_IPMI() {
     sed -i "s/%%NAME%%/$1/g" /etc/ipmi/$1.conf
   fi
 }
+
+# Function : Check_Existing_VM
+# Description: Check on DB if VM already exists
+# Args:
+#   $1: VM Name
+function Check_Existing_VM() {
+ Set_Db $VMMGR_DB_PATH
+ Db_Get_VM_Config $VMMGR_DB_PATH $1
+}
+
+# Function: Custom_VM_Config
+# Description: Customize VM Configuration
+# Args:
+#   $1: VM name
+#   $2: VM config path
+function Custom_VM_Config() {
+    sed -i "s/%%NAME%%/$1/g" $2
+}
