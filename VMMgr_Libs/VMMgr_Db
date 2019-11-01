@@ -14,6 +14,9 @@
 #   Db_Set_IPPORT: Set IP and PORT for a service (spice, telnet or qmp)
 #   Db_Get_IPPORT: Get IP and PORT for a service (spice, telnet or qmp)
 #   Db_Set_MAC: Get mac address (without OUI PART) from db, if not exists, create new one
+
+
+
 #   Db_get_IP_POOL
 #   Db_Set_IP_POOL
 #   Db_Get_NEXT_IP >>>> pour ipv6 on peut calculer avec le réseau + adresse MAC, quid de l'adresse mac
@@ -28,7 +31,7 @@
 # Arg:
 #   $1: path
 function Set_Db() {
- if [ ! -x $1/VMMgr_.db ]; then
+ if [ ! -r $1/VMMgr_.db ]; then
     sqlite3 $1/VMMGR_.db <<EOF
 CREATE TABLE VM(
     VMiD INTEGER PRIMARY KEY,
@@ -62,8 +65,8 @@ CREATE TABLE NETWORKS(
     IP TEXT,
     PREFIX INTEGER,
     PORT INTEGER,
-    UNIQUE BOOL,    ### indique si on peut réutiliser une IP ou non ###
-    TABLE TEXT NOT NULL ### on peut l'utiliser dans plusieurs tables?
+    ISUNIQUE INTEGER,
+    FROMTBL TEXT NOT NULL
 );
 
 CREATE TABLE MAC(
@@ -87,7 +90,7 @@ function Db_Create_VM() {
  if [ "$EXISTS" == "" ]; then
   echo "insert into VM ( Name, Config) values ('$2', '$3');" | sqlite3 $1/VMMGR_.db
   echo "select VMiD from VM where Name='$2';"| sqlite3 $1/VMMGR_.db
-  else
+ else
   echo $EXISTS
  fi
 }
@@ -164,9 +167,9 @@ function Db_Set_MAC() {
  VMID=$(echo "select VMiD from VM where Name='$2';" | sqlite3 $1/VMMGR_.db)
  EXISTS=$(echo "select printf('%06X', SUBMAC) from MAC where VMiD='$VMID' AND NETID='$3';" | sqlite3 $1/VMMGR_.db)
  if [ ! "$EXISTS" == "" ]; then
-  echo "select SUBMAC from MAC ORDER BY V DESC LIMIT 1;" | sqlite3 $1/VMMGR_.db)
+  echo "select SUBMAC from MAC ORDER BY V DESC LIMIT 1;" | sqlite3 $1/VMMGR_.db
   if [ "$SUBMAC" == "" ]; then $SUBMAC=0; else $SUBMAC=$(( $SUBMAC + 1 )); fi
-  echo "insert into MAC (VMid, SUBMAC, NETID) values ('$VMID', '$SUBMAC', '$3');" | sqlite3 $1/VMMGR_.db)
+  echo "insert into MAC (VMid, SUBMAC, NETID) values ('$VMID', '$SUBMAC', '$3');" | sqlite3 $1/VMMGR_.db
   EXISTS=$(echo "select printf('%06X', SUBMAC) from MAC where VMiD='$VMID' AND NETID='$3';" | sqlite3 $1/VMMGR_.db)
  fi
  echo $EXISTS
