@@ -16,14 +16,12 @@
 #   Db_Get_VM_Config: get VM config file
 #   Db_Set_IPPORT: Set IP and PORT for a service (spice, telnet or qmp)
 #   Db_Get_IPPORT: Get IP and PORT for a service (spice, telnet or qmp)
+#   Db_Search_PORT: Search for an existing port
 #   Db_Set_MAC: Get mac address (without OUI PART) from db, if not exists, create new one
+#   Db_Get_Network: Check network info from ifname
+#   Db_Create_Network: Declare a new Network
 
 
-
-#   Db_get_IP_POOL
-#   Db_Set_IP_POOL
-#   Db_Get_NEXT_IP >>>> pour ipv6 on peut calculer avec le réseau + adresse MAC, quid de l'adresse mac
-#   Db_Get_NEXT_PORT >>>> comment on récupe le dernier
 ###### SELECT NAME CONFIG FROM VM ORDER BY NAME DESC, CONFIG ASC;
 #### on a pas encore de lien entre une déclaration de Réseau et l'IP:PORT (on a systématiquement le même réseau, ou on peut en créer autant qu'on veut?)
 #### Avant d'assigner une IP, dig?
@@ -225,4 +223,25 @@ function Db_Set_MAC() {
   EXISTS=$(echo "select printf('%06X', SUBMAC) from MAC where VMiD='$VMID' AND NETID='$3';" | sqlite3 $1/VMMGR_.db)
  fi
  echo $EXISTS
+}
+
+# Function: Db_Get_Network
+# Description: Check network info from ifname
+# Args:
+#   $1: Db Path (parent dir)
+#   $2: Iface
+function Db_Get_Network() {
+ echo "select * from NETWORKS where IFACE='$2';" | sqlite3 $1/VMMGR_.db
+}
+
+# Function: Db_Create_Network
+# Description: Declare a new Network
+#   $1: Db Path
+#   $2: Network IP
+#   $3: Prefix
+#   $4: First IP available -1
+#   $5: Last IP available
+#   $6: Iface Name
+function Db_Create_Network() {
+ echo "insert into NETWORKS (IP, PREFIX, MINIP, MAXIP, LAST, IFACE) values ('$2', '$3', '$4', '$5', '$4', '$6');" | sqlite3 $1/VMMGR_.db
 }
