@@ -16,15 +16,22 @@
 # Set_MAC: Calculate MAC Address
 # Set_IPMI: Create IPMI device, using OpenIPMI-lanserv 
 # Custom_VM_Config: Customize VM Configuration
+#
+# Set_New_Port: Get Port or generate new one
+# Get_Next_IPv4: Generate new IP from a pool
+# Get_Next_IPv6: Generate new IP from a pool
+# Set_New_IP: Get IP or generate new one
+# Create_Tap: Create Tap iface
+# Create_Bridge: create bridge dispatcher
+# Enslave_Tap: enslave Tap to a bridge
+# Set_Iface_Net: Add IP to an iface
 
-
-## TODO: Create tapup and links (using brctl, ovs-brctl or nmcli)
+## TODO:
 ## Créer des units systemd
 ## créer les fichiers spice
 ## créer un tableau de numa
 # créer un tableau de périphériques disque
-# créer les connexions réseau
-# calculer les IP
+
 
 
 # Function Check_Softwares
@@ -258,11 +265,18 @@ function Start_VM_From_Config() {
             # donc: $1 IP ou iface
             # $2: IP mode: 4 or 6
             # $3: tap|bridge|tap2br
-            
+    
+# Steps:
+#   1) is $1 an IP?
+#   2) yes: is IP already exist: yes -> return $1; no -> 
+                        
+#   3) no: 
 function Set_Service_Listen() {
     NET="-$2"
-    if [ "$(Is_Valid_IP $1)" == "0" ]; then
-        if [ "$(Is_Existing_IP $1)" == "0" ]; then
+    ipcalc $NET $1 2>/dev/null 1>/dev/null)
+    if [ $? -eq 0 ]; then
+        ip $NET -br address show | grep $1 2>/dev/null 1>/dev/null
+        if [ $? -eq 0 ]; then
             echo $1
         else
             
@@ -421,15 +435,70 @@ function Get_Next_IPv6() {
 function Set_New_IP() {
     EXISTS=$(Db_Get_IPPORT $VMMGR_DB_PATH $1 $2)
     if ["$EXISTS" == "" ]; then
-        1. on get network, si on a pas, on retourne rien
-        select * from NETWORKS where IFACE='$3'
+        EXISTS=$(Db_Get_Network $VMMGR_DB_PATH $3)
         if [ "$EXISTS" != "" ]; then
-            #on get new next ip
-            
-            EXISTS=$(Get_Next_IPv4 $EXISTS)
-            EXISTS=$(Get_Next_IPv6 $EXISTS)
+            [ "${4^^}" == "IPV4" ] && EXISTS=$(Get_Next_IPv4 $EXISTS)
+            [ "${4^^}" == "IPV6" ] && EXISTS=$(Get_Next_IPv6 $EXISTS)
         fi
     fi
     echo $EXISTS | cut -d\|  -f1
-    
 }
+
+# Function: Create_Tap
+# Description: Create Tap iface
+# Args:
+#   $1: tap name
+function Create_Tap() {
+    sudo ip tuntap add mode tap $1
+    sudo ip link set dev $1 up
+}
+
+# Function: Create_Bridge
+# Description: create bridge dispatcher
+# $1: tap name
+# $2: Bridge Name
+# $3: Bridge Tool
+function Create_Bridge() {
+        case "$3" in
+            "brctl")
+                Set_Bridge_Brctl $2
+            ;;
+            "ovs")
+                Set_Bridge_Ovs $2
+            ;;
+            "nmcli")
+                Set_Bridge_Nmcli $2
+            ;;
+        esac
+}
+
+# Function: Enslave_Tap
+# Description: enslave Tap to a bridge
+# Args:
+# $1: tap name
+# $2: Bridge Name
+# $3: Bridge Tool
+function Enslave_Tap() {
+        case "$3" in
+            "brctl")
+                sudo brctl addif $2 $1
+            ;;
+            "ovs")
+                sudo ovs-vsctl add-port $2 $1
+            ;;
+            "nmcli")
+                sudo nmcli con add type bridge-slave ifname $1 master $2
+            ;;
+        esac
+}
+
+# Function: Set_Iface_Net
+# Description: Add IP to an iface
+# Args:
+#   $1: IP
+#   $2: Port
+#   $3: Iface
+function Set_Iface_Net() {
+    sudo ip address add $1/$2 dev $3
+}
+
