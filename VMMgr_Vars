@@ -28,15 +28,16 @@
 
 
 COMMON="-daemonize -display none -no-user-config -nodefaults -msg timestamp=on"
-###CONFIG="-writeconfig $VIRTPATH/configs/$NAME"
+CONFIG="-writeconfig $VMMGR_CONFIG_PATH/QEMU_CONFIGS/$NAME"
 MACHINE="-machine q35,accel=kvm"
-CPU="-cpu host,-hypervisor,+vmx,+x2apic,+kvm_pv_eoi,+kvm_pv_unhalt,+kvm_nopiodelay"
+CPU64="cpu qemu64"
+CPUKVM="-cpu host,-hypervisor,+vmx,+x2apic,+kvm_pv_eoi,+kvm_pv_unhalt,+kvm_nopiodelay"
 
 GLOBAL="-global PIIX4_PM.disable_s3=1 -global PIIX4_PM.disable_s4=1"
 PCI="-device pci-bridge,id=pci.0,chassis_nr=1"
 
 ### BIOS ###
-#BOOT="-boot menu=on,strict=off,splash=$VIRTPATH/uefi/splash640.bmp,splash-time=5000"
+BOOT="-boot menu=on,strict=off,splash=$VMMGR_DATA_PATH/splash640.bmp,splash-time=5000"
 BIOS="-bios /usr/share/qemu/bios-256k.bin -L /usr/share/qemu/"
 #if [ ! -d $VIRTPATH/uefi/$NAME/ ]; then cp -r $VIRTPATH/uefi/SRC $VIRTPATH/uefi/$NAME; fi
 #UEFI="-drive if=pflash,format=raw,file=$VIRTPATH/uefi/$NAME/OVMF_CODE.fd -global isa-debugcon.iobase=0x402 -debugcon file:$VIRTPATH/uefi/$NAME/$NAME.ovmf.log"
@@ -49,7 +50,7 @@ TABLET="-device virtio-tablet-pci"
 IDEDVD="-drive if=none,id=DVD,readonly=on -device ide-cd,drive=DVD"
 SCSIDVD="-device virtio-scsi-pci,id=scsi -drive if=none,id=DVD,readonly=on,format=raw -device scsi-cd,wwn=0x5000aa0102030405,bus=scsi0.0,channel=0,scsi-id=1,lun=0,drive=DVD,id=scsiDVD"
 QXL="-device qxl-vga,id=qxl-video0,ram_size=67108864,vram_size=67108864"
-GUESTAGENT="-chardev socket,id=charchannel1,path=$VIRTPATH/disks/f16x86_64.agent,server,nowait -device virtserialport,bus=virtio-serial0.0,nr=2,chardev=charchannel1,id=channel1,name=org.qemu.guest_agent.0"
+###GUESTAGENT="-chardev socket,id=charchannel1,path=$VMMGR_CONFIG_PATH/guest_agent/f16x86_64.agent,server,nowait -device virtserialport,bus=virtio-serial0.0,nr=2,chardev=charchannel1,id=channel1,name=org.qemu.guest_agent.0"
 WATCHDOG="-device i6300esb,id=watchdog0 -watchdog-action none"
 BALLOON="-device virtio-balloon-pci,id=balloon0"
 RNG="-object rng-random,id=rng0,filename=/dev/random -device virtio-rng-pci,rng=rng0,max-bytes=1234,period=2000"
@@ -94,7 +95,7 @@ SPICESASL="sasl"
 SPICETRANSPORT="ipv6"
 
 ### Templates for spice ###
-SPICE="-spice $SPICELISTEN,$SPICEPORT,$SPICETRANSPORT,$SPICEMOUSE,$SPICETICKET,$SPICECHANS,$SPICECOMPRESSION,$SPICEPLAYBACKCOMP,$SPICESTREAMVID,$SPICEMIGRATION $SPICE$SPICEAGENT $SPICEUSBREDIR $SPICESTREAM $SPICESHARE"
+SPICE="-spice $SPICELISTEN,$SPICEPORT,$SPICETRANSPORT,$SPICEMOUSE,$SPICEDTICKET,$SPICECHANS,$SPICECOMPRESSION,$SPICEPLAYBACKCOMP,$SPICESTREAMVID,$SPICEMIGRATION $SPICE$SPICEAGENT $SPICEUSBREDIR $SPICESTREAM $SPICESHARE"
 SPICESECURE="spice $SPICELISTEN,$SPICESPORT,$SPICETRANSPORT,$SPICESASL,$SPICECERTS,$SPICEMOUSE,$SPICEDTICKET,$SPICECHANS,$SPICECOMPRESSION,$SPICEPLAYBACKCOMP,$SPICESTREAMVID,$SPICEMIGRATION $SPICE$SPICEAGENT $SPICEUSBREDIR $SPICESTREAM $SPICESHARE $SPICECAC"
 SPICEGL="-spice $SPICELISTEN,$SPICEPORT,$SPICETRANSPORT,$SPICEMOUSE,$SPICEGL,$SPICETICKET,$SPICECHANS,$SPICECOMPRESSION,$SPICEPLAYBACKCOMP,$SPICESTREAMVID,$SPICEMIGRATION $SPICE$SPICEAGENT $SPICEUSBREDIR $SPICESTREAM $SPICESHARE $SPICEVIRGL"
 
@@ -107,3 +108,4 @@ IPMIDEV="-device ipmi-bmc-sim,id=bmc0 -chardev socket,id=ipmi0,host=$IPMIHOST,po
 
 
 LXBASE="$COMMON $MACHINE $CPU $BIOS"
+FAB=$COMMON $MACHINE $CPUKVM $CONFIG $BOOT $BIOS $USB $MOUSE $KEYBOARD $IDEDVD $QXL $WATCHDOG $BALLOON $RNG $UNIXCLOCK $SOUND $UUID $NODISPLAY $SPICE

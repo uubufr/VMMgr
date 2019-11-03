@@ -207,3 +207,229 @@ function Start_VM_From_Config() {
     source $2
     qemu-system-x86_64 $QEMU_TEMPLATE
 }
+
+# Function: Gen_New_IP
+# Description: Generate a new IP
+#
+#
+# ToDo: on doit générer une nouvelle ip, généralement c'est soit plutôt pour spice,telnet et qmp.
+# donc en fonction de ipv6ou4 on a une routine.
+# 1. on a besoin de déclarer un réseau au préalable (autre fonction). Ce réseau est $1
+# basé sur $1: on calcule, le réseau, lastIP, et currentIP
+# on calcule la nouvelle IP dispo et on la renseigne dans la db
+# NOTE: comment on sait quelle ip n'est pas dispo, si elle est déjà utilisée comment on va la modifier?
+#       Peut-on utiliser à chaque fois une ip différente? (pas de stockage dans la base?
+#       Pour ipv6 ce sera plus simple pour une IP unique pou l'interface on peut s'appuyer sur l'adrresse mac
+#
+
+# Function: Set_Service_Listen
+# Description: Set IP and Port for Spice
+#
+#
+#
+# NOTE: On ne génère aucune IP ici, on s'occupe juste de générer un PORT si besoin
+# ToDo: 1. si $1 n'est pas une ip mais une interface:
+    # Si l'interface existe:
+        # on s'appuye sur la première ip de l'interface (en fonction de $IPMODE)
+    # Si l'interface n'existe pas: erreur
+    # Si on a une IP:
+        # Si elle existe déjà:
+            #on l'utilise tel
+        # Sinon, on créé une interface TAP
+            # Si $3 est le nom d'un bridge, on enslave tap au bridge
+    # pour le PORT:
+        # si $4 est un port:
+            # on utilise ce port
+        # Si $4 est "gen"
+            # on regarde dans la base si on a pas déjà une association SPICE:PORT
+                # si c'est le cas on l'utilise,
+                # Sinon on génère un nouveau port, et on la stocke dans la db
+    # on retourne l'association IP:PORT
+    
+    
+    ### ou alors on gère pas la création du bridge,
+    # on précise quoi?
+    # on a besoin d'une IP
+    # on a besoin de savoir quoi en faire:
+            # ip existante
+            # ip à créer sur une iface existante
+            # créer un tap avec l'ip.
+            # Créer un tap avec l'ip et l'ajouter au bridge.
+            # donc: $1 IP ou iface
+            # $2: IP mode: 4 or 6
+            # $3: tap|bridge|tap2br
+            
+function Set_Service_Listen() {
+    NET="-$2"
+    if [ "$(Is_Valid_IP $1)" == "0" ]; then
+        if [ "$(Is_Existing_IP $1)" == "0" ]; then
+            echo $1
+        else
+            
+            if [ "$IFACE" == "" ]; then
+                # l'interface n'existe pas
+            else
+                # on a l'interface, on créé une ip
+            fi
+            case "$3" in
+                "tap")
+                    IFACE=$(ip -$2 -br address show type tun | grep $1 | head -1 | awk '{print $1}')
+                    if [ "$IFACE" == "" ]; then
+                        # on créé l'iface
+                    else
+                        #on retourne l'ip de l'iface
+                    fi
+                ;;
+                "bridge")
+                    if IFACE=$(ip -$2 -br address show type bridge | grep $1 | head -1 | awk '{print $1}')
+                    if [ "$IFACE" == "" ]; then
+                        # on créé le bridge
+                    else
+                        #on retourne la première ip du bridge
+                    fi
+                ;;
+                "tap2br")
+                    
+                ;;
+            esac
+            #on doit créer l'ip
+            # on doit donc savoir où on créé l'ip, sur une interface existante? un tap?
+            # on a donc $2 qui nous renseigne le nom de l'interface.
+                # si l'interface existe, on ajoute l'ip
+                # si l'interface existe pas on créé un tap
+                    #enfin, si $3 est spécifié et que c'est un bridge, on l'enslave
+        fi
+    else
+        # c'est pas une ip, on a donc un bridge
+        if [ "$(Is_Existing_Bridge  $1)" == "0" ]; then
+            # bridge existant
+        else
+            # bridge à créer
+        fi
+    fi
+}
+
+function Is_Valid_IP() {
+    NET="-4"
+    [ "$IPMODE" == "ipv6" ] && NET="-6"
+    ipcalc $NET $1 2>/dev/null 1>/dev/null
+    if [ $? -eq 0 ]; then 
+        echo "0"
+    else
+        echo "1"
+    fi
+}
+
+function Is_Existing_IP() {
+    NET="-4"
+    [ "$IPMODE" == "ipv6" ] && NET="-6"
+    ip $NET -br address show | grep $1 2>/dev/null 1>/dev/null
+    if [ $? -eq 0 ]; then 
+        echo "0"
+    else
+        echo "1"
+    fi
+}
+
+function Is_Existing_Bridge() {
+    ip -br address show type bridge $1 2>/dev/null 1>/dev/null
+    if [ $? -eq 0 ]; then 
+        echo "0"
+    else
+        echo "1"
+    fi
+}
+
+# Function: Set_New_Port
+# Description: Get Port or generate new one
+#   $1: Vm Name
+#   $2: Type [spice|telnet|qmp|vnc]
+#   $3: min port
+#   $4: max port
+function Set_New_Port() {
+    EXISTS=$(Db_Get_IPPORT $VMMGR_DB_PATH $1 $2)
+    if ["$EXISTS" == "" ]; then
+        for PORT in $(seq $3 $4); do
+            EXISTS=$(Db_Search_Port $VMMGR_DB_PATH $1 $PORT)
+            if [ "$EXISTS" != "" ]; then break; fi
+        done
+    fi
+    echo $EXISTS | cut -d\|  -f2
+}
+
+
+# Function: Get_Next_IPv4
+# Description: Generate new IP from a pool
+# Args:
+#   $1: Network
+# Steps:
+#   1) extract Network values
+#   2) get IP, convert in Hex value for operations
+#   3) Calculate next IP
+#   4) Check if we are not out of pool
+function Get_Next_IPv4() {
+    IFS=\| read -r IPNETWORK IPPREFIX MIN MAX LAST BR <<< $(echo "$1")
+
+    IFS=. read -r i1 i2 i3 i4 <<< $(ipcalc --network $IPNETWORK --prefix $IPPREFIX --info | grep Network | awk '{print $2}' | cut -d\/ -f 1)
+    printf -v Network '%02x' $i1 $i2 $i3 $i4
+    
+    printf -v LAST '%02x' $LAST
+    FirstIP=$(echo "obase=16;ibase=16; ${Network^^} + ${LAST^^}" | bc)
+    NextIP=$(echo "obase=16;ibase=16; ${FirstIP^^} + 1" | bc)
+    printf -v NextIP '%08x' 0x$NextIP
+    NextIP=${NextIP^^}
+    
+    printf -v MAX '%02x' $MAX
+    MaxIP=$(echo "obase=16;ibase=16;${Network^^} + ${MAX^^}" | bc)
+    printf -v MaxIP '%08x' 0x$MaxIP
+    MaxIP=${MaxIP^^}
+    
+ 
+    if [ $(echo "obase=10;ibase=16; ${NextIP^^}" | bc) -le $(echo "obase=10;ibase=16; ${MaxIP^^}" | bc) ]; then
+        echo $(echo "ibase=16;obase=A;${NextIP:0:2}" | bc).$(echo "ibase=16;obase=A;${NextIP:2:2}" | bc).$(echo "ibase=16;obase=A;${NextIP:4:2}" | bc).$(echo "ibase=16;obase=A;${NextIP:6:2}" | bc)
+    fi
+}
+
+# Function: Get_Next_IPv6
+# Description: Generate new IP from a pool
+# Args:
+#   $1: Network
+# Steps:
+#   1) extract Network values
+#   2) get full lengh IPv6
+#   3) Calculate next IP
+#   4) Check if we are not out of pool (I know, useless...)
+function Get_Next_IPv6() {
+
+    IFS=\| read -r IPNETWORK IPPREFIX MIN MAX LAST BR <<< $(echo "$1")
+    
+    Network=$(ipcalc -6 --network $IPNETWORK/$IPPREFIX  --info | grep "Full Network" | awk '{print $3}' | cut -d/  -f1 | tr -d : )
+    FirstIP=$(echo "obase=16;ibase=16; ${Network^^} + ${LAST^^}" | bc)
+    NextIP=$(echo "obase=16;ibase=16; ${FirstIP^^} + 1" | bc)
+
+    MaxIP=$(echo "obase=16;ibase=16;${Network^^} + ${MAX^^}" | bc)
+    if [ "$(echo "obase=16;ibase=16; ${MaxIP^^} > ${NextIP^^}" | bc)" == "1" ]; then
+        echo ${NextIP:0:4}:${NextIP:4:4}:${NextIP:8:4}:${NextIP:12:4}:${NextIP:16:4}:${NextIP:20:4}:${NextIP:24:4}:${NextIP:28:4}
+    fi
+}
+
+# Function: Set_New_IP
+# Description: Get IP or generate new one
+#   $1: Vm Name
+#   $2: Type [spice|telnet|qmp|vnc]
+#   $3: Network
+function Set_New_IP() {
+    EXISTS=$(Db_Get_IPPORT $VMMGR_DB_PATH $1 $2)
+    if ["$EXISTS" == "" ]; then
+        1. on get network, si on a pas, on retourne rien
+        select * from NETWORKS where IFACE='$3'
+        if [ "$EXISTS" != "" ]; then
+            #on get new next ip
+            
+            EXISTS=$(Get_Next_IPv4 $EXISTS)
+            EXISTS=$(Get_Next_IPv6 $EXISTS)
+        fi
+    fi
+    echo $EXISTS | cut -d\|  -f1
+    
+}
