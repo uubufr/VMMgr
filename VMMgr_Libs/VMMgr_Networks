@@ -1,0 +1,288 @@
+#! /bin/bash
+#
+# script name: VMMgr_Networks
+# autor: Sylvain Girod ( uubu at gmx dot fr )
+# version: 0.0#
+# description: Usefull Networks functions
+#
+# Functions:
+# Get_Bridge_Tool: Try to detect best bridge tool available
+# Set_Bridge_Brctl: Set bridges using brctl
+# Set_Bridge_Ovs: Create bridge using openvswitch
+# Set_Bridge_Nmcli: create bridge using nmcli
+# Create_Bridge: create bridge dispatcher
+# Set_MAC: Calculate MAC Address
+# Set_New_Port: Get Port or generate new one
+# Get_Next_IPv4: Generate new IP from a pool
+# Get_Next_IPv6: Generate new IP from a pool
+# Set_New_IP: Get IP or generate new one
+# Create_Tap: Create Tap iface
+# Enslave_Tap: enslave Tap to a bridge
+# Set_Iface_Net: Set IP/Prefix to net device
+# New_Network: create bridge or tap device
+
+# Function Get_Bridge_Tool
+# Description: Try to detect best bridge tool available
+# Args: No Args
+function Get_Bridge_Tool() {
+    ip --version 2>/dev/null 1>/dev/null
+    [ $? -eq 0 ] && BRIDGETOOL="ip"
+    ovs-vsctl --version 2>/dev/null 1>/dev/null
+    [ $? -eq 0 ] && BRIDGETOOL="ovs"
+    nmcli --version 2>/dev/null 1>/dev/null
+    [ $? -eq 0 ] && BRIDGETOOL="nmcli"
+    export BRIDGETOOL
+}
+
+# Function: Set_Bridge_Brctl
+# Description: Set bridges using brctl
+# Args:
+#   $1: bridge name
+#   $2: on: up the interface
+function Set_Bridge_Brctl() {
+    ip address show $1 2> /dev/null 1> /dev/null
+    if [ $? -ne 0 ]; then
+        sudo ip link add $1 type bridge
+    fi
+    if [ "$2" == "on" ]; then
+        sudo ip link set dev $1 up
+    fi
+}
+
+# function: Set_Bridge_Ovs
+# Description: Create bridge using openvswitch
+# Args:
+#   $1: Bridge name
+#   $2: on: up the interface
+function Set_Bridge_Ovs() {
+    if [ "$(sudo ovs-vsctl list-br | grep $1)" == "" ]; then
+        sudo ovs-vsctl add-br $1
+    fi
+    if [ "$2" == "on" ]; then
+        sudo ip link set dev $1 up
+    fi
+}
+
+# function: Set_Bridge_Nmcli
+# Description: create bridge using nmcli
+# Args:
+#   $1: Bridge name
+#   $2: on: up the interface
+function Set_Bridge_Nmcli() {
+    nmcli dev show $1 2>/dev/null 1>/dev/null
+    if [ $? -ne 0 ]; then
+        sudo nmcli con add save yes type bridge ifname $1
+        sudo nmcli con mod bridge-$1 connection.id $1
+        sudo nmcli dev set $1 autoconnect yes managed yes 
+        sudo nmcli con mod $1 ipv4.method disabled
+        sudo nmcli con mod $1 ipv6.method ignore
+        sudo nmcli con up $1
+    fi
+    if [ "$2" == "on" ]; then
+        sudo nmcli dev connect $1
+        sudo nmcli dev reapply $1
+    fi
+}
+
+# Function: Create_Bridge
+# Description: create bridge dispatcher
+# $1: Bridge Name
+# $2: Bridge Tool
+function Create_Bridge() {
+        case "$2" in
+            "brctl")
+                Set_Bridge_Brctl $1
+            ;;
+            "ovs")
+                Set_Bridge_Ovs $1
+            ;;
+            "nmcli")
+                Set_Bridge_Nmcli $1
+            ;;
+        esac
+}
+
+
+# Function: Set_MAC
+# Description: Calculate MAC Address
+# Args:
+#   $1: Vm Name
+#   $2: network device number
+function Set_MAC() {
+        OUI="52:54:00"
+        SUBMAC=Db_Set_MAC $DB_PATH $1 $2
+        echo $OUI:${SUBMAC:0:2}:${SUBMAC:2:2}:${SUBMAC:4:2}
+}
+
+# Function: Set_New_Port
+# Description: Get Port or generate new one
+#   $1: Vm Name
+#   $2: Type [spice|telnet|qmp|vnc]
+#   $3: min port
+#   $4: max port
+function Set_New_Port() {
+    EXISTS=$(Db_Get_IPPORT $VMMGR_DB_PATH $1 $2)
+    if ["$EXISTS" == "" ]; then
+        for PORT in $(seq $3 $4); do
+            EXISTS=$(Db_Search_Port $VMMGR_DB_PATH $1 $PORT)
+            if [ "$EXISTS" != "" ]; then break; fi
+        done
+    fi
+    echo $EXISTS | cut -d\|  -f2
+}
+
+# Function: Get_Next_IPv4
+# Description: Generate new IP from a pool
+# Args:
+#   $1: Network
+# Steps:
+#   1) extract Network values
+#   2) get IP, convert in Hex value for operations
+#   3) Calculate next IP
+#   4) Check if we are not out of pool
+function Get_Next_IPv4() {
+    IFS=\| read -r IPNETWORK IPPREFIX MIN MAX LAST BR <<< $(echo "$1")
+
+    IFS=. read -r i1 i2 i3 i4 <<< $(ipcalc --network $IPNETWORK --prefix $IPPREFIX --info | grep Network | awk '{print $2}' | cut -d\/ -f 1)
+    printf -v Network '%02x' $i1 $i2 $i3 $i4
+    
+    printf -v LAST '%02x' $LAST
+    FirstIP=$(echo "obase=16;ibase=16; ${Network^^} + ${LAST^^}" | bc)
+    NextIP=$(echo "obase=16;ibase=16; ${FirstIP^^} + 1" | bc)
+    printf -v NextIP '%08x' 0x$NextIP
+    NextIP=${NextIP^^}
+    
+    printf -v MAX '%02x' $MAX
+    MaxIP=$(echo "obase=16;ibase=16;${Network^^} + ${MAX^^}" | bc)
+    printf -v MaxIP '%08x' 0x$MaxIP
+    MaxIP=${MaxIP^^}
+    
+ 
+    if [ $(echo "obase=10;ibase=16; ${NextIP^^}" | bc) -le $(echo "obase=10;ibase=16; ${MaxIP^^}" | bc) ]; then
+        echo $(echo "ibase=16;obase=A;${NextIP:0:2}" | bc).$(echo "ibase=16;obase=A;${NextIP:2:2}" | bc).$(echo "ibase=16;obase=A;${NextIP:4:2}" | bc).$(echo "ibase=16;obase=A;${NextIP:6:2}" | bc)
+    fi
+}
+
+# Function: Get_Next_IPv6
+# Description: Generate new IP from a pool
+# Args:
+#   $1: Network
+# Steps:
+#   1) extract Network values
+#   2) get full lengh IPv6
+#   3) Calculate next IP
+#   4) Check if we are not out of pool (I know, useless...)
+function Get_Next_IPv6() {
+
+    IFS=\| read -r IPNETWORK IPPREFIX MIN MAX LAST BR <<< $(echo "$1")
+    
+    Network=$(ipcalc -6 --network $IPNETWORK/$IPPREFIX  --info | grep "Full Network" | awk '{print $3}' | cut -d/  -f1 | tr -d : )
+    FirstIP=$(echo "obase=16;ibase=16; ${Network^^} + ${LAST^^}" | bc)
+    NextIP=$(echo "obase=16;ibase=16; ${FirstIP^^} + 1" | bc)
+
+    MaxIP=$(echo "obase=16;ibase=16;${Network^^} + ${MAX^^}" | bc)
+    if [ "$(echo "obase=16;ibase=16; ${MaxIP^^} > ${NextIP^^}" | bc)" == "1" ]; then
+        echo ${NextIP:0:4}:${NextIP:4:4}:${NextIP:8:4}:${NextIP:12:4}:${NextIP:16:4}:${NextIP:20:4}:${NextIP:24:4}:${NextIP:28:4}
+    fi
+}
+
+# Function: Set_New_IP
+# Description: Get IP or generate new one
+#   $1: Vm Name
+#   $2: Type [spice|telnet|qmp|vnc]
+#   $3: Network
+#   $4: IPVER
+function Set_New_IP() {
+    EXISTS=$(Db_Get_IPPORT $VMMGR_DB_PATH $1 $2)
+    if ["$EXISTS" == "" ]; then
+        EXISTS=$(Db_Get_Network $VMMGR_DB_PATH $3)
+        if [ "$EXISTS" != "" ]; then
+            [ "${4^^}" == "IPV4" ] && EXISTS=$(Get_Next_IPv4 $EXISTS)
+            [ "${4^^}" == "IPV6" ] && EXISTS=$(Get_Next_IPv6 $EXISTS)
+        fi
+    fi
+    echo $EXISTS | cut -d\|  -f1
+}
+
+# Function: Create_Tap
+# Description: Create Tap iface
+# Args:
+#   $1: tap name
+function Create_Tap() {
+    sudo ip tuntap add mode tap $1
+    sudo ip link set dev $1 up
+}
+
+# Function: Enslave_Tap
+# Description: enslave Tap to a bridge
+# Args:
+# $1: tap name
+# $2: Bridge Name
+# $3: Bridge Tool
+function Enslave_Tap() {
+        case "$3" in
+            "brctl")
+                sudo brctl addif $2 $1
+            ;;
+            "ovs")
+                sudo ovs-vsctl add-port $2 $1
+            ;;
+            "nmcli")
+                sudo nmcli con add type bridge-slave ifname $1 master $2
+            ;;
+        esac
+}
+
+# Function: Set_Iface_Net
+# Description: Set IP/Prefix to net device
+# Args:
+#   $1: IP
+#   $2: Port
+#   $3: Iface
+function Set_Iface_Net() {
+    sudo ip address add $1/$2 dev $3
+}
+
+# Function: New_Network
+# Description: create bridge or tap device
+# Args:
+#   $1: Device Name
+#   $2: Device type: tap or bridge
+#   $3: <ipversion>|<IP>|<prefix>
+#   $4: (optional) bridge name for tap device only, tap will added to this bridge
+function New_Network() {
+    IFS=\| read -r IPVER IPNETWORK IPPREFIX <<< $(echo "$3")
+    if [ "$2" == "bridge" ]; then
+        ip -br address show type bridge $1 2>/dev/null 1>/dev/null
+        if [ $? -eq 0 ]; then
+            if [ "$3" != "" ]; then
+                ip -br address show $1 | grep $IPNETWORK 2>/dev/null 1>/dev/null
+                if [ $? -eq 1 ]; then
+                    Set_Iface_Net $IPNETWORK $IPPREFIX $1
+                fi
+            fi
+        else
+            Create_Bridge $1 $BRIDGETOOL
+            if [  "$3" != "" ]; then
+                [ "$IPVER" == "4" ] && 
+                Set_Iface_Net $IPNETWORK $IPPREFIX $1
+            fi
+        fi
+    else
+        if [ "$2" == "tap" ]; then
+            ip -br address show type tun $1 2>/dev/null 1>/dev/null
+            if [ $? -ne 0 ]; then
+                sudo ip tuntap add mode tap $1
+                sudo ip link set dev $1 up
+            fi
+            ip -br address show $1 | grep $IPNETWORK 2>/dev/null 1>/dev/null
+            if [ $? -ne 0 ]; then
+                Set_Iface_Net $IPNETWORK $IPPREFIX $1
+            fi
+            if [ "$4" != "" ]; then
+                Enslave_Tap $1 $4 $BRIDGETOOL
+            fi
+        fi
+    fi
+}
+
