@@ -1,0 +1,81 @@
+#! /bin/bash
+#
+# script name: %%NAME%%
+# autor: Sylvain Girod ( uubu at gmx dot fr )
+# version: 0.02
+# description: Template for %%NAME%%
+GROUP=""
+NAME="%%NAME%%"         # Unique Name
+MEM="1"                 # Initial Mem Size, in GB
+MAXMEM="1"               # OPTIONAL: Max Allowed mem (defaut: $MEM * 2)
+
+### Disks ###
+
+DISKPATH="/mnt/disks/%%NAME%%/"
+
+## Note: At least 1 First disk is needed, Defaut: Virtio Disk, but if iscsi is defined and not virtio, use iscsi as first disk only
+mVDISKSIZE=""             # First virtio Disk Size. Defaut: 2GB
+mSDISKSIZE=""            # OPTIONAL: First iscsi Disk Size. Defaut: 2GB
+## Additionnals Disks
+sVDISKNUMBER=""           # OPTIONAL: number of additionals Virtio Disks
+sVDISKSIZE=""             # OPTIONAL: Size for optionals Virtio Disks
+sSDISKNUMBER=""           # OPTIONAL: number of additionals ISCSI Disks
+sSDISKSIZE=""             # OPTIONAL: Size for optionals ISCSI Disks
+
+## you can set individual disk in calling function manually:
+# Set_Disk virtio 50G Disk1
+# Set_Disk iscsi 20G /mnt/idisks/%%NAME%%-disk2
+
+### Network ###
+# Set_NetDev <bridge> <number of taps>
+# Set_NetDev swvpl-main 2
+# Set_NetDev swvpl-admin 1
+
+
+### choose Qemu machine Template:
+SPICEIPVER=4
+SPICEIP=192.168.1.53
+SPICEPORT=2555
+
+ou encore
+SPICEIPVER=4
+SPICEIP=swvpl-main
+SPICE=new
+
+
+NETWORK=Set_New_Network $name $type $ip/$prefix enslave $br
+
+# Set an tap dev for Spice
+SPICE=on
+SPICETPL=$SPICESECURE
+
+# Set a tap dev for telnet
+TELNET=on
+New_Network ndvpl-telnet 6|fe80::2|64
+TELNETIP=ndpvl-telnet
+TELNETPORT=new
+
+# Set a tap dev for qmp
+QMP=on
+New_Network ndvpl-qmp 6|fe80::3|64
+QMPIP=ndvpl-qmp new
+QMPPORT=5401
+
+# Set a tap dev for vnc
+VNC=off
+New_Network ndvpl-vnc 6|::4|64
+VNCIP=ndvpl-vnc
+VNCPORT=new
+
+Set_Virtio_Net swvpl-main 2
+Set_Virtio_Net swvpl-admin 1
+
+QEMU_TEMPLATE=$FAB
+
+###env for spice:
+EMU_AUDIO_DRV=spice
+SPICE_DEBUG_ALLOW_MC=0
+
+
+#set_virtio_disk 1 50G 4G 1
+#set_virtio_net swvpl-main 1

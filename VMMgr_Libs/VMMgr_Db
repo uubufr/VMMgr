@@ -196,14 +196,10 @@ function Db_Get_IPPORT() {
 # Description: search for an existing port
 # Args:
 #   $1: Db Path (parent dir)
-#   $2: Vm Name
+#   $2: service (spice, telnet, qmp)
 #   $3: Port number
 function Db_Search_PORT() {
-    for TBL in $(echo spice telnet qmp); do
-        $EXISTS=$(echo "select PORT from ${3^^*} where PORT='$3';" | sqlite3 $1/VMMGR_.db)
-        if [ "$EXISTS" != "" ]; then break; fi
-    done
-    echo $EXISTS
+        echo "select PORT from ${2^^*} where PORT='$3';" | sqlite3 $1/VMMGR_.db
 }
 
 # Function Db_Set_MAC

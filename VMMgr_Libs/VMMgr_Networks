@@ -116,19 +116,53 @@ function Set_MAC() {
 
 # Function: Set_New_Port
 # Description: Get Port or generate new one
+# Args:
 #   $1: Vm Name
 #   $2: Type [spice|telnet|qmp|vnc]
 #   $3: min port
 #   $4: max port
+# Return: Port number
 function Set_New_Port() {
     EXISTS=$(Db_Get_IPPORT $VMMGR_DB_PATH $1 $2)
     if ["$EXISTS" == "" ]; then
         for PORT in $(seq $3 $4); do
-            EXISTS=$(Db_Search_Port $VMMGR_DB_PATH $1 $PORT)
-            if [ "$EXISTS" != "" ]; then break; fi
+            EXISTS=$(Db_Search_Port $VMMGR_DB_PATH $2 $PORT)
+            if [ "$EXISTS" == "" ]; then
+                EXISTS="undefined|"$(( PORT + 1 ))
+                if [ $(( PORT + 1 )) -lt $4 ]; then EXISTS=""; fi
+                break;
+            fi
         done
     fi
     echo $EXISTS | cut -d\|  -f2
+}
+
+# Function Set_Port_Listen
+# Description: get port for service
+# Args:
+#    $1: VM name
+#    $2: Type [spice|telnet|qmp|vnc]
+# Return Port number
+function Set_Port_Listen() {
+    case "$2" in
+        "spice")
+            PMIN=$SPICEMINPORT
+            PMAX=$SPICEMAXPORT
+        ;;
+        "telnet")
+            PMIN=$TELNETMINPORT
+            PMAX=$TELNETMAXPORT
+        ;;
+        "qmp")
+            PMIN=$QMPMINPORT
+            PMAX=$QMPMAXPORT
+        ;;
+        "vnc")
+            PMIN=$VNCMINPORT
+            PMAX=$VNCMAXPORT
+        ;;
+    esac
+    Set_New_Port $VMMGR_DB_PATH $1 $2 $PMIN $PMAX
 }
 
 # Function: Get_Next_IPv4
@@ -237,7 +271,7 @@ function Enslave_Tap() {
 # Description: Set IP/Prefix to net device
 # Args:
 #   $1: IP
-#   $2: Port
+#   $2: Prefix
 #   $3: Iface
 function Set_Iface_Net() {
     sudo ip address add $1/$2 dev $3
