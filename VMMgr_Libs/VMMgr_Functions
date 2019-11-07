@@ -13,13 +13,6 @@
 # Set_IPMI: Create IPMI device, using OpenIPMI-lanserv 
 # Custom_VM_Config: Customize VM Configuration
 #
-# Create_Tap: Create Tap iface
-# Create_Bridge: create bridge dispatcher
-# Enslave_Tap: enslave Tap to a bridge
-# Set_Iface_Net: Add IP to an iface
-#
-# Get_Bridge_Tool: Try to detect best bridge tool available
-
 
 ## TODO:
 ## Créer des units systemd
@@ -156,17 +149,23 @@ function Custom_VM_Config() {
 # Args:
 #   $1: VM Name
 #   $2: VM config path
+### TODO: c'est ici qu'on génère les ip:port des services SPICE QMP, TELNET, VNC
+###         C'est ici qu'on génère la configuration finale et qu'on lance la vm
 function Start_VM_From_Config() {
-    	echo "starting $2"
+    echo "starting $2"
     . $2
-
     . VMMgr_Vars
-    
     . $2
-	echo "on a lu la conf, on a donc: "
-	echo $QEMU_TEMPLATE
-	echo $FAB
-    qemu-system-x86_64 $QEMU_TEMPLATE
+#    [ "$SPICE" == "on" ] && SPICECMD=Set_Service_Listen $SPICEIP $SPICEPORT $SPICETPL $SPICEIPVER
+#    SPICEPORT=$(Set_Port_Listen $1 spice)
+#    SPICEIP=$(Set_IP_Listen $1 spice
+       
+#    [ "$TELNET" == "on" ] && TELNETCMD=Set_Service_Listen $TELNETIP $TELNETPORT $TELNETPTL
+    
+# 	echo "on a lu la conf, on a donc: "
+#	echo $QEMU_TEMPLATE
+#	echo $FAB
+#    qemu-system-x86_64 $QEMU_TEMPLATE
     # enregistrer SPICE, TELNET, QMP, VNC
 }
 
@@ -176,54 +175,49 @@ function Start_VM_From_Config() {
 #   $1: IP or Iface name
 #   $2: $IPVER
 #   $3: Iface type
-# Steps:
-#   1) is $1 an IP?
-#   2)  yes: is IP already exist? yes -> return $1; no create iface and set ip 
-#   3)  no: is existing iface? yes -> return first IP; no; create iface and set IP
+#   $4: VM Name
+#   $5: new "optional"
 function Set_Service_Listen() {
-    # Première chose: on récupère l'ip:port depuis la db.
-    # Ensuite si on a rien, on vérifie
     ipcalc -$2 $1 2>/dev/null 1>/dev/null
-    if [ $? -eq 0 ]; then
-        echo "IP valide"
+    if [ $? -eq 0 ]; then                                                   # OK valid IP
         ip -$2 -br address show | grep $1 2>/dev/null 1>/dev/null
-        if [ $? -eq 0 ]; then
+        if [ $? -eq 0 ]; then                                                   # IP exists on a netdev, returning
             echo $1
-        else
-            echo "ip inexistante"
-
         fi
-    else
-        echo "Not an IP"
-        case "$3" in
-                "tap")
-                    IFACE=$(ip -br address show type tun | grep $1 | head -1 | awk '{print $1}')
-                    if [ "$IFACE" == "" ]; then
-                        echo "not tun"
-                    else
-                        echo "yes tun $IFACE"
+    else                                                                    # not an IP, an iface Name?
+        [ "$3" == "tap" ] && TYPE="tun"
+        [ "$3" == "bridge" ] &&  TYPE="bridge"
+        
+        IFACE=$(ip -br a s type $TYPE | grep $1 | head -1 | awk '{print $1}')
+        if [ "$IFACE" != "" ]; then                                             # Found iface name
+            IPPORT=$(Db_Get_IPPORT $VMMGR_DB_PATH $VMNAME $1)
+            if [ "$IPPORT" == "" ]; then                                            # no IP found in DB
+                if [ "$5" == "new" ]; then                                              # Ok, we generate new IP
+                    ###on get network pour l'interface###
+                    Set_New_IP $4 $3 $1 $2
+                    Set_Iface_Net $IPdepuis là dessus $PORTàrécup $1
+                else                                                                    # No new IP, using first netdev IP
+                    ip -$2 -br a s | grep $1 | head -1 | awk '{ print $3}' | cut -d\/ -f1
+                fi
+            else                                                                    # IP found in DB, searching it on netdev
+                DBIP=${IPPORT%%|*}
+                FIP=""
+                for IP in $(ip -$2 -br a s | grep $1 | head -1); do
+                    IP=$(echo $IP | cut -d\/ -f1)
+                    if [ "$IP" == "$DBIP" ]; then                                       # IP in DB found in netdev
+                        FIP=$IP
+                        break;
                     fi
-                ;;
-                "bridge")
-                    IFACE=$(ip -br address show type bridge | grep $1 | head -1 | awk '{print $1}')
-                    if [ "$IFACE" == "" ]; then
-                        echo "not bridge"
-                    else
-                        echo "yes bridge: $IFACE"
-                    fi
-                ;;
-                "tap2br")
-                    echo "tap2br"
-                    IFACE=$(ip -br address show type tun | grep $1 | head -1 | awk '{print $1}')
-                    if [ "$IFACE" == "" ]; then
-                        echo "not tun"
-                    else
-                        echo "yes tun $IFACE"
-                    fi
-                ;;
-        esac
+                done
+                if [ "$FIP" == "" ]; then                                               # IP not found, setting it
+                    Set_Iface_Net ${IPPORT%%|*} ${IPPORT##*|} $2
+                fi
+                echo $IP
+            fi
+            
+        fi
     fi
-}            
+}
 
 function Is_Valid_IP() {
     NET="-4"
