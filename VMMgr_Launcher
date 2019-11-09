@@ -52,6 +52,7 @@ fi
 # Loading Libs
 . $VMMGR_DATA_PATH/VMMgr_Libs/VMMgr_Db
 . $VMMGR_DATA_PATH/VMMgr_Libs/VMMgr_Functions
+. $VMMGR_DATA_PATH/VMMgr_Libs/VMMgr_Networks
 
 
 
