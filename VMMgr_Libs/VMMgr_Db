@@ -294,5 +294,5 @@ function Db_Set_SVC() {
 #   $2: Network name
 #   $3: Last IP
 function Db_Update_Net_NextIP() {
-    echo "update NETWORKS SET LAST=$3 WHERE IFACE=$2;" | sqlite3 $1/VMMGR_.db)
+    echo "update NETWORKS SET LAST=$3 WHERE IFACE=$2;" | sqlite3 $1/VMMGR_.db
 }
