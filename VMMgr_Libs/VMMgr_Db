@@ -45,6 +45,8 @@ CREATE TABLE SPICE(
     VMiD INTEGER PRIMARY KEY,
     IP TEXT NOT NULL,
     PORT INTEGER NOT NULL,
+    IPVER TEXT NOT NULL,
+    NETWORK TEXT NOT NULL,
     TYPE TEXT NOT NULL,
     FOREIGN KEY(VMiD) REFERENCES VM(VMiD)
 );
@@ -69,7 +71,8 @@ CREATE TABLE NETWORKS(
     MINIP TEXT,
     MAXIP TEXT,
     LAST TEXT,
-    IFACE TEXT
+    IFACE TEXT,
+    BRIP TEXT
 );
 
 CREATE TABLE MAC(
@@ -240,4 +243,56 @@ function Db_Get_Network() {
 #   $6: Iface Name
 function Db_Create_Network() {
  echo "insert into NETWORKS (IP, PREFIX, MINIP, MAXIP, LAST, IFACE) values ('$2', '$3', '$4', '$5', '$4', '$6');" | sqlite3 $1/VMMGR_.db
+}
+
+# Function: Db_Set_Network_IP
+# Description: add a default IP to a network (bridge)
+#              this allow to always use this IP
+# Args:
+#   $1: Db Path (parent dir)
+#   $2: Network Name
+#   $3: IP for this bridge
+function Db_Set_Network_IP() {
+    echo "update NETWORKS values BRIP='$3' where IFACE='$2'" | | sqlite3 $1/VMMGR_.db
+}
+
+# Function: Db_Get_SVC
+# Description: Get all infomations about service
+# Args:
+#   $1: Db Path (parent dir)
+#   $2: VM name
+#   $3: service (spice, telnet, qmp)
+function Db_Get_SVC() {
+ EXISTS=$(echo "select VMiD from VM where Name='$2';" | sqlite3 $1/VMMGR_.db)
+ if [ ! "$EXISTS" == "" ]; then
+  echo "select * from ${3^^*} where VMiD='$EXISTS';" | sqlite3 $1/VMMGR_.db
+ fi
+}
+
+# Function: DB_Set_SVC
+# Description: Add service informations
+# Args:
+#   $1: Db Path (parent dir)
+#   $2: VM name
+#   $3: service (spice, telnet, qmp)
+#   $4: IP
+#   $5: PORT
+#   $6: IPVER
+#   $7: NETWORK
+#   $8: TYPE
+function Db_Set_SVC() {
+ EXISTS=$(echo "select VMiD from VM where Name='$2';" | sqlite3 $1/VMMGR_.db)
+ if [ ! "$EXISTS" == "" ]; then
+  echo "insert into ${3^^*} (VMiD, IP, PORT, IPVER, NETWORK, TYPE ) values ( '$EXISTS', '$4', '$5', '$6', '$7', '$8' );" | sqlite3 $1/VMMGR_.db
+ fi
+}
+
+# Function Db_Update_Net_NextIP
+# Description: Update Last IP used in NETWORKS table
+# Args:
+#   $1: Db Path (parent dir)
+#   $2: Network name
+#   $3: Last IP
+function Db_Update_Net_NextIP() {
+    echo "update NETWORKS SET LAST=$3 WHERE IFACE=$2;" | sqlite3 $1/VMMGR_.db)
 }

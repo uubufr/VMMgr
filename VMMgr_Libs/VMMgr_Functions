@@ -104,7 +104,7 @@ function Check_MEM() {
 #   $2: Number of tap devices
 #   $3: tapupdown file path
 # Return an array of netdev declarations
-function Set_NedDev() {
+function Set_NetDev() {
     for NETNUMBER in $(seq $(( ${#NETDEV[@]} + 1 )) $(( ${#NETDEV[@]} + $2 )) ); do
         NETDEV[$NETNUMBER]="-netdev type=tap,id=virtio-tap$NETNUMBER,script=$3/tapup-$1,downscript=$3/tapdown-$1,vhost=on -device virtio-net-pci,netdev=virtio-tap$NETNUMBER,mac=$(Set_MAC $NETNUMBER),id=drive-virtio-tap$NETNUMBER,csum=off,gso=off,guest_tso4=off,guest_tso6=off,guest_ecn=off"
     done
@@ -167,98 +167,4 @@ function Start_VM_From_Config() {
 #	echo $FAB
 #    qemu-system-x86_64 $QEMU_TEMPLATE
     # enregistrer SPICE, TELNET, QMP, VNC
-}
-
-# Function: Set_Service_Listen
-# Description: Set IP and Port for Spice
-# Args:
-#   $1: IP or Iface name
-#   $2: $IPVER
-#   $3: Iface type
-#   $4: VM Name
-#   $5: new "optional"
-function Set_Service_Listen() {
-    ipcalc -$2 $1 2>/dev/null 1>/dev/null
-    if [ $? -eq 0 ]; then                                                   # OK valid IP
-        ip -$2 -br address show | grep $1 2>/dev/null 1>/dev/null
-        if [ $? -eq 0 ]; then                                                   # IP exists on a netdev, returning
-            echo $1
-        fi
-    else                                                                    # not an IP, an iface Name?
-        [ "$3" == "tap" ] && TYPE="tun"
-        [ "$3" == "bridge" ] &&  TYPE="bridge"
-        
-        IFACE=$(ip -br a s type $TYPE | grep $1 | head -1 | awk '{print $1}')
-        if [ "$IFACE" != "" ]; then                                             # Found iface name
-            IPPORT=$(Db_Get_IPPORT $VMMGR_DB_PATH $VMNAME $1)
-            if [ "$IPPORT" == "" ]; then                                            # no IP found in DB
-                if [ "$5" == "new" ]; then                                              # Ok, we generate new IP
-                    ###on get network pour l'interface###
-                    Set_New_IP $4 $3 $1 $2
-                    Set_Iface_Net $IPdepuis là dessus $PORTàrécup $1
-                else                                                                    # No new IP, using first netdev IP
-                    ip -$2 -br a s | grep $1 | head -1 | awk '{ print $3}' | cut -d\/ -f1
-                fi
-            else                                                                    # IP found in DB, searching it on netdev
-                DBIP=${IPPORT%%|*}
-                FIP=""
-                for IP in $(ip -$2 -br a s | grep $1 | head -1); do
-                    IP=$(echo $IP | cut -d\/ -f1)
-                    if [ "$IP" == "$DBIP" ]; then                                       # IP in DB found in netdev
-                        FIP=$IP
-                        break;
-                    fi
-                done
-                if [ "$FIP" == "" ]; then                                               # IP not found, setting it
-                    Set_Iface_Net ${IPPORT%%|*} ${IPPORT##*|} $2
-                fi
-                echo $IP
-            fi
-            
-        fi
-    fi
-}
-
-function Is_Valid_IP() {
-    NET="-4"
-    [ "$IPMODE" == "ipv6" ] && NET="-6"
-    ipcalc $NET $1 2>/dev/null 1>/dev/null
-    if [ $? -eq 0 ]; then 
-        echo "0"
-    else
-        echo "1"
-    fi
-}
-
-function Is_Existing_IP() {
-    NET="-4"
-    [ "$IPMODE" == "ipv6" ] && NET="-6"
-    ip $NET -br address show | grep $1 2>/dev/null 1>/dev/null
-    if [ $? -eq 0 ]; then 
-        echo "0"
-    else
-        echo "1"
-    fi
-}
-
-function Is_Existing_Bridge() {
-    ip -br address show type bridge $1 2>/dev/null 1>/dev/null
-    if [ $? -eq 0 ]; then 
-        echo "0"
-    else
-        echo "1"
-    fi
-}
-
-# Function: Create_New_Network
-# Description: Declare New Network in DB
-# Args:
-#   $1: Iface Name
-#   $2: Network IP
-#   $3: Prefix
-#   $4: First IP available -1
-#   $5: Last IP available
-#   $6: Type (bridge or tap)
-function Create_New_Network() {
-    Db_Create_Network $VMMGR_DB_PATH $2 $3 $4 $5 $1
 }
