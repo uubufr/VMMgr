@@ -326,6 +326,11 @@ function New_Network() {
         fi
     fi
 }
+
+New_Network ndvpl-telnet "4|10.98.98.0|24" "10|100" 10.98.98.1
+
+
+
 function New_Tap() {
     sudo ip tuntap add mode tap $1
 }

@@ -44,7 +44,6 @@ SPICEIPVER=4
 SPICEIP=swvpl-main
 SPICE=new
 
-
 # Set an tap dev for Spice
 SPICE=on
 SPICETPL=$SPICESECURE
