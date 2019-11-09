@@ -36,7 +36,7 @@ sSDISKSIZE=""             # OPTIONAL: Size for optionals ISCSI Disks
 New_Network swvpl-spice "4|10.98.98.0|24" "10|100" 10.98.98.1
 SPICEIPVER=4
 SPICE=on
-SPICEIP=swvpl-spice
+SPICEIP=10.98.98.1
 SPICEPORT=new
 SPICETYPE=tun
 SPICETPL=$SPICESECURE
