@@ -253,7 +253,7 @@ function Db_Create_Network() {
 #   $2: Network Name
 #   $3: IP for this bridge
 function Db_Set_Network_IP() {
-    echo "update NETWORKS values BRIP='$3' where IFACE='$2'" | sqlite3 $1/VMMGR_.db
+    echo "update NETWORKS SET BRIP='$3' where IFACE='$2'" | sqlite3 $1/VMMGR_.db
 }
 
 # Function: Db_Get_SVC
@@ -294,5 +294,5 @@ function Db_Set_SVC() {
 #   $2: Network name
 #   $3: Last IP
 function Db_Update_Net_NextIP() {
-    echo "update NETWORKS values LAST='$3' WHERE IFACE='$2';" | sqlite3 $1/VMMGR_.db
+    echo "update NETWORKS SET LAST='$3' WHERE IFACE='$2';" | sqlite3 $1/VMMGR_.db
 }
