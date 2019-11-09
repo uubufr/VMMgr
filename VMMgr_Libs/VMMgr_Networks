@@ -409,7 +409,7 @@ function Set_Service_Listen() {
         else                                                                        # Data not found in DB
             ip -br address show type bridge $1 2>/dev/null 1>/dev/null
             if [ $? -eq 0 ]; then
-                if [ "$3" == "tun" ]; then
+                if [ "$3" == "tun" ]; then
                     IP=$(Set_New_IP $2 $DBNET $DBPFX) 
                     New_Tap "$4-$5"
                     Enslave_Tap "$4-$5" $NETWORK $BRIDGETOOL
