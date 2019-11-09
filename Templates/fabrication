@@ -50,19 +50,19 @@ SPICETPL=$SPICESECURE
 
 # Set a tap dev for telnet
 TELNET=on
-New_Network ndvpl-telnet "6|fe80::0|64" 3 FFFF
+New_Network ndvpl-telnet "6|fe80::0|64" "3|FFFF"
 TELNETIP=ndpvl-telnet
 TELNETPORT=new
 
 # Set a tap dev for qmp
 QMP=on
-New_Network ndvpl-qmp "6|fe80::3|64"
+New_Network ndvpl-qmp "6|fe80::0|64" "1FFFF|2FFFF"
 QMPIP=ndvpl-qmp new
 QMPPORT=5401
 
 # Set a tap dev for vnc
 VNC=off
-New_Network ndvpl-vnc "6|::4|64"
+New_Network ndvpl-vnc "6|::4|64" "5|100"
 VNCIP=ndvpl-vnc
 VNCPORT=new
 
