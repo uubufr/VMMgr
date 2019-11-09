@@ -256,7 +256,7 @@ function Create_Tap() {
 # $2: Bridge Name
 # $3: Bridge Tool
 function Enslave_Tap() {
-        if ( "$(ip -br a s $2 | awk '{print $2}')" == "DOWN" ]; then
+        if [ "$(ip -br a s $2 | awk '{print $2}')" == "DOWN" ]; then
             sudo ip link set dev $2 up
         fi
         case "$3" in
