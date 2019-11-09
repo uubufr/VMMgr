@@ -33,19 +33,12 @@ sSDISKSIZE=""             # OPTIONAL: Size for optionals ISCSI Disks
 
 
 ### choose Qemu machine Template:
+New_Network swvpl-spice "4|10.98.98.0|24" "10|100" 10.98.98.1
 SPICEIPVER=4
 SPICE=on
-New_Network ndvpl-spice "4|10.98.98.0|24" "10|100" 10.98.98.1
 SPICEIP=192.168.1.53
-SPICEPORT=2555
-
-#ou encore
-SPICEIPVER=4
-SPICEIP=swvpl-main
-SPICE=new
-
-# Set an tap dev for Spice
-SPICE=on
+SPICEPORT=new
+SPICETYPE=tun
 SPICETPL=$SPICESECURE
 
 # Set a tap dev for telnet
@@ -57,7 +50,7 @@ TELNETPORT=new
 # Set a tap dev for qmp
 QMP=on
 New_Network ndvpl-qmp "6|fe80::0|64" "1FFFF|2FFFF"
-QMPIP=ndvpl-qmp new
+QMPIP=ndvpl-qmp
 QMPPORT=5401
 
 # Set a tap dev for vnc
