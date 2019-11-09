@@ -43,27 +43,25 @@ SPICEIP=swvpl-main
 SPICE=new
 
 
-NETWORK=Set_New_Network $name $type $ip/$prefix enslave $br
-
 # Set an tap dev for Spice
 SPICE=on
 SPICETPL=$SPICESECURE
 
 # Set a tap dev for telnet
 TELNET=on
-New_Network ndvpl-telnet 6|fe80::2|64
+New_Network ndvpl-telnet "6|fe80::2|64"
 TELNETIP=ndpvl-telnet
 TELNETPORT=new
 
 # Set a tap dev for qmp
 QMP=on
-New_Network ndvpl-qmp 6|fe80::3|64
+New_Network ndvpl-qmp "6|fe80::3|64"
 QMPIP=ndvpl-qmp new
 QMPPORT=5401
 
 # Set a tap dev for vnc
 VNC=off
-New_Network ndvpl-vnc 6|::4|64
+New_Network ndvpl-vnc "6|::4|64"
 VNCIP=ndvpl-vnc
 VNCPORT=new
 
