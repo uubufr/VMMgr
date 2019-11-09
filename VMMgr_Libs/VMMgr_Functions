@@ -156,6 +156,9 @@ function Start_VM_From_Config() {
     . $2
     . VMMgr_Vars
     . $2
+    if [ "$SPICE" == "on" ]; then
+        Set_Service_Listen $SPICEIP $SPICEIPVER $SPICETYPE $VMNAME $SPICEPORT
+    fi
 #    [ "$SPICE" == "on" ] && SPICECMD=Set_Service_Listen $SPICEIP $SPICEPORT $SPICETPL $SPICEIPVER
 #    SPICEPORT=$(Set_Port_Listen $1 spice)
 #    SPICEIP=$(Set_IP_Listen $1 spice
