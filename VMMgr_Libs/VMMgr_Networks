@@ -124,12 +124,11 @@ function Set_MAC() {
 # Return: Port number
 function Set_New_Port() {
     EXISTS=$(Db_Get_IPPORT $VMMGR_DB_PATH $1 $2)
-    if ["$EXISTS" == "" ]; then
+    if [ "$EXISTS" == "" ]; then
         for PORT in $(seq $3 $4); do
-            EXISTS=$(Db_Search_Port $VMMGR_DB_PATH $2 $PORT)
+            EXISTS=$(Db_Search_PORT $VMMGR_DB_PATH $2 $PORT)
             if [ "$EXISTS" == "" ]; then
                 EXISTS="undefined|"$(( PORT + 1 ))
-                if [ $(( PORT + 1 )) -lt $4 ]; then EXISTS=""; fi
                 break;
             fi
         done
@@ -162,7 +161,7 @@ function Set_Port_Listen() {
             PMAX=$VNCMAXPORT
         ;;
     esac
-    Set_New_Port $VMMGR_DB_PATH $1 $2 $PMIN $PMAX
+    Set_New_Port $1 $2 $PMIN $PMAX
 }
 
 # Function: Get_Next_IPv4
@@ -235,6 +234,9 @@ function Set_New_IP() {
             [ "${4^^}" == "IPV6" ] && EXISTS=$(Get_Next_IPv6 $EXISTS)
         fi
     fi
+    if [ "$EXISTS" ]; then
+        Db_Update_Net_NextIP $VMMGR_DB_PATH $3 ${EXISTS%|*}
+    fi
     echo $EXISTS | cut -d\|  -f1
 }
 
@@ -254,6 +256,9 @@ function Create_Tap() {
 # $2: Bridge Name
 # $3: Bridge Tool
 function Enslave_Tap() {
+        if ( "$(ip -br a s $2 | awk '{print $2}')" == "DOWN" ]; then
+            sudo ip link set dev $2 up
+        fi
         case "$3" in
             "brctl")
                 sudo brctl addif $2 $1
@@ -275,48 +280,155 @@ function Enslave_Tap() {
 #   $3: Iface
 function Set_Iface_Net() {
     sudo ip address add $1/$2 dev $3
+    sudo ip link set dev $3 up
+}
+
+# Function: Create_New_Network
+# Description: Declare New Network in DB
+# Args:
+#   $1: Iface Name
+#   $2: Network IP
+#   $3: Prefix
+#   $4: First IP available -1
+#   $5: Last IP available
+#   $6: Type (bridge or tap)
+function Create_New_Network() {
+    Db_Create_Network $VMMGR_DB_PATH $2 $3 $4 $5 $1
 }
 
 # Function: New_Network
 # Description: create bridge or tap device
 # Args:
 #   $1: Device Name
-#   $2: Device type: tap or bridge
-#   $3: <ipversion>|<IP>|<prefix>
-#   $4: (optional) bridge name for tap device only, tap will added to this bridge
+#   $2: <ipversion>|<IP>|<prefix>
+#   $3: <MINIP>|<MAXIP>
+#   $4: (optional) if $3 is set only: default IP for this bridge
 function New_Network() {
-    IFS=\| read -r IPVER IPNETWORK IPPREFIX <<< $(echo "$3")
-    if [ "$2" == "bridge" ]; then
-        ip -br address show type bridge $1 2>/dev/null 1>/dev/null
-        if [ $? -eq 0 ]; then
-            if [ "$3" != "" ]; then
-                ip -br address show $1 | grep $IPNETWORK 2>/dev/null 1>/dev/null
-                if [ $? -eq 1 ]; then
-                    Set_Iface_Net $IPNETWORK $IPPREFIX $1
-                fi
-            fi
-        else
-            Create_Bridge $1 $BRIDGETOOL
-            if [  "$3" != "" ]; then
-                [ "$IPVER" == "4" ] && 
-                Set_Iface_Net $IPNETWORK $IPPREFIX $1
-            fi
+    IFS=\| read -r IPVER IPNETWORK IPPREFIX <<< $(echo "$2")
+    DBNET=$(Db_Get_Network $VMMGR_DB_PATH $1)
+    if [ "$DBNET" == "" ]; then
+        Db_Create_Network $VMMGR_DB_PATH $IPNETWORK $IPPREFIX ${3%|*} ${3#*|} $1
+        if [ "$4" != "" ]; then
+            Db_Set_Network_IP $VMMGR_DB_PATH $1 $4
         fi
     else
-        if [ "$2" == "tap" ]; then
-            ip -br address show type tun $1 2>/dev/null 1>/dev/null
-            if [ $? -ne 0 ]; then
-                sudo ip tuntap add mode tap $1
-                sudo ip link set dev $1 up
+        IFS=\| read -r DBIP DBPFX DBMIN $DBMAX $DBLAST $DBIFACE <<< $(echo $DBNET)
+        
+    fi
+    ip -br address show type bridge $1 2>/dev/null 1>/dev/null
+    if [ $? -ne 0 ]; then
+        Create_Bridge $1 $BRIDGETOOL
+    fi
+    if [ "$4" != "" ]; then
+        ip -br address show type bridge $1 | grep $4 2>/dev/null 1>/dev/null
+        if [ $? -ne 0 ]; then
+            Set_Iface_Net $4 $DBPFX $1
+        fi
+    fi
+}
+function New_Tap() {
+    sudo ip tuntap add mode tap $1
+}
+
+# Function: Set_Service_Listen
+# Description: Set IP and Port for Spice
+# Args:
+#   $1: IP or Iface name
+#   $2: $IPVER
+#   $3: Iface type (tun or bridge)
+#   $4: VM Name
+#   $5: Service Name ( spice, telnet, qmp, vnc)
+#   $6: PORT
+### TODO:
+#           Revoir les fonciton Set_Iface_Net
+#           Revoir Enslave_Tap, on utilise pas le bon nom
+# on vérifie que tun est bien enslave?:
+##      ip a s "$1-$2" | grep $IP | head -1 | grep master | grep $NETWORK
+function Set_Service_Listen() {
+    ipcalc -$2 $1 2>/dev/null 1>/dev/null
+    if [ $? -eq 0 ]; then                                                           # OK valid IP
+        ip -$2 -br address show | grep $1 2>/dev/null 1>/dev/null
+        if [ $? -eq 0 ]; then                                                       # IP exists on a netdev, returning
+            if [ "$6" == "new" ]; then
+                PORT=Set_Port_Listen $4 $3                                          # Generate new port
+            else
+                PORT=$6
             fi
-            ip -br address show $1 | grep $IPNETWORK 2>/dev/null 1>/dev/null
-            if [ $? -ne 0 ]; then
-                Set_Iface_Net $IPNETWORK $IPPREFIX $1
+            echo $1 $6
+        fi
+    else                                                                            # Not an IP, assuming iface name and using DB
+        DBSVC=$(Db_Get_SVC $VMMGR_DB_PATH $1 $2)
+        IFS=\| read -r $VMID $IP $IPPORT $IPVER $NETWORK $TYPE <<< $(echo "$DBSVC")
+        DBNET=$(Db_Get_Network $VMMGR_DB_PATH $1)
+        IFS=\| read -r DBIP DBPFX DBMIN $DBMAX $DBLAST $DBIFACE <<< $(echo $DBNET)  # We get all information from DB
+        if [ "$DBSVC" != "" ]; then                                                 # Data found in DB
+            if [ "$3" == "bridge" ]; then                                           # We use bridge
+                if [ "$TYPE" == "$3" ]; then                                        # Ok DB speak about bridge too
+                    ip -$2 -br a s type bridge $NETWORK | grep $IP 2>/dev/null 1>/dev/null
+                    if [ $? -eq 0 ]; then                                           # Bridge ok with IP already set, returning
+                        echo "$IP|$IPPORT"
+                    else                                                            # Bridge has not IP, setting it, returning
+                        Set_Iface_Net $IP $DBPFX $NETWORK
+                    fi
+                elif [ "$TYPE" == "tun" ]; then                                     # DB speak about tun
+                    ip -br a s type tun $1 2>/dev/null 1>/dev/null
+                    if [ $? -eq 0 ]; then                                           # Tun exists
+                        ip -$2 -br a s type tun | grep $IP 2>/dev/null 1>/dev/null
+                        if [ $? -eq 0 ]; then                                       # tun exists with IP, returning
+                            echo "$IP|$IPPORT"
+                        else                                                        # tu exists but missing IP, setting, returning
+                            Set_Iface_Net $IP $DBPFX $1
+                            Enslave_Tap "$4-$5" $NETWORK $BRIDGETOOL
+                            echo "$IP|$IPPORT"
+                        fi
+                    else                                                            # Tun not exists, creating, returning
+                        New_Tap "$4-$5"
+                        Set_Iface_Net $IP $DBPFX "$4-$5"
+                        Enslave_Tap "$4-$5" $NETWORK $BRIDGETOOL
+                        echo "$IP|$IPPORT"
+                    fi
+                fi
+            elif [ "$3" == "tun" ]; then                                            # We use tun
+                if [ "$TYPE" == "   $3" ]; then                                     # Db speak about tun, ok
+                    ip -br a s type tun $1 2>/dev/null 1>/dev/null
+                    if [ $? -eq 0 ]; then                                           # Tun exists
+                        TUN=$1
+                        ip -$2 -br a s type tun $1 | grep $IP 2>/dev/null 1>/dev/null
+                        if [ $? -ne 0 ]; then                                       # Tun exists but missing IP, setting, returning
+                            Set_Iface_Net $IP $DBPFX $1
+                        fi
+                    else                                                            # Tun not exists, creating, returning
+                        New_Tap "$4-$5"
+                        TUN="$4-$5"
+                        Set_Iface_Net $IP $DBPFX "$4-$5"
+                    fi
+                    Enslave_Tap $TUN $NETWORK $BRIDGETOOL
+                    echo "$IP|$IPPORT"
+                fi
             fi
-            if [ "$4" != "" ]; then
-                Enslave_Tap $1 $4 $BRIDGETOOL
+        else                                                                        # Data not found in DB
+            ip -br address show type bridge $1 2>/dev/null 1>/dev/null
+            if [ $? -eq 0 ]; then
+                if [ "$3" == "tun" ]; then
+                    IP=$(Set_New_IP $2 $DBNET $DBPFX) 
+                    New_Tap "$4-$5"
+                    Enslave_Tap "$4-$5" $NETWORK $BRIDGETOOL
+                elif [ "$3" == "bridge" ]; then
+                    if [ "$BRIP" != "" ]; then                                      # if bridge has default IP, using it
+                        IP=$BRIP
+                    else
+                        IP=$(Set_New_IP $2 $DBNET $DBPFX)                           # if not, generate new ip
+                        Set_Iface_Net $NETWORK $DBPFX $1
+                    fi
+                    if [ "$6" == "new" ]; then
+                        PORT=Set_Port_Listen $4 $3                                  # Generate new port
+                    else
+                        PORT=$6
+                    fi
+                fi
+                Db_Set_SVC $VMMGR_DB_PATH $4 $5 $IP $PORT $2 $NETWORK $3            # Adding to DB
+                echo "$IP|$PORT"
             fi
         fi
     fi
 }
-
