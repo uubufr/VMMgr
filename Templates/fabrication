@@ -34,10 +34,12 @@ sSDISKSIZE=""             # OPTIONAL: Size for optionals ISCSI Disks
 
 ### choose Qemu machine Template:
 SPICEIPVER=4
+SPICE=on
+New_Network ndvpl-telnet "4|10.98.98.0|24" 10 100 10.98.98.1
 SPICEIP=192.168.1.53
 SPICEPORT=2555
 
-ou encore
+#ou encore
 SPICEIPVER=4
 SPICEIP=swvpl-main
 SPICE=new
@@ -49,7 +51,7 @@ SPICETPL=$SPICESECURE
 
 # Set a tap dev for telnet
 TELNET=on
-New_Network ndvpl-telnet "6|fe80::2|64"
+New_Network ndvpl-telnet "6|fe80::0|64" 3 FFFF
 TELNETIP=ndpvl-telnet
 TELNETPORT=new
 
@@ -65,8 +67,8 @@ New_Network ndvpl-vnc "6|::4|64"
 VNCIP=ndvpl-vnc
 VNCPORT=new
 
-Set_Virtio_Net swvpl-main 2
-Set_Virtio_Net swvpl-admin 1
+#Set_Virtio_Net swvpl-main 2
+#Set_Virtio_Net swvpl-admin 1
 
 QEMU_TEMPLATE=$FAB
 
