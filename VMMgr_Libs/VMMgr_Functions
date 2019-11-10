@@ -157,7 +157,11 @@ function Start_VM_From_Config() {
     . VMMgr_Vars
     . $2
     if [ "$SPICE" == "on" ]; then
-        Set_Service_Listen $SPICEIP $SPICEIPVER $SPICETYPE $NAME spice $SPICEPORT
+        . $2
+        . $VMMGR_CONFIG_PATH/DATA/VMMgr_Spice
+        IPPORT=$(Set_Service_Listen $SPICEIP $SPICEIPVER $SPICETYPE $NAME spice $SPICEPORT)
+        SPICEIP=${IPPORT%|*}; SPICEPORT=${IPPORT#*|}
+        echo ${!SPICETPL}
     fi
 #    [ "$SPICE" == "on" ] && SPICECMD=Set_Service_Listen $SPICEIP $SPICEPORT $SPICETPL $SPICEIPVER
 #    SPICEPORT=$(Set_Port_Listen $1 spice)
