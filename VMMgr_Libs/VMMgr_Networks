@@ -218,11 +218,11 @@ function Get_Next_IPv6() {
 #   $4: IPVER
 function Set_New_IP() {
     EXISTS=$(Db_Get_IPPORT $VMMGR_DB_PATH $1 $2)
-    if ["$EXISTS" == "" ]; then
+    if [ "$EXISTS" == "" ]; then
         EXISTS=$(Db_Get_Network $VMMGR_DB_PATH $3)
         if [ "$EXISTS" != "" ]; then
-            [ "${4^^}" == "IPV4" ] && EXISTS=$(Get_Next_IPv4 "$EXISTS")
-            [ "${4^^}" == "IPV6" ] && EXISTS=$(Get_Next_IPv6 "$EXISTS")
+            [ "${4^^}" == "4" ] && EXISTS=$(Get_Next_IPv4 "$EXISTS")
+            [ "${4^^}" == "6" ] && EXISTS=$(Get_Next_IPv6 "$EXISTS")
         fi
     fi
     if [ "$EXISTS" ]; then
@@ -259,6 +259,7 @@ function Enslave_Tap() {
             ;;
             "nmcli")
                 sudo nmcli con add type bridge-slave ifname $1 master $2
+                sudo brctl addif $2 $1
             ;;
         esac
 }
@@ -350,7 +351,9 @@ function Set_Service_Listen() {
         fi
     else                                                                            # Not an IP, assuming iface name and using DB
         DBSVC=$(Db_Get_SVC $VMMGR_DB_PATH $1 $2)
-        IFS=\| read -r $VMID $IP $IPPORT $IPVER $NETWORK $TYPE <<< $(echo "$DBSVC")
+        if [ "$DBSVC" != "" ]; then
+            IFS=\| read -r $VMID $IP $IPPORT $IPVER $NETWORK $TYPE <<< $(echo "$DBSVC")
+        fi
         DBNET=$(Db_Get_Network $VMMGR_DB_PATH $1)
         IFS=\| read -r DBIP DBPFX DBMIN $DBMAX $DBLAST $DBIFACE <<< $(echo $DBNET)  # We get all information from DB
         if [ "$DBSVC" != "" ]; then                                                 # Data found in DB
@@ -402,18 +405,19 @@ function Set_Service_Listen() {
             ip -br address show type bridge $1 2>/dev/null 1>/dev/null
             if [ $? -eq 0 ]; then
                 if [ "$3" == "tun" ]; then
-                    IP=$(Set_New_IP $2 $DBNET $DBPFX) 
+                    IP=$(Set_New_IP $4 $5 $1 $2) 
                     New_Tap "$4-$5"
-                    Enslave_Tap "$4-$5" $NETWORK $BRIDGETOOL
+                    Enslave_Tap "$4-$5" $1 $BRIDGETOOL
+                    Set_Iface_Net $IP $DBPFX "$4-$5"
                 elif [ "$3" == "bridge" ]; then
                     if [ "$BRIP" != "" ]; then                                      # if bridge has default IP, using it
                         IP=$BRIP
                     else
-                        IP=$(Set_New_IP $2 $DBNET $DBPFX)                           # if not, generate new ip
-                        Set_Iface_Net $NETWORK $DBPFX $1
+                        IP=$(Set_New_IP $4 $5 $1 $2)                           # if not, generate new ip
+                        Set_Iface_Net $IP $DBPFX $1
                     fi
                     if [ "$6" == "new" ]; then
-                        PORT=Set_Port_Listen $4 $5                                  # Generate new port
+                        PORT=$(Set_Port_Listen $4 $5)                                  # Generate new port
                     else
                         PORT=$6
                     fi
