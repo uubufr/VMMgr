@@ -33,7 +33,7 @@ sSDISKSIZE=""             # OPTIONAL: Size for optionals ISCSI Disks
 
 
 ### choose Qemu machine Template:
-New_Network swvpl-spice "4|10.98.98.0|24" "10|100" 10.98.98.1
+New_Network swvpl-spice "4|10.98.98.0|24" "10.98.98.10|10.98.98.100" 10.98.98.1
 SPICEIPVER=4
 SPICE=on
 SPICEIP=10.98.98.1

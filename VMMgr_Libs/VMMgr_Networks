@@ -169,29 +169,20 @@ function Set_Port_Listen() {
 # Args:
 #   $1: Network
 # Steps:
-#   1) extract Network values
-#   2) get IP, convert in Hex value for operations
-#   3) Calculate next IP
-#   4) Check if we are not out of pool
+#   1) Get Last used IP, add 1
+#   2) Get Max IP
+#   3) Ensure Next IP is not after Max IP
 function Get_Next_IPv4() {
-    IFS=\| read -r IPNETWORK IPPREFIX MIN MAX LAST BR <<< $(echo "$1")
-
-    IFS=. read -r i1 i2 i3 i4 <<< $(ipcalc --network $IPNETWORK --prefix $IPPREFIX --info | grep Network | awk '{print $2}' | cut -d\/ -f 1)
-    printf -v Network '%02x' $i1 $i2 $i3 $i4
-    
-    printf -v LAST '%02x' $LAST
-    FirstIP=$(echo "obase=16;ibase=16; ${Network^^} + ${LAST^^}" | bc)
-    NextIP=$(echo "obase=16;ibase=16; ${FirstIP^^} + 1" | bc)
+    IFS=\| read -r IPNETWORK IPPREFIX MIN MAX LAST BR BRIP <<< $(echo "$1")
+    IFS=. read -r i1 i2 i3 i4 <<< $(echo $LAST)
+    printf -v LastIP '%02x' $i1 $i2 $i3 $i4
+    NextIP=$(echo "obase=16;ibase=16; ${LastIP^^} + 1" | bc)
     printf -v NextIP '%08x' 0x$NextIP
-    NextIP=${NextIP^^}
     
-    printf -v MAX '%02x' $MAX
-    MaxIP=$(echo "obase=16;ibase=16;${Network^^} + ${MAX^^}" | bc)
-    printf -v MaxIP '%08x' 0x$MaxIP
-    MaxIP=${MaxIP^^}
-    
- 
-    if [ $(echo "obase=10;ibase=16; ${NextIP^^}" | bc) -le $(echo "obase=10;ibase=16; ${MaxIP^^}" | bc) ]; then
+    IFS=. read -r i1 i2 i3 i4 <<< $(echo $MAX)
+    printf -v MaxIP '%02x' $i1 $i2 $i3 $i4
+    MaxIP=${MaxIP^^}; NextIP=${NextIP^^}
+    if [ $(echo "obase=10;ibase=16; $NextIP" | bc) -le $(echo "obase=10;ibase=16; $MaxIP" | bc) ]; then
         echo $(echo "ibase=16;obase=A;${NextIP:0:2}" | bc).$(echo "ibase=16;obase=A;${NextIP:2:2}" | bc).$(echo "ibase=16;obase=A;${NextIP:4:2}" | bc).$(echo "ibase=16;obase=A;${NextIP:6:2}" | bc)
     fi
 }
@@ -207,13 +198,13 @@ function Get_Next_IPv4() {
 #   4) Check if we are not out of pool (I know, useless...)
 function Get_Next_IPv6() {
 
-    IFS=\| read -r IPNETWORK IPPREFIX MIN MAX LAST BR <<< $(echo "$1")
+    IFS=\| read -r IPNETWORK IPPREFIX MIN MAX LAST BR BRIP <<< $(echo "$1")
+    LastIP=$(ipcalc -6 $LAST --info | grep "Full Address" | awk '{print $3}' | cut -d/  -f1 | tr -d : )
     
-    Network=$(ipcalc -6 --network $IPNETWORK/$IPPREFIX  --info | grep "Full Network" | awk '{print $3}' | cut -d/  -f1 | tr -d : )
-    FirstIP=$(echo "obase=16;ibase=16; ${Network^^} + ${LAST^^}" | bc)
-    NextIP=$(echo "obase=16;ibase=16; ${FirstIP^^} + 1" | bc)
-
-    MaxIP=$(echo "obase=16;ibase=16;${Network^^} + ${MAX^^}" | bc)
+    NextIP=$(echo "obase=16;ibase=16; ${LastIP^^} + 1" | bc)
+    
+    MaxIP=$(ipcalc -6 $MAX --info | grep "Full Address" | awk '{print $3}' | cut -d/  -f1 | tr -d : )
+    MaxIP=${MaxIP^^}; NextIP=${NextIP^^}
     if [ "$(echo "obase=16;ibase=16; ${MaxIP^^} > ${NextIP^^}" | bc)" == "1" ]; then
         echo ${NextIP:0:4}:${NextIP:4:4}:${NextIP:8:4}:${NextIP:12:4}:${NextIP:16:4}:${NextIP:20:4}:${NextIP:24:4}:${NextIP:28:4}
     fi
@@ -230,8 +221,8 @@ function Set_New_IP() {
     if ["$EXISTS" == "" ]; then
         EXISTS=$(Db_Get_Network $VMMGR_DB_PATH $3)
         if [ "$EXISTS" != "" ]; then
-            [ "${4^^}" == "IPV4" ] && EXISTS=$(Get_Next_IPv4 $EXISTS)
-            [ "${4^^}" == "IPV6" ] && EXISTS=$(Get_Next_IPv6 $EXISTS)
+            [ "${4^^}" == "IPV4" ] && EXISTS=$(Get_Next_IPv4 "$EXISTS")
+            [ "${4^^}" == "IPV6" ] && EXISTS=$(Get_Next_IPv6 "$EXISTS")
         fi
     fi
     if [ "$EXISTS" ]; then
