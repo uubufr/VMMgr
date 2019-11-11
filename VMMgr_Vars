@@ -30,7 +30,7 @@
 COMMON="-daemonize -display none -no-user-config -nodefaults -msg timestamp=on"
 CONFIG="-writeconfig $VMMGR_CONFIG_PATH/QEMU_CONFIGS/$NAME"
 MACHINE="-machine q35,accel=kvm"
-CPU64="cpu qemu64"
+CPU64="-cpu qemu64"
 CPUKVM="-cpu host,-hypervisor,+vmx,+x2apic,+kvm_pv_eoi,+kvm_pv_unhalt,+kvm_nopiodelay"
 
 GLOBAL="-global PIIX4_PM.disable_s3=1 -global PIIX4_PM.disable_s4=1"
@@ -57,47 +57,9 @@ RNG="-object rng-random,id=rng0,filename=/dev/random -device virtio-rng-pci,rng=
 UNIXCLOCK="-realtime mlock=off -rtc base=utc,clock=vm,driftfix=slew -global kvm-pit.lost_tick_policy=discard"
 WINDOWSCLOCK="-realtime mlock=off -rtc base=utc,clock=vm,driftfix=slew -global kvm-pit.lost_tick_policy=discard"
 SOUND="-soundhw hda"
-UUID=$(cat /proc/sys/kernel/random/uuid)
-NODISPLAY="display none"
-DISPLAYEGL="display egl-headless"
-
-
-
-### SPICE ###
-SPICEAGENT="-device virtio-serial -chardev spicevmc,id=vdagent,debug=0,name=vdagent -device virtserialport,chardev=vdagent,name=com.redhat.spice.0"
-SPICEUSBREDIR="-device ich9-usb-ehci1,id=usb -device ich9-usb-uhci1,masterbus=usb.0,firstport=0,bus=pci.0,multifunction=on,addr=0x6 -device ich9-usb-uhci2,masterbus=usb.0,firstport=2,bus=pci.0,addr=0x6.0x1 -device ich9-usb-uhci3,masterbus=usb.0,firstport=4,bus=pci.0,addr=0x6.0x2 -device virtio-serial-pci,id=virtio-serial0,bus=pci.0,addr=0x7 -chardev spicevmc,id=charchannel0,name=vdagent -device virtserialport,bus=virtio-serial0.0,nr=1,chardev=charchannel0,id=channel0,name=com.redhat.spice.0 -chardev spicevmc,id=charredir0,name=usbredir -device usb-redir,chardev=charredir0,id=redir0 -chardev spicevmc,id=charredir1,name=usbredir -device usb-redir,chardev=charredir1,id=redir1 -chardev spicevmc,id=charredir2,name=usbredir -device usb-redir,chardev=charredir2,id=redir2 -chardev spicevmc,id=charredir3,name=usbredir -device usb-redir,chardev=charredir3,id=redir3"
-SPICESTREAM="-device virtserialport,bus=virtio-serial0.0,nr=1,chardev=charchannel1,id=channel1,name=org.spice-space.stream.0 -chardev spiceport,name=org.spice-space.stream.0,id=charchannel1"
-SPICECAC="-device usb-ccid -chardev spicevmc,name=smartcard,id=ccid -device ccid-card-passthru,chardev=ccid"
-SPICESHARE="-device virtserialport,bus=virtio-serial0.0,nr=3,chardev=charchannel2,id=channel2,name=org.spice-space.webdav.0 -chardev spiceport,name=org.spice-space.webdav.0,id=charchannel2"
-SPICEVIRGL="-device virtio-vga,virgl=on -spice gl=on,unix,addr=/run/user/$(id -u)/spice.sock"
-SPICELISTEN="addr=$SPICEIP"
-SPICEPORT="port=$SPICEPORT"
-SPICESPORT="tls-port=$SPICEPORT,tls-ciphers=tls1.2"
-SPICEMOUSE="agent-mouse=on"
-SPICEDTICKET="disable-ticketing"
-SPICETICKET="password=$SPICEPWD"
-SPICECERTS="x509-dir=/etc/pki/VM/$name/,x509-key-password=,x509-cert-file=,x509-cacert-file=,509-dh-key-file="
-SPICECHANDEFAULT="$SPICEMODE-channel=default"
-SPICECHANMAIN="$SPICEMODE-channel=main"
-SPICECHANDISPLAY="$SPICEMODE-channel=display"
-SPICECHANINPUT="$SPICEMODE-channel=inputs"
-SPICECHANCURSOR="$SPICEMODE-channel=cursor"
-SPICECHANPLAYBACK="$SPICEMODE-channel=playback"
-SPICECHANRECORD="$SPICEMODE-channel=record"
-SPICECHANUSB="$SPICEMODE-channel=usbredir"
-SPICECHANS="$SPICECHANDEFAULT,$SPICECHANMAIN,$SPICECHANDISPLAY,$SPICECHANINPUT,$SPICECHANCURSOR,$SPICECHANPLAYBACK,$SPICECHANPLAYBACK,$SPICECHANRECORD,$SPICECHANUSB"
-SPICECOMPRESSION="image-compression=lz,jpeg-wan-compression=always,zlib-glz-wan-compression=always"
-SPICEPLAYBACKCOMP="playback-compression=on"
-SPICESTREAMVID="streaming-video=all"
-SPICEMIGRATION="seamless-migration=on"
-SPICEGL="gl=on,rendernode="
-SPICESASL="sasl"
-SPICETRANSPORT="ipv6"
-
-### Templates for spice ###
-SPICE="-spice $SPICELISTEN,$SPICEPORT,$SPICETRANSPORT,$SPICEMOUSE,$SPICEDTICKET,$SPICECHANS,$SPICECOMPRESSION,$SPICEPLAYBACKCOMP,$SPICESTREAMVID,$SPICEMIGRATION $SPICE$SPICEAGENT $SPICEUSBREDIR $SPICESTREAM $SPICESHARE"
-SPICESECURE="spice $SPICELISTEN,$SPICESPORT,$SPICETRANSPORT,$SPICESASL,$SPICECERTS,$SPICEMOUSE,$SPICEDTICKET,$SPICECHANS,$SPICECOMPRESSION,$SPICEPLAYBACKCOMP,$SPICESTREAMVID,$SPICEMIGRATION $SPICE$SPICEAGENT $SPICEUSBREDIR $SPICESTREAM $SPICESHARE $SPICECAC"
-SPICEGL="-spice $SPICELISTEN,$SPICEPORT,$SPICETRANSPORT,$SPICEMOUSE,$SPICEGL,$SPICETICKET,$SPICECHANS,$SPICECOMPRESSION,$SPICEPLAYBACKCOMP,$SPICESTREAMVID,$SPICEMIGRATION $SPICE$SPICEAGENT $SPICEUSBREDIR $SPICESTREAM $SPICESHARE $SPICEVIRGL"
+UUID="-uuid "$(cat /proc/sys/kernel/random/uuid)
+NODISPLAY="-display none"
+DISPLAYEGL="-display egl-headless"
 
 ### VNC ###
 
@@ -105,7 +67,7 @@ SPICEGL="-spice $SPICELISTEN,$SPICEPORT,$SPICETRANSPORT,$SPICEMOUSE,$SPICEGL,$SP
 ### IPMI ###
 IPMIDEV="-device ipmi-bmc-sim,id=bmc0 -chardev socket,id=ipmi0,host=$IPMIHOST,port=$IPMIPORT,reconnect=10 -device ipmi-bmc-extern,id=bmc0,chardev=ipmi0 -device isa-ipmi-kcs,bmc=bmc0,irq=5 -device isa-ipmi-bt,bmc=bmc0,irq0"
 
-
+TELNET="-monitor telnet:$TELNETIP:$TELNETPORT,server,nowait"
 
 LXBASE="$COMMON $MACHINE $CPU $BIOS"
-FAB="$COMMON $MACHINE $CPUKVM $CONFIG $BOOT $BIOS $USB $MOUSE $KEYBOARD $IDEDVD $QXL $WATCHDOG $BALLOON $RNG $UNIXCLOCK $SOUND $UUID $NODISPLAY $SPICE"
+FAB="$COMMON $MACHINE $CPUKVM $CONFIG $BOOT $BIOS $PCI $USB $MOUSE $KEYBOARD $IDEDVD $QXL $WATCHDOG $BALLOON $RNG $UNIXCLOCK $SOUND $UUID $NODISPLAY"

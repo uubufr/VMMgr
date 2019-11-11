@@ -153,26 +153,23 @@ function Custom_VM_Config() {
 ###         C'est ici qu'on génère la configuration finale et qu'on lance la vm
 function Start_VM_From_Config() {
     echo "starting $2"
-    . $2
-    . VMMgr_Vars
+    if [ -r /usr/local/etc/VMMgr_.conf ]; then
+        . /usr/local/etc/VMMgr_.conf
+    elif [ -r $(dirname $0)/VMMgr_.conf ]; then
+        . $(dirname $0)/VMMgr_.conf
+    else
+        echo "No config VMMgr_.conf found, abording..."
+        return
+    fi
+    . $VMMGR_CONFIG_PATH/DATA/VMMgr_Spice
     . $2
     Get_Bridge_Tool
-    if [ "$SPICE" == "on" ]; then
-        . $2
-        . $VMMGR_CONFIG_PATH/DATA/VMMgr_Spice
+     if [ "$SPICE" == "on" ]; then
         IPPORT=$(Set_Service_Listen $SPICEIP $SPICEIPVER $SPICETYPE $NAME spice $SPICEPORT)
         SPICEIP=${IPPORT%|*}; SPICEPORT=${IPPORT#*|}
-        echo ${!SPICETPL}
+        . $VMMGR_CONFIG_PATH/DATA/VMMgr_Spice
     fi
-#    [ "$SPICE" == "on" ] && SPICECMD=Set_Service_Listen $SPICEIP $SPICEPORT $SPICETPL $SPICEIPVER
-#    SPICEPORT=$(Set_Port_Listen $1 spice)
-#    SPICEIP=$(Set_IP_Listen $1 spice
-       
-#    [ "$TELNET" == "on" ] && TELNETCMD=Set_Service_Listen $TELNETIP $TELNETPORT $TELNETPTL
-    
-# 	echo "on a lu la conf, on a donc: "
-#	echo $QEMU_TEMPLATE
-#	echo $FAB
-#    qemu-system-x86_64 $QEMU_TEMPLATE
-    # enregistrer SPICE, TELNET, QMP, VNC
+    . VMMgr_Vars
+    echo "qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL}"
+    qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL}
 }

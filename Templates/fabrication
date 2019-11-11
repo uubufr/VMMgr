@@ -33,41 +33,14 @@ sSDISKSIZE=""             # OPTIONAL: Size for optionals ISCSI Disks
 
 
 ### choose Qemu machine Template:
-New_Network swvpl-spice "4|10.98.98.0|24" "10.98.98.10|10.98.98.100" 10.98.98.1
-SPICEIPVER=4
+New_Network swvpl-spice "6|2a01:e0a:278:9831::|64" "2a01:e0a:278:9831::10|2a01:e0a:278:9831::FFFF" 2a01:e0a:278:9831::1
 SPICE=on
-SPICEIP=10.98.98.1
-SPICEPORT=new
-SPICETYPE=tun
-SPICETPL=$SPICESECURE
-
-# Set a tap dev for telnet
-#TELNET=on
-#New_Network ndvpl-telnet "6|fe80::0|64" "3|FFFF"
-#TELNETIP=ndpvl-telnet
-#TELNETPORT=new
-
-# Set a tap dev for qmp
-#QMP=on
-#New_Network ndvpl-qmp "6|fe80::0|64" "1FFFF|2FFFF"
-#QMPIP=ndvpl-qmp
-#QMPPORT=5401
-
-# Set a tap dev for vnc
-#VNC=off
-#New_Network ndvpl-vnc "6|::4|64" "5|100"
-#VNCIP=ndvpl-vnc
-#VNCPORT=new
-
-#Set_Virtio_Net swvpl-main 2
-#Set_Virtio_Net swvpl-admin 1
+SPICEIP=swvpl-spice
+SPICETYPE=bridge
+SPICETPL=SPICESECURE
 
 QEMU_TEMPLATE=$FAB
 
 ###env for spice:
 EMU_AUDIO_DRV=spice
 SPICE_DEBUG_ALLOW_MC=0
-
-
-#set_virtio_disk 1 50G 4G 1
-#set_virtio_net swvpl-main 1
