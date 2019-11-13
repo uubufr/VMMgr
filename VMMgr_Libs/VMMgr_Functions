@@ -112,7 +112,7 @@ function Set_NetDev() {
      declare -a NETARRAY=$4
     [ "$4" == "new" ] && unset NETARRAY && declare -a NETARRAY
     for NETNUMBER in $(seq $(( ${#NETARRAY[@]} + 1 )) $(( ${#NETARRAY[@]} + $3 )) ); do
-        MAC="-mac="$(Set_MAC $VMMGR_DB_PATH $NETNUMBER $1)
+        MAC="mac="$(Set_MAC $VMMGR_DB_PATH $NETNUMBER $1)
         TAPUP="script=$VMMGR_DATA_PATH/TAPSCRIPTS/tapup-$2"
         TAPDOWN="downscript=$VMMGR_DATA_PATH/TAPSCRIPTS/tapdown-$2"
         [ -r "$VMMGR_DATA_PATH/TAPSCRIPTS/tapup-$2" ] || ln $VMMGR_DATA_PATH/TAPSCRIPTS/tapup $VMMGR_DATA_PATH/TAPSCRIPTS/tapup-$2
@@ -201,6 +201,7 @@ function Start_VM_From_Config() {
         NETWORKDEV=$(Set_NetDev $NAME ${NET%|*} ${NET#*|} $NETWORKDEV $NETDEV $DEVICE)
     done
     NETWORKDEV[0]=""
+    echo "au final: "$NETWORKDEV
     echo "qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} $TELNETTPL ${NETWORKDEV[@]}"
     qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} $TELNETTPL ${NETWORKDEV[@]}
 }
