@@ -46,7 +46,7 @@ TELNETTYPE=bridge
 
 . ./DATA/VMMgr_VirtioNet
 New_Network swvpl-prod01 "6|2a01:e0a:278:9833::|64" "2a01:e0a:278:9833::10|2a01:e0a:278:9833::FFFF:FFFF"
-Set_NetDev $NAME swvpl-prod01 4 new NETDEV DEVICE
+declare -a MYNET=$(Set_NetDev $NAME swvpl-prod01 4 new NETDEV DEVICE)
 
 QEMU_TEMPLATE=FAB
 
