@@ -195,6 +195,8 @@ function Start_VM_From_Config() {
     for NET in $(echo $NETWORKDEVICE); do
     echo $NET
         NETWORKDEV=$(Set_NetDev $NAME ${NET%|*} ${NET#*|} $NETWORKDEV $NETDEV $DEVICE)
+        echo $NETWORKDEV
+        echo ${NETWORKDEV[@]}
     done
     
     echo "qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} ${MYNET[@]}"
