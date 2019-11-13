@@ -43,7 +43,7 @@ function Get_Bridge_Tool() {
 function Set_Bridge_Brctl() {
     ip address show $1 2> /dev/null 1> /dev/null
     if [ $? -ne 0 ]; then
-        sudo ip link add $1 type bridge
+        sudo ip link add name $1 type bridge
         sudo ip link set dev $1 up
     fi
     if [ "$2" == "on" ]; then
