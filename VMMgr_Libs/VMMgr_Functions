@@ -193,10 +193,9 @@ function Start_VM_From_Config() {
     echo "setting NET:"$NETWORKDEVICE
     
     for NET in $(echo $NETWORKDEVICE); do
-    echo $NET
+    echo $NET $NAME ${NET%|*} ${NET#*|} $NETWORKDEV $NETDEV $DEVICE
+    
         NETWORKDEV=$(Set_NetDev $NAME ${NET%|*} ${NET#*|} $NETWORKDEV $NETDEV $DEVICE)
-        echo "on a: " $NETWORKDEV
-        echo "tableau"${NETWORKDEV[@]}
     done
     
     echo "qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} ${MYNET[@]}"
