@@ -231,8 +231,8 @@ function Db_Search_PORT() {
 function Db_Set_MAC() {
  VMID=$(echo "select VMiD from VM where Name='$2';" | sqlite3 $1/VMMGR_.db)
  EXISTS=$(echo "select printf('%06X', SUBMAC) from MAC where VMiD='$VMID' AND NETID='$3';" | sqlite3 $1/VMMGR_.db)
- if [ ! "$EXISTS" == "" ]; then
-  echo "select SUBMAC from MAC ORDER BY V DESC LIMIT 1;" | sqlite3 $1/VMMGR_.db
+ if [ "$EXISTS" == "" ]; then
+  SUBMAC=$(echo "select SUBMAC from MAC ORDER BY SUBMAC DESC LIMIT 1;" | sqlite3 $1/VMMGR_.db)
   if [ "$SUBMAC" == "" ]; then $SUBMAC=0; else $SUBMAC=$(( $SUBMAC + 1 )); fi
   echo "insert into MAC (VMid, SUBMAC, NETID) values ('$VMID', '$SUBMAC', '$3');" | sqlite3 $1/VMMGR_.db
   EXISTS=$(echo "select printf('%06X', SUBMAC) from MAC where VMiD='$VMID' AND NETID='$3';" | sqlite3 $1/VMMGR_.db)

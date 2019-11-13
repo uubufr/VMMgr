@@ -112,7 +112,7 @@ function Create_Bridge() {
 #   $2: network device number
 function Set_MAC() {
         OUI="52:54:00"
-        SUBMAC=Db_Set_MAC $DB_PATH $1 $2
+        SUBMAC=$(Db_Set_MAC $VMMGR_DB_PATH $1 $2)
         echo $OUI:${SUBMAC:0:2}:${SUBMAC:2:2}:${SUBMAC:4:2}
 }
 

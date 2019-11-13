@@ -54,7 +54,7 @@ fi
 . $VMMGR_DATA_PATH/VMMgr_Libs/VMMgr_Functions
 . $VMMGR_DATA_PATH/VMMgr_Libs/VMMgr_Networks
 
-
+Check_System
 
 case "$1" in
     "check")

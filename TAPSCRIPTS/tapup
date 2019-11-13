@@ -1,0 +1,11 @@
+#! /bin/sh
+
+sudo ip tuntap add mode tap $1
+sleep 0.5
+sleep 2
+sudo ip link set dev $1 up
+sudo brctl addif swvpl-${0#*tapup-} $1
+#sudo ovs-vsctl add-port swvpl-${0#*tapup-} $1
+#sudo ovs-vsctl add-port swvpl-${0#*tapup-} $1 -- set Interface $1 type=internal
+#sudo ovs-vsctl set Interface $1 mtu=9000
+sudo ip link set dev $1 up

@@ -100,14 +100,28 @@ function Check_MEM() {
 # Function: Set_NetDev
 # Description: Create tap interfaces
 # Args:
-#   $1: Bridge name
-#   $2: Number of tap devices
-#   $3: tapupdown file path
+#   $1: VM Name
+#   $2: Bridge name
+#   $3: Number of tap devices
+#   $4: NETDEV array
+#   $5: -netdev template
+#   $6: -device template
 # Return an array of netdev declarations
 function Set_NetDev() {
-    for NETNUMBER in $(seq $(( ${#NETDEV[@]} + 1 )) $(( ${#NETDEV[@]} + $2 )) ); do
-        NETDEV[$NETNUMBER]="-netdev type=tap,id=virtio-tap$NETNUMBER,script=$3/tapup-$1,downscript=$3/tapdown-$1,vhost=on -device virtio-net-pci,netdev=virtio-tap$NETNUMBER,mac=$(Set_MAC $NETNUMBER),id=drive-virtio-tap$NETNUMBER,csum=off,gso=off,guest_tso4=off,guest_tso6=off,guest_ecn=off"
-    done
+    Create_Bridge $2 $BRIDGETOOL on
+     declare -a NETARRAY=$4
+    [ "$4" == "new" ] && declare -a NETARRAY
+    for NETNUMBER in $(seq $(( ${#NETARRAY[@]} + 1 )) $(( ${#NETARRAY[@]} + $3 )) ); do
+        MAC="-mac="$(Set_MAC $VMMGR_DB_PATH $NETNUMBER $1)
+        echo $MAC
+        TAPUP="script=$VMMGR_DATA_PATH/TAPSCRIPTS/tapup-$2"
+        TAPDOWN="downscript=$VMMGR_DATA_PATH/TAPSCRIPTS/tapdown-$2"
+        ln $VMMGR_DATA_PATH/TAPSCRIPTS/tapup $VMMGR_DATA_PATH/TAPSCRIPTS/tapup-$2
+        ln $VMMGR_DATA_PATH/TAPSCRIPTS/tapdown $VMMGR_DATA_PATH/TAPSCRIPTS/tapdown-$2
+        ADDR="addr=0x$NETNUMBER"
+        NETARRAY[$NETNUMBER]="-netdev tap,id=virtio-tap$NETNUMBER,$TAPUP,$TAPDOWN,${!5} -device virtio-net-pci,netdev=virtio-tap$NETNUMBER,$MAC,id=drive-virtio-tap$NETNUMBER,${!6}"
+     done
+     echo ${NETARRAY[@]}
 }
 
 # Function: Set_IPMI
