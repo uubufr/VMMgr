@@ -113,13 +113,12 @@ function Set_NetDev() {
     [ "$4" == "new" ] && declare -a NETARRAY
     for NETNUMBER in $(seq $(( ${#NETARRAY[@]} + 1 )) $(( ${#NETARRAY[@]} + $3 )) ); do
         MAC="-mac="$(Set_MAC $VMMGR_DB_PATH $NETNUMBER $1)
-        echo $MAC
         TAPUP="script=$VMMGR_DATA_PATH/TAPSCRIPTS/tapup-$2"
         TAPDOWN="downscript=$VMMGR_DATA_PATH/TAPSCRIPTS/tapdown-$2"
-        ln $VMMGR_DATA_PATH/TAPSCRIPTS/tapup $VMMGR_DATA_PATH/TAPSCRIPTS/tapup-$2
-        ln $VMMGR_DATA_PATH/TAPSCRIPTS/tapdown $VMMGR_DATA_PATH/TAPSCRIPTS/tapdown-$2
+        [ -L $VMMGR_DATA_PATH/TAPSCRIPTS/tapup-$2 ] || ln $VMMGR_DATA_PATH/TAPSCRIPTS/tapup $VMMGR_DATA_PATH/TAPSCRIPTS/tapup-$2
+        [ -L $VMMGR_DATA_PATH/TAPSCRIPTS/tapup-$2 ] || ln $VMMGR_DATA_PATH/TAPSCRIPTS/tapdown $VMMGR_DATA_PATH/TAPSCRIPTS/tapdown-$2
         ADDR="addr=0x$NETNUMBER"
-        NETARRAY[$NETNUMBER]="-netdev tap,id=virtio-tap$NETNUMBER,$TAPUP,$TAPDOWN,${!5} -device virtio-net-pci,netdev=virtio-tap$NETNUMBER,$MAC,id=drive-virtio-tap$NETNUMBER,${!6}"
+        NETARRAY[$NETNUMBER]="-netdev tap,id=virtio-tap$NETNUMBER,$TAPUP,$TAPDOWN,${!5} -device virtio-net-pci,netdev=virtio-tap$NETNUMBER,$MAC,id=drive-virtio-tap$NETNUMBER,${!6},$ADDR"
      done
      echo ${NETARRAY[@]}
 }
@@ -189,6 +188,8 @@ function Start_VM_From_Config() {
         IPPORT=$(Set_Service_Listen $TELNETIP $TELNETIPVER $TELNETTYPE $NAME telnet $TELNETPORT)
         TELNETTPL="-monitor telnet:$(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}'):${IPPORT#*|},server,nowait"
     fi
+    
+    
     echo "qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL}"
     qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} $TELNETTPL
 }
