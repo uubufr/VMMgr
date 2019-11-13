@@ -12,5 +12,5 @@ DEVICE_SIMPLE=""
 DEVICE_ADV="tx=bh,host_tso6=on,host_tso4=on,guest_tso6=on,guest_tso4=on,gso=on,rx_queue_size=1024,tx_queue_size=1024,mq=on,vectors=12,ctrl_vq=on,page-per-vq=on,disable-legacy=on,disable-modern=off,x-disable-pcie=off,x-pcie-lnksta-dllla=on,x-pcie-extcap-init=on,x-pcie-pm-init=on,x-pcie-deverr-init=on,x-pcie-lnkctl-init=on,event_idx=on,iommu_platform=on,ats=on,host_ecn=off,guest_ecn=on,host_mtu=1500,host_ufo=off,guest_ufo=off,guest_announce=on,speed=1024,duplex=1,status=on,ctrl_vlan=off,multifunction=on,bootindex=10,ctrl_mac_addr=off,ctrl_rx=0,ctrl_rx_extra=0,guest_csum=off,csum=on,ctrl_guest_offloads=on,notify_on_empty=on,mrg_rxbuf=on,ioeventfd=on"
 
 
-NETDEV=$NETDEV_QUEUE
-DEVICE=$DEVICE_ADV
+NETDEV="$NETDEV_QUEUE"
+DEVICE="$DEVICE_ADV"

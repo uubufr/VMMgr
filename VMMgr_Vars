@@ -37,7 +37,7 @@ GLOBAL="-global PIIX4_PM.disable_s3=1 -global PIIX4_PM.disable_s4=1"
 PCI="-device pci-bridge,id=pci.0,chassis_nr=1"
 
 ### BIOS ###
-BOOT="-boot menu=on,strict=off,splash=$VMMGR_DATA_PATH/splash640.bmp,splash-time=5000"
+BOOT="-boot menu=on,strict=off,splash=$VMMGR_DATA_PATH/UEFI/splash640.bmp,splash-time=5000"
 BIOS="-bios /usr/share/qemu/bios-256k.bin -L /usr/share/qemu/"
 #if [ ! -d $VIRTPATH/uefi/$NAME/ ]; then cp -r $VIRTPATH/uefi/SRC $VIRTPATH/uefi/$NAME; fi
 #UEFI="-drive if=pflash,format=raw,file=$VIRTPATH/uefi/$NAME/OVMF_CODE.fd -global isa-debugcon.iobase=0x402 -debugcon file:$VIRTPATH/uefi/$NAME/$NAME.ovmf.log"
