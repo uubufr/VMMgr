@@ -27,7 +27,7 @@
 ###Manque NUMA SMP TELNET SPICE QMP RAM
 
 
-COMMON="-daemonize -display none -no-user-config -nodefaults -msg timestamp=on"
+COMMON="-daemonize -no-user-config -nodefaults -msg timestamp=on"
 CONFIG="-writeconfig $VMMGR_CONFIG_PATH/QEMU_CONFIGS/$NAME"
 MACHINE="-machine q35,accel=kvm"
 CPU64="-cpu qemu64"
@@ -70,4 +70,4 @@ IPMIDEV="-device ipmi-bmc-sim,id=bmc0 -chardev socket,id=ipmi0,host=$IPMIHOST,po
 TELNET="-monitor telnet:$TELNETIP:$TELNETPORT,server,nowait"
 
 LXBASE="$COMMON $MACHINE $CPU $BIOS"
-FAB="$COMMON $MACHINE $CPUKVM $CONFIG $BOOT $BIOS $PCI $USB $MOUSE $KEYBOARD $IDEDVD $QXL $WATCHDOG $BALLOON $RNG $UNIXCLOCK $SOUND $UUID $NODISPLAY"
+FAB="$COMMON $MACHINE $CPUKVM $CONFIG $BOOT $BIOS $PCI $USB $MOUSE $KEYBOARD $IDEDVD $QXL $WATCHDOG $BALLOON $RNG $UNIXCLOCK $SOUND $UUID $NODISPLAY -debugcon stdio"

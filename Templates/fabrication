@@ -39,6 +39,11 @@ SPICEIP=swvpl-spice
 SPICETYPE=bridge
 SPICETPL=SPICESECURE
 
+New_Network swvpl-telnet "6|2a01:e0a:278:9832::|64" "2a01:e0a:278:9832::10|2a01:e0a:278:9832::FFFF" 2a01:e0a:278:9832::1
+TELNET=on
+TELNETIP=swvpl-telnet
+TELNETTYPE=bridge
+
 QEMU_TEMPLATE=FAB
 
 ###env for spice:
