@@ -184,6 +184,11 @@ function Start_VM_From_Config() {
         . $VMMGR_CONFIG_PATH/DATA/VMMgr_Spice
     fi
     . VMMgr_Vars
+    
+    if [ "$TELNET" == "on" ]; then
+        IPPORT=$(Set_Service_Listen $TELNETIP $TELNETIPVER $TELNETTYPE $NAME telnet $TELNETPORT)
+        TELNETTPL="-monitor telnet:$(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}'):${IPPORT#*|},server,nowait"
+    fi
     echo "qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL}"
-    qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL}
+    qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} $TELNETTPL
 }
