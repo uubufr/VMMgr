@@ -189,7 +189,7 @@ function Start_VM_From_Config() {
         TELNETTPL="-monitor telnet:$(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}'):${IPPORT#*|},server,nowait"
     fi
     
-    . VMMGR_CONFIG_PATH/DATA/VMMgr_VirtioNet
+    . $VMMGR_CONFIG_PATH/DATA/VMMgr_VirtioNet
     
     declare -a NETWORKDEV[0]="new"
     
