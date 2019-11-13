@@ -191,5 +191,5 @@ function Start_VM_From_Config() {
     
     
     echo "qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL}"
-    qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} $TELNETTPL
+    qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} $TELNETTPL ${MYNET[@]}
 }
