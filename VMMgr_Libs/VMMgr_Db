@@ -234,7 +234,7 @@ function Db_Set_MAC() {
  if [ "$EXISTS" == "" ]; then
   SUBMAC=$(echo "select SUBMAC from MAC ORDER BY SUBMAC DESC LIMIT 1;" | sqlite3 $1/VMMGR_.db)
   if [ "$SUBMAC" == "" ]; then SUBMAC=0; else SUBMAC=$(( $SUBMAC + 1 )); fi
-  echo "insert into MAC (VMid, SUBMAC, NETID) values ('$VMID', '$SUBMAC', '$3');" | sqlite3 $1/VMMGR_.db
+  echo "insert into MAC (VMiD, SUBMAC, NETID) values ('$VMID', '$SUBMAC', '$3');" | sqlite3 $1/VMMGR_.db
   EXISTS=$(echo "select printf('%06X', SUBMAC) from MAC where VMiD='$VMID' AND NETID='$3';" | sqlite3 $1/VMMGR_.db)
  fi
  echo $EXISTS
