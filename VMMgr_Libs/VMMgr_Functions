@@ -188,7 +188,11 @@ function Start_VM_From_Config() {
         IPPORT=$(Set_Service_Listen $TELNETIP $TELNETIPVER $TELNETTYPE $NAME telnet $TELNETPORT)
         TELNETTPL="-monitor telnet:$(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}'):${IPPORT#*|},server,nowait"
     fi
+    declare -a NETWORKDEV[0]="new"
     
+    for NET in $(echo $NETWORKDEVICE); do
+        NETWORKDEV=Set_NetDev $NAME ${NET%|*} ${NET#*|} NETWORKDEV NETDEV DEVICE)
+    done
     
     echo "qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL}"
     qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} $TELNETTPL ${MYNET[@]}
