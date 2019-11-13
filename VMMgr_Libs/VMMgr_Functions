@@ -110,7 +110,7 @@ function Check_MEM() {
 function Set_NetDev() {
     Create_Bridge $2 $BRIDGETOOL on
      declare -a NETARRAY=$4
-    [ "$4" == "new" ] && declare -a NETARRAY
+    [ "$4" == "new" ] && unset NETARRAY && declare -a NETARRAY
     for NETNUMBER in $(seq $(( ${#NETARRAY[@]} + 1 )) $(( ${#NETARRAY[@]} + $3 )) ); do
         MAC="-mac="$(Set_MAC $VMMGR_DB_PATH $NETNUMBER $1)
         TAPUP="script=$VMMGR_DATA_PATH/TAPSCRIPTS/tapup-$2"
@@ -188,6 +188,9 @@ function Start_VM_From_Config() {
         IPPORT=$(Set_Service_Listen $TELNETIP $TELNETIPVER $TELNETTYPE $NAME telnet $TELNETPORT)
         TELNETTPL="-monitor telnet:$(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}'):${IPPORT#*|},server,nowait"
     fi
+    
+    . VMMGR_CONFIG_PATH/DATA/VMMgr_VirtioNet
+    
     declare -a NETWORKDEV[0]="new"
     
     echo "setting NET:"$NETWORKDEVICE
@@ -197,7 +200,7 @@ function Start_VM_From_Config() {
     
         NETWORKDEV=$(Set_NetDev $NAME ${NET%|*} ${NET#*|} $NETWORKDEV $NETDEV $DEVICE)
     done
-    
+    NETWORKDEV[0]=""
     echo "qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} $TELNETTPL ${NETWORKDEV[@]}"
     qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} $TELNETTPL ${NETWORKDEV[@]}
 }
