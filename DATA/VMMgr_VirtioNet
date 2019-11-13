@@ -1,0 +1,116 @@
+#! /bin/bash
+#
+# script name: VMMgr_VirtioNet
+# autor: Sylvain Girod ( uubu at gmx dot fr )
+# version: 0.04
+# description: VirtioNet Vars and Templates
+#
+mac=$(Set_MAC $NETNUMBER)
+netdev=virtio-tap$NETNUMBER
+
+NETDEV_TAP="vhost=on"
+NETDEV_QUEUE="vhost=on,queues=8"
+
+DEVICE_SIMPLE=""
+DEVICE_ADV="tx=bh,host_tso6=on,host_tso4=on,guest_tso6=on,guest_tso4=on,gso=on,rx_queue_size=1024,tx_queue_size=1024,mq=on,vectors=12,ctrl_vq=on,page-per-vq=on,disable-legacy=on,disable-modern=off,x-disable-pcie=off,x-pcie-lnksta-dllla=on,x-pcie-extcap-init=on,x-pcie-pm-init=on,x-pcie-deverr-init=on,x-pcie-lnkctl-init=on,event_idx=on,iommu_platform=on,ats=on,host_ecn=off,guest_ecn=on,host_mtu=1500,host_ufo=off,guest_ufo=off,guest_announce=on,speed=1024,duplex=1,status=on,ctrl_vlan=off,multifunction=on,bootindex=10,ctrl_mac_addr=off,ctrl_rx=0,ctrl_rx_extra=0,guest_csum=off,csum=on,ctrl_guest_offloads=on,notify_on_empty=on,mrg_rxbuf=on,ioeventfd=on"
+
+
+NETDEV=$NETDEV_QUEUE
+DEVICE=$DEVICE_ADV
+
+
+addr=0x
+iommu_platform=on,ats=on
+
+
+
+csum=
+bus=pci.0,addr=0x3
+vectors=
+
+  
+  
+  virtio-backend=<child<virtio-net-device>>
+  virtio-pci-bus-master-bug-migration=<bool> - on/off
+  modern-pio-notify=<bool> - on/off
+  page-per-vq=<bool>     - on/off
+  x-mtu-bypass-backend=<bool>
+  migrate-extra=<bool>   - on/off
+  indirect_desc=<bool>   - on/off
+  any_layout=<bool>      - on/off
+  x-ignore-backend-features=<bool>
+  x-txburst=<int32>
+  command_serr_enable=<bool> - on/off
+  addr=<int32>           - Slot and optional function number, example: 06.0 or 06
+
+  -netdev tap,fds=26:28:29:30:31,id=hostnet0,vhost=on,vhostfds=32:33:34:35:36,queues=N -device virtio-net-pci,csum=off,gso=off,host_tso4=off,host_tso6=off,host_ecn=off,host_ufo=off,mrg_rxbuf=off,guest_csum=off,guest_tso4=off,guest_tso6=off,guest_ecn=off,guest_ufo=off,mq=on,vectors=12,rx_queue_size=512,tx_queue_size=512,netdev=hostnet0,id=net0,mac=52:54:00:00:b5:99,
+
+  ctrl_vlan=<bool>       - on/off
+  duplex=<str>
+  x-pcie-lnksta-dllla=<bool> - on/off
+  virtio-backend=<child<virtio-net-device>>
+  x-txtimer=<uint32>
+  notify_on_empty=<bool> - on/off
+  guest_tso6=<bool>      - on/off
+  status=<bool>          - on/off
+  ctrl_vq=<bool>         - on/off
+  guest_ufo=<bool>       - on/off
+  virtio-pci-bus-master-bug-migration=<bool> - on/off
+  ctrl_mac_addr=<bool>   - on/off
+  romfile=<str>
+  speed=<int32>
+  event_idx=<bool>       - on/off
+mac=$(Set_MAC $NETNUMBER)
+  ioeventfd=<bool>       - on/off
+  guest_tso4=<bool>      - on/off
+netdev=virtio-tap$NETNUMBER
+  x-disable-pcie=<bool>  - on/off
+  modern-pio-notify=<bool> - on/off
+  x-pcie-extcap-init=<bool> - on/off
+  guest_csum=<bool>      - on/off
+  page-per-vq=<bool>     - on/off
+  x-mtu-bypass-backend=<bool>
+  x-pcie-pm-init=<bool>  - on/off
+  migrate-extra=<bool>   - on/off
+  bootindex=<int32>
+  ats=<bool>             - on/off
+  guest_announce=<bool>  - on/off
+  iommu_platform=<bool>  - on/off
+  mq=<bool>              - on/off
+  disable-legacy=<OnOffAuto> - on/off/auto
+  host_tso6=<bool>       - on/off
+  vectors=<uint32>
+  indirect_desc=<bool>   - on/off
+  any_layout=<bool>      - on/off
+  rx_queue_size=<uint16>
+  mrg_rxbuf=<bool>       - on/off
+  host_ecn=<bool>        - on/off
+  ctrl_rx_extra=<bool>   - on/off
+  x-ignore-backend-features=<bool>
+  x-txburst=<int32>
+  csum=<bool>            - on/off
+  tx_queue_size=<uint16>
+  host_tso4=<bool>       - on/off
+  gso=<bool>             - on/off
+  x-pcie-deverr-init=<bool> - on/off
+  host_ufo=<bool>        - on/off
+  host_mtu=<uint16>
+  command_serr_enable=<bool> - on/off
+  disable-modern=<bool>
+tx=bh
+  multifunction=<bool>   - on/off
+  x-pcie-lnkctl-init=<bool> - on/off
+  rombar=<uint32>
+  ctrl_guest_offloads=<bool> - on/off
+  addr=<int32>           - Slot and optional function number, example: 06.0 or 06
+  ctrl_rx=<bool>         - on/off
+  guest_ecn=<bool>       - on/off
+
+
+
+tx: <bh|timer> Définis l'algorithme utilisé pour la transmission des paquets. bh (bottom half): les paquets sont tous fait dans un iothread. timer: la transmission est faite dans qemu. Quand il y'a des donnée à transmettre, un timer est mis avant que qemu passe à autre chose, quand ce timer est attend, une autre tentative est faite pour envoyer plus de données.. La différence est que:
+  - bh est plus asynchrone et réduit la latence, mais plus couteux pour le cpu.
+multifunction: pour un périphérique à plusieurs fonction. pour un périphérique pci par exemple, permet d'inclure un second disque avec le même slot number, comme premier disque et un numéro de fonction différent. (dans addr=)
+tso (ou LRO) : TCP Offload Engine (TOE) est une technologie utilisé dans les cartes réseaux pour décharger le traitement de toute la pile TCP/IP dans le contrôleur réseau. le Scatter and Gather (E/S vectorisé) est un concept principalement utilisé dans les disques dur et améliore les performance des grosses E/S, si supporté par le hardware. Generic Segmentation Offloadd est lié à tso.
+
+'
