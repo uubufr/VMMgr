@@ -192,9 +192,10 @@ function Start_VM_From_Config() {
     
     unset NETWORKDEV
     for NET in $(echo $NETWORKDEVICE); do
-        NETWORKDEV=$(Set_NetDev $NAME ${NET%|*} ${NET#*|} $NETWORKDEV "$NETDEV" "$DEVICE")
+        #NETWORKDEV=$(Set_NetDev $NAME ${NET%|*} ${NET#*|} $NETWORKDEV "$NETDEV" "$DEVICE")
+        Set_NetDev $NAME ${NET%|*} ${NET#*|} $NETWORKDEV "$NETDEV" "$DEVICE"
     done
-    echo "au final: "$NETWORKDEV
+    #echo "au final: "$NETWORKDEV
     #echo "qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} $TELNETTPL ${NETWORKDEV[@]}"
     #qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} $TELNETTPL ${NETWORKDEV[@]}
 }
