@@ -107,6 +107,7 @@ function Check_MEM() {
 #   $5: -device template
 #   $6: Addr
 function Set_NetDev() {
+echo $2 $BRIDGETOOL
     Create_Bridge $2 $BRIDGETOOL on
     for NETNUMBER in $(seq 1 $3 ); do
         MAC="mac="$(Set_MAC $VMMGR_DB_PATH $(( $6 + $NETNUMBER )) $1)
