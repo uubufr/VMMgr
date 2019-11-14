@@ -152,6 +152,37 @@ function Custom_VM_Config() {
     sed -i "s/%%NAME%%/$1/g" $2
 }
 
+# Function: Set_Remote_Viewer
+# Description: Create .vv file for remove viewer
+# Args:
+#   $1: TEMPLATENAME
+#   $2: VM Name
+#   $3: Spice_IP_PORT ($IPPORT)
+#   $4: SPICE Password
+function Set_Remote_Viewer() {
+    cp $VMMGR_CONFIG_PATH/R-SPICE/$1 $VMMGR_CONFIG_PATH/R-SPICE/$2
+    sed -i "s/%%NAME%%/$2/g" $VMMGR_CONFIG_PATH/R-SPICE/$2
+    sed -i "s/%%SPICEPWD%%/$4/g" $VMMGR_CONFIG_PATH/R-SPICE/$2
+    
+    CERTNAME=$(cat $VMMGR_CONFIG_PATH/R-SPICE/$2 | grep host-subject); CERTNAME=${CERTNAME#*CN=}; CERTNAME=${CERTNAME%%,*}
+    if [ "$CERTNAME" == "" ]; then
+        echo "Warning: no certname found in .vv remove viewer config file"
+    fi
+    
+    NAMEDHOST=$(cat /etc/hosts | grep ${3%|*} | awk '{print $2}';
+    if [ "$NAMEDHOST" = "" ]; then
+        NAMEDHOST=$(dig -x ${3%|*} | grep -v ";" | grep -v "^$" | head -1)
+        NAMEDHOST=${NAMEDHOST##*PTR }
+        if [ "$NAMEDHOST" = "" ]; then
+            echo "Warning: no Hostname found matching Spice IP: ${3%|*}"
+        fi
+    fi
+    if [ "$CERTNAME" == "$NAMEDHOST" ]; then
+        sed -i "s/%%HOSTNAME%%/$CERTNAME/g" $VMMGR_CONFIG_PATH/R-SPICE/$2
+    fi
+    sed -i "s/%%PORT%%/${3#*|}/g" $VMMGR_CONFIG_PATH/R-SPICE/$2
+}
+
 # Function: Start_VM_From_Config
 # Description: Start VM using VM Config file
 # Args:
@@ -177,6 +208,7 @@ function Start_VM_From_Config() {
         IPPORT=$(Set_Service_Listen $SPICEIP $SPICEIPVER $SPICETYPE $NAME spice $SPICEPORT)
         SPICEIP=${IPPORT%|*}; SPICEPORT=${IPPORT#*|}
         . $VMMGR_CONFIG_PATH/DATA/VMMgr_Spice
+        Set_Remote_Viewer $SPICETPL $NAME $IPPORT $SPICEPWD
     fi
     . VMMgr_Vars
     
@@ -192,6 +224,6 @@ function Start_VM_From_Config() {
         NETARRAY="$NETARRAY $(Set_NetDev $NAME ${NET%|*} ${NET#*|} "$NETDEV" "$DEVICE" $NUMDEV)"
         NUMDEV=$(( $NUMDEV + ${NET#*|} ))
     done
-    echo "qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} $TELNETTPL $NETARRAY"
+    #echo "qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} $TELNETTPL $NETARRAY"
     qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} $TELNETTPL $NETARRAY
 }
