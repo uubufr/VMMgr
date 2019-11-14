@@ -173,7 +173,8 @@ function Start_VM_From_Config() {
     . $VMMGR_CONFIG_PATH/DATA/VMMgr_Spice
     . $2
     Get_Bridge_Tool
-     if [ "$SPICE" == "on" ]; then
+    
+    if [ "$SPICE" == "on" ]; then
         IPPORT=$(Set_Service_Listen $SPICEIP $SPICEIPVER $SPICETYPE $NAME spice $SPICEPORT)
         SPICEIP=${IPPORT%|*}; SPICEPORT=${IPPORT#*|}
         . $VMMGR_CONFIG_PATH/DATA/VMMgr_Spice
@@ -189,11 +190,9 @@ function Start_VM_From_Config() {
     
     declare -i NUMDEV=0
     for NET in $(echo $NETWORKDEVICE); do
-        #NETWORKDEV=$(Set_NetDev $NAME ${NET%|*} ${NET#*|} $NETWORKDEV "$NETDEV" "$DEVICE")
-        NETARRAY=$(Set_NetDev $NAME ${NET%|*} ${NET#*|} "$NETDEV" "$DEVICE" $NUMDEV)
+        NETARRAY="$NETARRAY $(Set_NetDev $NAME ${NET%|*} ${NET#*|} "$NETDEV" "$DEVICE" $NUMDEV)"
         NUMDEV=$(( $NUMDEV + ${NET#*|} ))
     done
-    #echo "au final: "$NETWORKDEV
     echo "qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} $TELNETTPL $NETARRAY"
-    #qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} $TELNETTPL ${NETWORKDEV[@]}
+    qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} $TELNETTPL $NETARRAY
 }
