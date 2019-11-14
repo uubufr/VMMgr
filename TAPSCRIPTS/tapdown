@@ -1,4 +1,4 @@
 #! /bin/sh
-#sudo brctl delif swvpl-${0#*tapup-} $1
+sudo brctl delif ${0#*tapup-} $1
 #sudo ovs-vsctl del-port $1
-#sudo ip link delete dev $1
+sudo ip link delete dev $1
