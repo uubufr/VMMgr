@@ -318,6 +318,8 @@ function New_Network() {
     if [ $? -ne 0 ]; then
     echo "ok on créé $1"
         Create_Bridge $1 $BRIDGETOOL
+        echo "on l'a créé:"
+        ip -br address show type bridge $1
     fi
     if [ "$4" != "" ]; then
         ip -br address show type bridge $1 | grep $4 2>/dev/null 1>/dev/null
