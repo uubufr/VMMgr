@@ -275,9 +275,6 @@ function Enslave_Tap() {
 #   $2: Prefix
 #   $3: Iface
 function Set_Iface_Net() {
-echo "IP: "$1
-echo "PREFIX: "$2
-echo "BRIDGE: "$3
     sudo ip address add $1/$2 dev $3
     sudo ip link set dev $3 up
 }
@@ -321,6 +318,8 @@ function New_Network() {
     if [ "$4" != "" ]; then
         ip -br address show type bridge $1 | grep $4 2>/dev/null 1>/dev/null
         if [ $? -ne 0 ]; then
+        echo "prefix: $DBPFX"
+        echo "bridge: "$1
             Set_Iface_Net $4 $DBPFX $1
         fi
     fi
