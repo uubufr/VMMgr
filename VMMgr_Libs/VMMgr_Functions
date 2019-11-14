@@ -114,7 +114,6 @@ function Set_NetDev() {
         TAPDOWN="downscript=$VMMGR_DATA_PATH/TAPSCRIPTS/tapdown-$2"
         [ -r "$VMMGR_DATA_PATH/TAPSCRIPTS/tapup-$2" ] || ln $VMMGR_DATA_PATH/TAPSCRIPTS/tapup $VMMGR_DATA_PATH/TAPSCRIPTS/tapup-$2
         [ -r "$VMMGR_DATA_PATH/TAPSCRIPTS/tapdown-$2" ] || ln $VMMGR_DATA_PATH/TAPSCRIPTS/tapdown $VMMGR_DATA_PATH/TAPSCRIPTS/tapdown-$2
-        ADDR="addr=0x$(( $6 + $NETNUMBER + 8 ))"
         echo "-netdev tap,id=virtio-tap$(( $6 + $NETNUMBER )),$TAPUP,$TAPDOWN,$4 -device virtio-net-pci,netdev=virtio-tap$(( $6 + $NETNUMBER )),$MAC,id=drive-virtio-tap$(( $6 + $NETNUMBER )),$5 "
      done
 }
@@ -193,6 +192,6 @@ function Start_VM_From_Config() {
         NETARRAY="$NETARRAY $(Set_NetDev $NAME ${NET%|*} ${NET#*|} "$NETDEV" "$DEVICE" $NUMDEV)"
         NUMDEV=$(( $NUMDEV + ${NET#*|} ))
     done
-    #echo "qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} $TELNETTPL $NETARRAY"
+    echo "qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} $TELNETTPL $NETARRAY"
     qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} $TELNETTPL $NETARRAY
 }
