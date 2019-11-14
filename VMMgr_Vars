@@ -67,7 +67,5 @@ DISPLAYEGL="-display egl-headless"
 ### IPMI ###
 IPMIDEV="-device ipmi-bmc-sim,id=bmc0 -chardev socket,id=ipmi0,host=$IPMIHOST,port=$IPMIPORT,reconnect=10 -device ipmi-bmc-extern,id=bmc0,chardev=ipmi0 -device isa-ipmi-kcs,bmc=bmc0,irq=5 -device isa-ipmi-bt,bmc=bmc0,irq0"
 
-TELNET="-monitor telnet:$TELNETIP:$TELNETPORT,server,nowait"
-
 LXBASE="$COMMON $MACHINE $CPU $BIOS"
 FAB="$COMMON $MACHINE $CPUKVM $CONFIG $BOOT $BIOS $PCI $USB $MOUSE $KEYBOARD $IDEDVD $QXL $WATCHDOG $BALLOON $RNG $UNIXCLOCK $SOUND $UUID $NODISPLAY"
