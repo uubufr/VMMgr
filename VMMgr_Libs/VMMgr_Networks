@@ -275,6 +275,9 @@ function Enslave_Tap() {
 #   $2: Prefix
 #   $3: Iface
 function Set_Iface_Net() {
+echo "IP: "$1
+echo "PREFIX: "$2
+echo "BRIDGE: "$3
     sudo ip address add $1/$2 dev $3
     sudo ip link set dev $3 up
 }
