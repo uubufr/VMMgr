@@ -188,7 +188,7 @@ function Start_VM_From_Config() {
     
     declare -i NUMDEV=0
     for NET in $(echo $NETWORKDEVICE); do
-        $NUMDEV=$(( $NUMDEV + ${NET#*|} ))
+        NUMDEV=$(( $NUMDEV + ${NET#*|} ))
         #NETWORKDEV=$(Set_NetDev $NAME ${NET%|*} ${NET#*|} $NETWORKDEV "$NETDEV" "$DEVICE")
         Set_NetDev $NAME ${NET%|*} ${NET#*|} $NUMDEV "$NETDEV" "$DEVICE"
     done
