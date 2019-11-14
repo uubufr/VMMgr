@@ -26,12 +26,12 @@
 # Args: No Args
 function Get_Bridge_Tool() {
     ip --version 2>/dev/null 1>/dev/null
-    [ $? -eq 0 ] && BRIDGETOOL="ip"
+    [ $? -eq 0 ] && BRIDGETOOL="brctl"
     ovs-vsctl --version 2>/dev/null 1>/dev/null
     [ $? -eq 0 ] && BRIDGETOOL="ovs"
     nmcli --version 2>/dev/null 1>/dev/null
     [ $? -eq 0 ] && BRIDGETOOL="nmcli"
-    BRIDGETOOL="ip"
+    BRIDGETOOL="brctl"
     export BRIDGETOOL
 }
 
