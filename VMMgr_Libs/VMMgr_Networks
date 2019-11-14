@@ -93,7 +93,6 @@ function Set_Bridge_Nmcli() {
 # $1: Bridge Name
 # $2: Bridge Tool
 function Create_Bridge() {
-echo "create bridge avec: $1 et $2"
 [ "$2" ] || Set_Bridge_Ip $1 on
         case "$2" in
             "ip")
