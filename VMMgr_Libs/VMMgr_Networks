@@ -93,6 +93,7 @@ function Set_Bridge_Nmcli() {
 # $1: Bridge Name
 # $2: Bridge Tool
 function Create_Bridge() {
+echo "create bridge avec: $1 et $2"
         case "$2" in
             "brctl")
                 Set_Bridge_Brctl $1 on
