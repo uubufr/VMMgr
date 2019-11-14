@@ -94,7 +94,10 @@ function Set_Bridge_Nmcli() {
 # $2: Bridge Tool
 function Create_Bridge() {
 echo "create bridge avec: $1 et $2"
+[ "$2" ] || Set_Bridge_Ip $1 on
         case "$2" in
+            "ip")
+                Set_Bridge_Ip $1 on
             "brctl")
                 Set_Bridge_Brctl $1 on
             ;;
@@ -303,30 +306,24 @@ function Create_New_Network() {
 function New_Network() {
     IFS=\| read -r IPVER IPNETWORK IPPREFIX <<< $(echo "$2")
     DBNET=$(Db_Get_Network $VMMGR_DB_PATH $1)
-    echo "on a1: $DBNET"
     if [ "$DBNET" == "" ]; then
         Db_Create_Network $VMMGR_DB_PATH $IPNETWORK $IPPREFIX ${3%|*} ${3#*|} $1
         if [ "$4" != "" ]; then
             Db_Set_Network_IP $VMMGR_DB_PATH $1 $4
         fi
         DBNET=$(Db_Get_Network $VMMGR_DB_PATH $1)
-        echo "ona2: $DBNET"
     else
         IFS=\| read -r DBIP DBPFX DBMIN $DBMAX $DBLAST $DBIFACE <<< $(echo $DBNET)
         
     fi
     ip -br address show type bridge $1 2>/dev/null 1>/dev/null
     if [ $? -ne 0 ]; then
-    echo "ok on créé $1"
+        [ "$BRIDGETOOL" ] || Get_Bridge_Tool
         Create_Bridge $1 $BRIDGETOOL
-        echo "on l'a créé:"
-        ip -br address show type bridge $1
     fi
     if [ "$4" != "" ]; then
         ip -br address show type bridge $1 | grep $4 2>/dev/null 1>/dev/null
         if [ $? -ne 0 ]; then
-        echo "prefix: $DBNET"
-        echo "bridge: "$1
             Set_Iface_Net $4 $DBPFX $1
         fi
     fi
