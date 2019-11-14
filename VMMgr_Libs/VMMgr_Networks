@@ -98,6 +98,7 @@ echo "create bridge avec: $1 et $2"
         case "$2" in
             "ip")
                 Set_Bridge_Ip $1 on
+            ;;
             "brctl")
                 Set_Bridge_Brctl $1 on
             ;;
