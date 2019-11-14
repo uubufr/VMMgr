@@ -308,6 +308,7 @@ function New_Network() {
             Db_Set_Network_IP $VMMGR_DB_PATH $1 $4
         fi
     else
+    echo $DBNET
         IFS=\| read -r DBIP DBPFX DBMIN $DBMAX $DBLAST $DBIFACE <<< $(echo $DBNET)
         
     fi
