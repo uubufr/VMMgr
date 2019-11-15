@@ -1,4 +1,8 @@
 #! /bin/sh
-sudo brctl delif ${0#*tapup-} $1
+sudo brctl delif ${0#*tapdown-} $1
 #sudo ovs-vsctl del-port $1
 sudo ip link delete dev $1
+BRIF=$(ls /sys/class/net/${0#*tapdown-}/brif/)
+if [ "$BRIF" == "" ]; then
+    sudo ip link delete dev ${0#*tapdown-}
+fi
