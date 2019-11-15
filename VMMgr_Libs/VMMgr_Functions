@@ -169,7 +169,7 @@ function Set_Remote_Viewer() {
         echo "Warning: no certname found in .vv remove viewer config file"
     fi
     
-    NAMEDHOST=$(cat /etc/hosts | grep ${3%|*} | awk '{print $2}';
+    NAMEDHOST=$(cat /etc/hosts | grep ${3%|*} | awk '{print $2}');
     if [ "$NAMEDHOST" = "" ]; then
         NAMEDHOST=$(dig -x ${3%|*} | grep -v ";" | grep -v "^$" | head -1)
         NAMEDHOST=${NAMEDHOST##*PTR }
