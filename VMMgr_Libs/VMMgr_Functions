@@ -188,8 +188,6 @@ function Set_Remote_Viewer() {
 # Args:
 #   $1: VM Name
 #   $2: VM config path
-### TODO: c'est ici qu'on génère les ip:port des services SPICE QMP, TELNET, VNC
-###         C'est ici qu'on génère la configuration finale et qu'on lance la vm
 function Start_VM_From_Config() {
     echo "starting $2"
     if [ -r /usr/local/etc/VMMgr_.conf ]; then
