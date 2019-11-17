@@ -43,6 +43,10 @@ VNCIP=swvpl-spice
 VNCTYPE=bridge
 VNCTPL=VNCSECURE
 
+QMP=on
+QMPIP=swpvl-telnet
+QMPTYPE=bridge
+
 . ./DATA/VMMgr_VirtioNet
 New_Network swvpl-prod01 "6|2a01:e0a:278:9833::|64" "2a01:e0a:278:9833::1|2a01:e0a:278:9833::FFFF:FFFF"
 New_Network swvpl-main "6|2a01:e0a:278:9830::|64"  "2a01:e0a:278:9830::1|2a01:e0a:278:9830::FFFF:FFFF" 2a01:e0a:278:9830:82c5:f2ff:fe06:984f

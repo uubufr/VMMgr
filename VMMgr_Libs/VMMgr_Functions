@@ -234,6 +234,13 @@ function Start_VM_From_Config() {
     else
         VNCTPL=TPLNULL
     fi
+    
+    if [ "$QMP" == "on" ]; then
+        IPPORT=$(Set_Service_Listen $QMPIP $QMPIPVER $QMPTYPE $NAME qmp $QMPPORT)
+        $QMPTPL="-chardev socket,id=qmp01,host=$(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}'),port=${IPPORT#*|},server,nowait -mon chardev=qmp01,mode=control,pretty=on"
+    else
+        $QMPTPL=TPLNULL
+    fi
 
     . $VMMGR_CONFIG_PATH/DATA/VMMgr_VirtioNet
     
@@ -245,10 +252,25 @@ function Start_VM_From_Config() {
     
        
     sleep 2
-    echo "qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} $TELNETTPL $NETARRAY ${!VNCTPL}"
-    qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $TELNETTPL $NETARRAY
+    echo "qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} ${!QMPTPL} $TELNETTPL $NETARRAY "
+    qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} ${!QMPTPL} $TELNETTPL $NETARRAY
     sleep 2
     if [ "$VNCPWD" != "" ]; then
             { echo "set_password vnc $VNCPWD"; sleep 1; } | telnet $VNCIP $VNCPORT
     fi
+    if [ "$TELNET" == "on" ]; then
+        { echo "info status"; sleep 1; } | telnet $TELNETIP $TELNETPORT
+    fi
+    
+    if [ "$QMP" == "on" ]; then
+        { echo '{ "execute": "query-status" }'; sleep 1; } | telnet $QMPIP $QMPPORT
+    fi
 }
+
+
+### ToDo ###
+# virtio-win:
+# stable: https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso
+# latest:https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/latest-virtio/virtio-win.iso
+# qemu-ga: https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-qemu-ga/qemu-ga-win-100.0.0.0-3.el7ev/qemu-ga-x64.msi
+# Spice-guest-tools: https://www.spice-space.org/download/windows/spice-guest-tools/spice-guest-tools-latest.exe
