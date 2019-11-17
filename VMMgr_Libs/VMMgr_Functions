@@ -226,9 +226,6 @@ function Start_VM_From_Config() {
         IPPORT=$(Set_Service_Listen $VNCIP $VNCIPVER $VNCTYPE $NAME vnc $VNCPORT)
         VNCIP=$(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}'); VNCPORT=${IPPORT#*|}
         . $VMMGR_CONFIG_PATH/DATA/VMMgr_VNC
-        if [ "$VNCPWD" != "" ]; then
-            { echo "set_password vnc $VNCPWD"; sleep 1; } | telnet $VNCIP $VNCPORT
-        fi
         echo "Remote Viewer with x509 do not work, please use another vnc viewer like Remina"
         #Set_Remote_Viewer $VNCTPL $NAME $IPPORT $VNCPWD
     else
@@ -247,4 +244,8 @@ function Start_VM_From_Config() {
     sleep 2
     echo "qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} $TELNETTPL $NETARRAY ${!VNCTPL}"
     qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $TELNETTPL $NETARRAY
+    sleep 2
+    if [ "$VNCPWD" != "" ]; then
+            { echo "set_password vnc $VNCPWD"; sleep 1; } | telnet $VNCIP $VNCPORT
+    fi
 }
