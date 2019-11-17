@@ -167,9 +167,6 @@ function Set_Remote_Viewer() {
     sed -i "s/%%PWD%%/$5/g" $CFGPATH
     
     CERTNAME=$(cat $CFGPATH | grep host-subject); CERTNAME=${CERTNAME#*CN=}; CERTNAME=${CERTNAME%%,*}
-    if [ "$CERTNAME" == "" ]; then
-        echo "Warning: no certname found in .vv remove viewer config file"
-    fi
     
     NAMEDHOST=$(cat /etc/hosts | grep ${4%|*} | awk '{print $2}');
     if [ "$NAMEDHOST" = "" ]; then
@@ -181,6 +178,8 @@ function Set_Remote_Viewer() {
     fi
     if [ "$CERTNAME" == "$NAMEDHOST" ]; then
         sed -i "s/%%HOSTNAME%%/$CERTNAME/g" $CFGPATH
+    elif [ "$NAMEDHOST" != "" ] && [ "$CERTNAME" != "" ]; then
+        sed -i "s/%%HOSTNAME%%/$NAMEDHOST/g" $CFGPATH
     else
         sed -i "s/%%HOSTNAME%%/${4%|*}/g" $CFGPATH
     fi
