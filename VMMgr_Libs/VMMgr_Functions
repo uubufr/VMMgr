@@ -259,11 +259,15 @@ function Start_VM_From_Config() {
             { echo "set_password vnc $VNCPWD"; sleep 1; } | telnet $VNCIP $VNCPORT
     fi
     if [ "$TELNET" == "on" ]; then
-        { echo "info status"; sleep 1; } | telnet $TELNETIP $TELNETPORT
+        TIP=${TELNETTPL##*monitor telnet:}
+        TIP=${TIP%%,server,nowait}
+        { echo "info status"; sleep 1; } | telnet ${TIP%:*} ${TIP##*:}
     fi
     
     if [ "$QMP" == "on" ]; then
-        { echo '{ "execute": "query-status" }'; sleep 1; } | telnet $QMPIP $QMPPORT
+        TIP=${QMPTPL##*chardev socket,id=qmp01,host=}
+        TIP=${TIP%%,server,nowait*}
+        { echo '{ "execute": "qmp_capabilities" } { "execute": "query-status" }'; sleep 1; } | telnet ${TIP%%,*} ${TIP##*port=}
     fi
 }
 
