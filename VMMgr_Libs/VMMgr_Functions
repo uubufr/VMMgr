@@ -219,7 +219,7 @@ function Start_VM_From_Config() {
         IPPORT=$(Set_Service_Listen $TELNETIP $TELNETIPVER $TELNETTYPE $NAME telnet $TELNETPORT)
         TELNETTPL="-monitor telnet:$(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}'):${IPPORT#*|},server,nowait"
     else
-        TELNETTPL=TPLNULL
+        TELNETTPL=""
     fi
 
     
@@ -239,7 +239,7 @@ function Start_VM_From_Config() {
         IPPORT=$(Set_Service_Listen $QMPIP $QMPIPVER $QMPTYPE $NAME qmp $QMPPORT)
         QMPTPL="-chardev socket,id=qmp01,host=$(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}'),port=${IPPORT#*|},server,nowait -mon chardev=qmp01,mode=control,pretty=on"
     else
-        QMPTPL=TPLNULL
+        QMPTPL=""
     fi
 
     . $VMMGR_CONFIG_PATH/DATA/VMMgr_VirtioNet
@@ -252,8 +252,8 @@ function Start_VM_From_Config() {
     
        
     sleep 2
-    echo "qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} ${!QMPTPL} $TELNETTPL $NETARRAY "
-    qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} ${!QMPTPL} $TELNETTPL $NETARRAY
+    echo "qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY "
+    qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY
     sleep 2
     if [ "$VNCPWD" != "" ]; then
             { echo "set_password vnc $VNCPWD"; sleep 1; } | telnet $VNCIP $VNCPORT
