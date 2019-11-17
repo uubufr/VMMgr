@@ -155,32 +155,36 @@ function Custom_VM_Config() {
 # Function: Set_Remote_Viewer
 # Description: Create .vv file for remove viewer
 # Args:
-#   $1: TEMPLATENAME
-#   $2: VM Name
-#   $3: Spice_IP_PORT ($IPPORT)
-#   $4: SPICE Password
+#   $1: Type (spice,vnc)
+#   $2: TEMPLATENAME
+#   $3: VM Name
+#   $4: Spice_IP_PORT ($IPPORT)
+#   $5: SPICE Password
 function Set_Remote_Viewer() {
-    cp $VMMGR_CONFIG_PATH/R-SPICE/$1 $VMMGR_CONFIG_PATH/R-SPICE/$2
-    sed -i "s/%%NAME%%/$2/g" $VMMGR_CONFIG_PATH/R-SPICE/$2
-    sed -i "s/%%SPICEPWD%%/$4/g" $VMMGR_CONFIG_PATH/R-SPICE/$2
+    CFGPATH=$VMMGR_CONFIG_PATH/R-${1^^}/$3
+    cp $VMMGR_CONFIG_PATH/R-${1^^}/$2 $CFGPATH
+    sed -i "s/%%NAME%%/$3/g" $CFGPATH
+    sed -i "s/%%PWD%%/$5/g" $CFGPATH
     
-    CERTNAME=$(cat $VMMGR_CONFIG_PATH/R-SPICE/$2 | grep host-subject); CERTNAME=${CERTNAME#*CN=}; CERTNAME=${CERTNAME%%,*}
+    CERTNAME=$(cat $CFGPATH | grep host-subject); CERTNAME=${CERTNAME#*CN=}; CERTNAME=${CERTNAME%%,*}
     if [ "$CERTNAME" == "" ]; then
         echo "Warning: no certname found in .vv remove viewer config file"
     fi
     
-    NAMEDHOST=$(cat /etc/hosts | grep ${3%|*} | awk '{print $2}');
+    NAMEDHOST=$(cat /etc/hosts | grep ${4%|*} | awk '{print $2}');
     if [ "$NAMEDHOST" = "" ]; then
-        NAMEDHOST=$(dig -x ${3%|*} | grep -v ";" | grep -v "^$" | head -1)
+        NAMEDHOST=$(dig -x ${4%|*} | grep -v ";" | grep -v "^$" | head -1)
         NAMEDHOST=${NAMEDHOST##*PTR }
         if [ "$NAMEDHOST" = "" ]; then
-            echo "Warning: no Hostname found matching Spice IP: ${3%|*}"
+            echo "Warning: no Hostname found matching IP: ${4%|*}"
         fi
     fi
     if [ "$CERTNAME" == "$NAMEDHOST" ]; then
-        sed -i "s/%%HOSTNAME%%/$CERTNAME/g" $VMMGR_CONFIG_PATH/R-SPICE/$2
+        sed -i "s/%%HOSTNAME%%/$CERTNAME/g" $CFGPATH
+    else
+        sed -i "s/%%HOSTNAME%%/${4%|*}/g" $CFGPATH
     fi
-    sed -i "s/%%PORT%%/${3#*|}/g" $VMMGR_CONFIG_PATH/R-SPICE/$2
+    sed -i "s/%%PORT%%/${4#*|}/g" $CFGPATH
 }
 
 # Function: Start_VM_From_Config
@@ -206,7 +210,7 @@ function Start_VM_From_Config() {
         IPPORT=$(Set_Service_Listen $SPICEIP $SPICEIPVER $SPICETYPE $NAME spice $SPICEPORT)
         SPICEIP=${IPPORT%|*}; SPICEPORT=${IPPORT#*|}
         . $VMMGR_CONFIG_PATH/DATA/VMMgr_Spice
-        Set_Remote_Viewer $SPICETPL $NAME $IPPORT $SPICEPWD
+        Set_Remote_Viewer spice $SPICETPL $NAME $IPPORT $SPICEPWD
     else
         SPICETPL=TPLNULL
     fi
@@ -227,7 +231,7 @@ function Start_VM_From_Config() {
         VNCIP=$(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}'); VNCPORT=${IPPORT#*|}
         . $VMMGR_CONFIG_PATH/DATA/VMMgr_VNC
         echo "Remote Viewer with x509 do not work, please use another vnc viewer like Remina"
-        #Set_Remote_Viewer $VNCTPL $NAME $IPPORT $VNCPWD
+        Set_Remote_Viewer vnc $VNCTPL $NAME $IPPORT $VNCPWD
     else
         VNCTPL=TPLNULL
     fi
