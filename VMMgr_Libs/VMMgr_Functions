@@ -178,7 +178,7 @@ function Set_Remote_Viewer() {
     fi
     if [ "$CERTNAME" == "$NAMEDHOST" ]; then
         sed -i "s/%%HOSTNAME%%/$CERTNAME/g" $CFGPATH
-    elif [ "$NAMEDHOST" != "" ] && [ "$CERTNAME" != "" ]; then
+    elif [ "$NAMEDHOST" != "" ]; then
         sed -i "s/%%HOSTNAME%%/$NAMEDHOST/g" $CFGPATH
     else
         sed -i "s/%%HOSTNAME%%/${4%|*}/g" $CFGPATH
