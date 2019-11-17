@@ -20,8 +20,6 @@ VNCCLEAR="-vnc $VNCDISPLAY"
 VNCSECURE="$VNCSECRETS -vnc $VNCDISPLAY,$VNCPASSWD,$VNCCREDS,$VNCEXCLUSIVE"
 VNCREV="-vnc $VNCREVERSE"
 
-VNCTPL=$VNCCLEAR
-
 # How to correctly set certs:
 #openssl rand -out /etc/pki/services/vnc/vnc-master.secret -base64 -rand=/dev/random 32
 #openssl rand -out /etc/pki/services/vnc/vnc-iv.secret -base64 -rand=/dev/random 16
