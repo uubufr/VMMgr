@@ -61,9 +61,6 @@ UUID="-uuid "$(cat /proc/sys/kernel/random/uuid)
 NODISPLAY="-display none"
 DISPLAYEGL="-display egl-headless"
 
-### VNC ###
-
-
 ### IPMI ###
 IPMIDEV="-device ipmi-bmc-sim,id=bmc0 -chardev socket,id=ipmi0,host=$IPMIHOST,port=$IPMIPORT,reconnect=10 -device ipmi-bmc-extern,id=bmc0,chardev=ipmi0 -device isa-ipmi-kcs,bmc=bmc0,irq=5 -device isa-ipmi-bt,bmc=bmc0,irq0"
 
