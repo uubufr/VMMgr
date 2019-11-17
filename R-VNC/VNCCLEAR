@@ -1,6 +1,6 @@
 [virt-viewer]
 type=vnc
-host=hvppl-fedora01
-port=5901
+host=%%HOSTNAME%%
+port=%%PORT
 fullscreen=1
-title=test
+title=%%NAME%%
