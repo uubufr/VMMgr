@@ -44,7 +44,7 @@ VNCTYPE=bridge
 VNCTPL=VNCSECURE
 
 QMP=on
-QMPIP=swpvl-telnet
+QMPIP=swvpl-telnet
 QMPTYPE=bridge
 
 . ./DATA/VMMgr_VirtioNet
