@@ -214,7 +214,21 @@ function Start_VM_From_Config() {
         IPPORT=$(Set_Service_Listen $TELNETIP $TELNETIPVER $TELNETTYPE $NAME telnet $TELNETPORT)
         TELNETTPL="-monitor telnet:$(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}'):${IPPORT#*|},server,nowait"
     fi
+
     
+    if [ "$VNC" == "on" ]; then
+        . $VMMGR_CONFIG_PATH/DATA/VMMgr_Spice
+        . $2
+        IPPORT=$(Set_Service_Listen $VNCIP $VNCIPVER $VNCTYPE $NAME vnc $VNCPORT)
+        VNCIP=$(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}'); VNCPORT=${IPPORT#*|}
+        . $VMMGR_CONFIG_PATH/DATA/VMMgr_VNC
+        if [ "$VNCPWD" != "" ]; then
+            { echo "set_password vnc $VNCPWD"; sleep 1; } | telnet $VNCIP $VNCPORT
+        fi
+        echo "Remote Viewer with x509 do not work, please use another vnc viewer like Remina"
+        #Set_Remote_Viewer $VNCTPL $NAME $IPPORT $VNCPWD
+    fi
+
     . $VMMGR_CONFIG_PATH/DATA/VMMgr_VirtioNet
     
     declare -i NUMDEV=0
@@ -222,7 +236,9 @@ function Start_VM_From_Config() {
         NETARRAY="$NETARRAY $(Set_NetDev $NAME ${NET%|*} ${NET#*|} "$NETDEV" "$DEVICE" $NUMDEV)"
         NUMDEV=$(( $NUMDEV + ${NET#*|} ))
     done
+    
+       
     sleep 2
-    echo "qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} $TELNETTPL $NETARRAY"
-    qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} $TELNETTPL $NETARRAY
+    echo "qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} $TELNETTPL $NETARRAY $VNCTPL"
+    qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} $TELNETTPL $NETARRAY $VNCTPL
 }

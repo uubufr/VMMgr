@@ -1,0 +1,7 @@
+echo "open "IP "PORT"
+sleep 2
+echo "set_password vnc $VNCPWD"
+echo
+echo
+sleep 2
+
