@@ -1,0 +1,38 @@
+#! /bin/bash
+#
+# script name: VMMgr_VNC
+# autor: Sylvain Girod ( uubu at gmx dot fr )
+# version: 0.04
+# description: VNC Vars and Templates
+#
+VNCSASL="sasl,acl"
+VNCSECRETS="-object secret,id=vncmaster,format=base64,file=/etc/pki/services/vnc/vnc-master.secret -object secret,id=vncsecret,format=base64,keyid=vncmaster,format=base64,file=/etc/pki/services/vnc/vnc-data,iv=$(</etc/pki/services/vnc/vnc-iv.secret) -object tls-creds-x509,id=vnctls,dir=/etc/pki/services/vnc,endpoint=server,priority=NONE:+SECURE128:-VERS-ALL:+VERS-TLS1.2,verify-peer=on,passwordid=vncsecret"
+VNCSHARE="share=force-shared"
+VNCEXCLUSIVE="share=allow-exclusive"
+VNCPASSWD="password"
+VNCDISPLAY="$VNCIP:$(( $VNCPORT - 5900 )),id=vnc01"
+VNCREVERSE="$VNCIP:$VNCPORT,reverse"
+VNCCREDS="tls-creds=vnctls"
+
+
+### Templates for VNC ###
+VNCCLEAR="-vnc $VNCDISPLAY"
+VNCSECURE="$VNCSECRETS -vnc $VNCDISPLAY,$VNCPASSWD,$VNCCREDS,$VNCEXCLUSIVE"
+VNCREV="-vnc $VNCREVERSE"
+
+VNCTPL=$VNCCLEAR
+
+# How to correctly set certs:
+#openssl rand -out /etc/pki/services/vnc/vnc-master.secret -base64 -rand=/dev/random 32
+#openssl rand -out /etc/pki/services/vnc/vnc-iv.secret -base64 -rand=/dev/random 16
+#PASS=$(cat /dev/random | tr -dc 'a-zA-Z0-9' | fold -w 64 | head -n 1)
+#VNCSEC0=$(printf $PASS | openssl enc -aes-256-cbc -a -K $(base64 -d /etc/pki/services/vnc/vnc-master.secret | hexdump -v -e '/1 "%02X"') -iv $(base64 -d /etc/pki/services/vnc/vnc-iv.secret | hexdump -v -e '/1 "%02X"') | tr -d "\n" )
+#echo $VNCSEC0 > /etc/pki/services/vnc/vnc-data
+#unset $VNCSEC0
+#cd /etc/pki/services/vnc/
+#cp ../spice/hvppl-fedora01.key server-key.pem
+#openssl rsa -in server-key.pem -out server-key.pem2
+#echo $PASS
+#openssl rsa -aes-256-cbc -in server-key.pem2 -out server-key.pem
+#chmod 0600 *
+#chown sylvain: *

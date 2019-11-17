@@ -1,0 +1,16 @@
+[virt-viewer]
+type=vnc
+host=%%HOSTNAME%%
+port=%%PORT%%
+fullscreen=1
+password=%%VNCPWD%%
+title=%%NAME%%
+fullscreen=1
+;disable-effects=all
+enable-usbredir=1
+enable-usb-autoshare=1
+enable-smartcard=0
+delete-this-file=0
+toggle-fullscreen=shift+f11
+release-cursor=shift+f12
+secure-attention=ctrl+alt+end
