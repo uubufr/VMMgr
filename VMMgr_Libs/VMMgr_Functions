@@ -168,7 +168,7 @@ function Set_Remote_Viewer() {
     
     CERTNAME=$(cat $CFGPATH | grep host-subject); CERTNAME=${CERTNAME#*CN=}; CERTNAME=${CERTNAME%%,*}
     
-    NAMEDHOST=$(cat /etc/hosts | grep ${4%|*} | awk '{print $2}');
+    NAMEDHOST=$(cat /etc/hosts | grep ${4%|*} | awk '{print $2}' | head -1);
     if [ "$NAMEDHOST" = "" ]; then
         NAMEDHOST=$(dig -x ${4%|*} | grep -v ";" | grep -v "^$" | head -1)
         NAMEDHOST=${NAMEDHOST##*PTR }
