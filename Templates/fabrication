@@ -41,7 +41,6 @@ TELNETTYPE=bridge
 VNC=on
 VNCIP=swvpl-spice
 VNCTYPE=bridge
-VNCTYPE=tun
 VNCTPL=VNCCLEAR
 
 . ./DATA/VMMgr_VirtioNet
