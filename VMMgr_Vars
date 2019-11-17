@@ -24,7 +24,7 @@
 # Note: all options can be overwrited in a specific template #
 
 
-###Manque NUMA SMP TELNET SPICE QMP RAM
+###Manque NUMA SMP QMP RAM
 
 
 COMMON="-daemonize -no-user-config -nodefaults -msg timestamp=on"
