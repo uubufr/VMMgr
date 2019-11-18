@@ -2,43 +2,46 @@
 #
 # script name: %%NAME%%
 # autor: Sylvain Girod ( uubu at gmx dot fr )
-# version: 0.02
-# description: Template for %%NAME%%
+# version: 0.05
+# description: Template for Linux Base
+#               1 CPU
+#               1GB RAM
+#               1HD 8G - Virtio-Disk
+#               1 iface - Virtio-Net
+#               Telnet and Spice
+# ToDo: IPVER=4, VNC=off, qmp=off
 GROUP=""
 NAME="%%NAME%%"         # Unique Name
 MEM="1"                 # Initial Mem Size, in GB
-MAXMEM=""               # OPTIONAL: Max Allowed mem (defaut: $MEM * 2)
+MAXMEM="1"              # OPTIONAL: Max Allowed mem (defaut: $MEM * 2)
 
 ### Disks ###
-
-DISKPATH="/mnt/disks/%%NAME%%/"
-
-## Note: At least 1 First disk is needed, Defaut: Virtio Disk, but if iscsi is defined and not virtio, use iscsi as first disk only
-VDISKSIZE=""             # First virtio Disk Size. Defaut: 2GB
-SDISKSIZE=""            # OPTIONAL: First iscsi Disk Size. Defaut: 2GB
-## Additionnals Disks
-sVDISKNUMBER=""           # OPTIONAL: number of additionals Virtio Disks
-sVDISKSIZE=""             # OPTIONAL: Size for optionals Virtio Disks
-sSDISKNUMBER=""           # OPTIONAL: number of additionals ISCSI Disks
-sSDISKSIZE=""             # OPTIONAL: Size for optionals ISCSI Disks
-
-## you can set individual disk in calling function manually:
-# Set_Disk virtio 50G Disk1
-# Set_Disk iscsi 20G /mnt/idisks/%%NAME%%-disk2
-
-### Network ###
-# Set_NetDev <bridge> <number of taps>
-# Set_NetDev swvpl-main 2
-# Set_NetDev swvpl-admin 1
+IOTHREADS=1
+DISKPATH="~/VMs/$NAME"
+Virtio_Disk[0]="1 8G $DISKPATH"
 
 
-### choose Qemu machine Template:
-QEMU_TEMPLATE=$LXBASE
+New_Network VM-Bridge "4|10.98.98.0|24" "10.98.98.10|10.98.98.100" 10.98.98.1
+SPICEIPVER=4
+SPICEMODE=plaintext
+SPICE=on
+SPICEIP=VM-Bridge
+SPICETYPE=bridge
+SPICETPL=SPICECLEAR
+
+TELNETIPVER=4
+TELNET=on
+TELNETIP=VM-Bridge
+TELNETTYPE=bridge
+
+VNC=off
+QMP=off
+
+. ./DATA/VMMgr_VirtioNet
+NETWORKDEVICE="VM-Bridge|1"
+
+QEMU_TEMPLATE=FAB
 
 ###env for spice:
 EMU_AUDIO_DRV=spice
 SPICE_DEBUG_ALLOW_MC=0
-
-
-#set_virtio_disk 1 50G 4G 1
-#set_virtio_net swvpl-main 1
