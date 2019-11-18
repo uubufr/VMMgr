@@ -1,1 +1,230 @@
- 
+#! /bin/bash
+#
+# script name: VMMgr_Disks
+# autor: Sylvain Girod ( uubu at gmx dot fr )
+# version: 0.04
+# description: Disks management
+#
+# Functions:
+# Set_Disk_Threads: Create threads objects
+# Set_Virtio_Disks: Take the list of disks, then génerate -object and -device
+# Set_Disks: Get disk list, check if they already exists and if not, create it
+# Set_Pci_Bridge: Create Pci_Bridge for Virtio Disks
+
+# Function: Set_Virtio_Disks
+# Description: Create an array of Virtio Disks
+# Args:
+#   $1: VM Name
+#   $2: Number of Disks
+#   $3: Size of Disks
+#   $4: Paths of Disks
+#   $5: threads
+#   $6: last PCI-addr used
+function Set_Virtio_Disks() {
+    #CURPCI=${6%-*}; [ "$CURPCI" == "" ] && CURPCI=1
+    #CURCADDR=${6#*-}; [ "$CURCADDR" == "" ] && CURCADDR=1
+    #CURTHREAD=1
+    #echo "Voilà ce qu'on doit faire:"
+    #echo "on doit créer $2 disques, en utilisant $5 threads"
+    #echo "o commence au bridge pci $CURPCI et à l'adresse $(( $CURCADDR + 1 ))"
+    
+    # gestion des paths:
+    
+    case ${4%%:*} in
+        "order")
+            ORDER="order"
+            ;;
+        "share")
+            ORDER="share"
+            ;;
+        *)
+            ORDER="share"
+            ;;
+    esac
+    
+    for DISKP in $(echo $4 | tr  tr : \  ); do
+    
+    #peut être qu'on doit sauver cette valeur pour faire les calculs ultérieurement, ou pas.
+     $DAVAIL=$(df | grep /mnt  | awk '{print $4}')
+    
+    
+    
+### ICI on créé une fonction qui sera appelé avec la variabel AllDisks, qui contient la liste de tous les disques.
+### on pourra donc calculer le nombre de disques, donc le nombre de pci-bridges
+### on pourra facilement créer l'ensemble des drive.
+### on aura toujours le problème de threads.
+### peut être qu'on peut relire les variables dans le template pour relire les threads.
+### peut être qu'on peut réfléchir à une autre manière de spécifier les threads.
+### peut être que dans la variable alldisks on peut inclure de threads à utiliser
+
+### la fonction de création des threads sera appelé par cette fonction, tout comme pour les pci-bridge
+### et la génération des -device ici.
+    
+    for NUMDRIVE in $(seq 1 $2); do
+        HDPATH=$1-Disk-$NUMDRIVE
+        for PLACE in $(echo $DISKPATH | tr : \  ); do
+            #echo ${PLACE%|*}/$HDPATH
+            if [ -r "${PLACE%|*}/$HDPATH" ]; then
+                CDISK="${PLACE%|*}/$HDPATH"
+            else
+                CDISK="new"
+            fi
+        done
+        if [ "$CDISK" == "new" ]; then                  # Disk not found, need to create it
+            echo "faut gérer les path"
+            #qemu-img create -f qcow2 -o cluster_size=32k ${PLACE%|*}/$HDPATH $3
+            CDISK="${PLACE%|*}/$HDPATH"
+        fi
+        AllDisks="$AllDisks|$CDISK"
+    done
+    echo "au final: "$AllDisks
+}
+        PCIUPD=1; CURPCIADDR=$(( $CURCADDR + $NUMDRIVE ))
+        echo $CURPCIADDR
+        
+        while [ $CURPCIADDR -gt 31 ]; do CURPCIADDR=$(( $CURPCIADDR - 31 )); PCIUPD=$(( $PCIUPD + 1)); done;
+        if [ $CURPCI -ne $PCIUPD ]; then PCIBRIDGECREATED=0; fi
+        CURPCI=$PCIUPD; CURPCIADDR=$(echo "ibase=10;obase=16;$CURPCIADDR" | bc);
+
+        # pci bridge declare
+        if [ $PCIBRIDGECREATED -eq 0 ]; then echo "-device pci-bridge,id=pci.$CURPCI,chassis_nr=1"; PCIBRIDGECREATED=1; fi
+
+        echo "-drive file=$HDPATH,if=none,format=qcow2,id=virtio-disk$numdrv,cache=directsync,aio=native -device virtio-blk-pci,iothread=iothread$CURTHREAD,ioeventfd=on,event_idx=on,scsi=off,config-wce=off,drive=virtio-disk$NUMDRIVE,bus=pci.$CURPCI,addr=0x$CURPCIADDR.0x0"
+    done
+}
+
+
+# Function: Set_Disk_Threads
+# Description: Create threads objects
+# Args:
+#   $1: number of threads
+function Set_Disk_Threads() {
+    THREADS=""
+    for DTHREAD in $(seq 1 $1); do
+        THREADS="$THREADS -object iothread,id=iothread$DTHREAD"
+    done
+    echo $THREADS
+}
+
+# Function: Set_Pci_Bridge
+# Description: Create Pci_Bridge for Virtio Disks
+# Args:
+#   $1: How many bridge?
+function Set_Pci_Bridge() {
+    PCIs=""
+    for PCI in $(seq 1 $1 ); do
+        PCIs="$PCIs -device pci-bridge,id=pci.$PCI,chassis_nr=1"
+    done
+    echo $PCIs
+}
+
+# Function: Set_Disks
+# Description: Get disk list, check if they already exists and if not, create it
+# Args:
+#   $1: Vm Name
+function Set_Disks() {
+    DisksList=""
+    DNUM=0
+    CPATH=""
+    for ARRAYNUM in $(seq 0 ${#Virtio_Disk[@]}); do
+        read -r DNUMBER DSIZE DPATH <<< $(echo "${Virtio_Disk[$ARRAYNUM]}")
+        if [ "$DNUMBER" == "" ]; then continue; fi
+        case "${DPATH%%:*}" in
+            "order")
+                ORDER="order"
+                ;;
+            "share")
+                ORDER="share"
+                ;;
+            *)
+                ORDER="share"
+                ;;
+        esac
+        
+        CounterPATH="1"
+        for drive in $(seq 1 $DNUMBER); do
+            DNUM=$(( DNUM + 1 ))
+            
+            ### First, we need to find if disk exists:
+            EXISTS="Qemu-Virtio-Disk_qcow2_$DSIZE-$DNUM-$NAME"
+            DFOUND=0
+            OldCounter=$CounterPATH
+            for EPATH in $( echo $DPATH | tr : \  ); do
+                [ -d $EPATH ] || mkdir -p $EPATH
+                if [ -r "$EPATH/$EXISTS" ]; then
+                    DFOUND=1; break;
+                else
+                   if [ "$ORDER" == "share" ]; then
+                    CounterPATH=$(( $CounterPATH + 1 ))
+                   fi
+            done
+            if [ "$DFOUND" == 1 ]; then
+                DisksList="$DisksList|$EPATH/$EXISTS"
+            else
+                CounterPATH=$OldCounter
+                case "$ORDER" in
+                    "share")
+                        DPATH=${DPATH#share:}
+                            CPATH=$( echo $DPATH | cut -d: -f $CounterPATH)
+                            if [ "$CPATH" == "" ]; then
+                                CounterPATH=1
+                                CPATH=$( echo $DPATH | cut -d: -f $CounterPATH)
+                            fi
+                            CounterPATH=$(( $CounterPATH + 1 ))
+                        ;;
+                    "order")
+                        DPATH=${DPATH#order:}
+                        # Here, we need to check if we have enough space on the disk, if not, we check next path:
+                        CPATH=$( echo $DPATH | cut -d: -f $CounterPATH)
+                        IAVAIL=$(echo "$(df --block-size=1k --sync --output=iavail $CPATH | tail -1)K" | numfmt --from=iec )
+                        AVAIL=$(echo "$(df --block-size=1k --sync --output=avail $CPATH | tail -1)K" | numfmt --from=iec )
+                        OSIZE=$(echo 8G | numfmt --from=iec)
+                        AVAIL=$(( $AVAIL - $OSIZE ))
+                        
+                        # Not enough space left on the device
+                        while [ $AVAIL -le "0" ]; do
+                            CounterPATH=$(( $CounterPATH + 1 ))
+                            CPATH=$( echo $DPATH | cut -d: -f $CounterPATH)
+                            if [ "$CPATH" == "" ]; then                     # end of path list, so no space left anywhere, error
+                                break;
+                            else                                            # Checking next path
+                                IAVAIL=$(echo "$(df --block-size=1k --sync --output=iavail $CPATH | tail -1)K" | numfmt --from=iec )
+                                AVAIL=$(echo "$(df --block-size=1k --sync --output=avail $CPATH | tail -1)K" | numfmt --from=iec )
+                                OSIZE=$(echo 8G | numfmt --from=iec)
+                                AVAIL=$(( $AVAIL - $OSIZE ))
+                            fi
+                        done
+                        ;;
+                esac
+            fi
+            qemu-img create -f qcow2 -o cluster_size=32k "$CPATH/Qemu-Virtio-Disk_qcow2_$DSIZE-$DNUM-$NAME" $DSIZE
+            DisksList="$DisksList|$CPATH/Qemu-Virtio-Disk_qcow2_$DSIZE-$DNUM-$NAME"
+        done
+    done
+    echo ${DisksList#|}
+}
+
+# Function: Set_Virtio_Disks
+# Description: Déclare iothreads, pci-bridges, and drives
+# Args:
+#   $1: Vm Name
+#   $2: Num Threads
+#   $3: DiskLists
+function Set_Virtio_Disks() {
+    IOTHREADS=$(Set_Disk_Threads $2)
+    COUNT=0;PCOUNT=0
+    PCIBRIDGE=1
+    THREAD=1
+    for DISK in $(echo $3 | tr \| \  ); do
+        COUNT=$(( $COUNT + 1 ))
+        PCOUNT=$(( $PCOUNT + 1 ))
+        if [ $PCOUNT -gt 31 ]; then
+            PCIBRIDGE=$(( $PCIBRIDGE + 1 ))
+            PCOUNT=1
+        fi
+        DRIVES="$DRIVES-drive file=$DISK,if=none,format=qcow2,id=virtio-disk$COUNT,cache=directsync,aio=native,werror=enospc,rerror=report -device virtio-blk-pci,iothread=iothread$THREAD,ioeventfd=on,event_idx=on,scsi=off,config-wce=off,drive=virtio-disk$COUNT,bus=pci.$PCIBRIDGE,addr=0x$(echo "ibase=10;obase=16;$PCOUNT" | bc).0x0 "
+        THREAD=$(( $THREAD + 1 )); [ $THREAD -gt $2 ] && THREAD=1
+    done
+    PCIs=$(Set_Pci_Bridge $PCIBRIDGE)
+    echo $IOTHREADS $PCIs $DRIVES
+}

@@ -250,7 +250,11 @@ function Start_VM_From_Config() {
         NUMDEV=$(( $NUMDEV + ${NET#*|} ))
     done
     
-       
+    export Virtio_Disk
+    DisksList=$(Set_Disks $NAME)
+    Set_Virtio_Disks $NAME $IOTHREADS $DisksList
+    unset Virtio_Disk
+    
     sleep 2
     echo "qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY "
     qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY
@@ -270,6 +274,7 @@ function Start_VM_From_Config() {
         { echo '{ "execute": "qmp_capabilities" } { "execute": "query-status" }'; sleep 1; } | telnet ${TIP%%,*} ${TIP##*port=}
     fi
 }
+
 
 
 ### ToDo ###
