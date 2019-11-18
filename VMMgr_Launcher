@@ -240,7 +240,7 @@ case "$1" in
             . $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF
             case "$3" in
                 "spice")
-                        remote-viewer $VMMGR_CONFIG_PATH/R-SPICE/$2
+                        nohup remote-viewer $VMMGR_CONFIG_PATH/R-SPICE/$2 &
                 ;;
                 "telnet")
                     IPPORT=$(Set_Service_Listen $TELNETIP $TELNETIPVER $TELNETTYPE $NAME telnet $TELNETPORT)
@@ -251,7 +251,7 @@ case "$1" in
                     telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
                 ;;
                 "vnc")
-                    remote-viewer $VMMGR_CONFIG_PATH/R-VNC/$2
+                    nohup remote-viewer $VMMGR_CONFIG_PATH/R-VNC/$2 &
                 ;;
             esac
         fi
