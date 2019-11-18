@@ -252,12 +252,12 @@ function Start_VM_From_Config() {
     
     export Virtio_Disk
     DisksList=$(Set_Disks $NAME)
-    Set_Virtio_Disks $NAME $IOTHREADS $DisksList
+    VIRTIODISKS=$(Set_Virtio_Disks $NAME $IOTHREADS $DisksList)
     unset Virtio_Disk
     
     sleep 2
-    echo "qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY "
-    qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY
+    echo "qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS"
+    qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS
     sleep 2
     if [ "$VNCPWD" != "" ]; then
             { echo "set_password vnc $VNCPWD"; sleep 1; } | telnet $VNCIP $VNCPORT

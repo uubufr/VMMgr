@@ -132,7 +132,7 @@ function Set_Virtio_Disks() {
     IOTHREADS=$(Set_Disk_Threads $2)
     COUNT=0;PCOUNT=0
     PCIBRIDGE=1
-    THREAD=1
+    declare -i THREAD=1
     for DISK in $(echo $3 | tr \| \  ); do
         COUNT=$(( $COUNT + 1 ))
         PCOUNT=$(( $PCOUNT + 1 ))
