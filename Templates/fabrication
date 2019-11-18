@@ -53,11 +53,11 @@ New_Network swvpl-main "6|2a01:e0a:278:9830::|64"  "2a01:e0a:278:9830::1|2a01:e0
 NETWORKDEVICE="swvpl-prod01|2 swvpl-main|4"
 
 
-DISKPATH="/mnt/disks/$NAME/"
+DISKPATH="/run/media/sylvain/STORAGE/4M/$NAME"
 Virtio_Disk[0]="1 8G $DISKPATH"
-DISKPATH="share:/run/media/sylvain/STORAGE/4M/$NAME:/run/media/sylvain/DATA/$NAME:/srv/$NAME"
+#DISKPATH="share:/run/media/sylvain/STORAGE/4M/$NAME:/run/media/sylvain/DATA/$NAME:/srv/$NAME"
 Virtio_Disk[1]="4 4G $DISKPATH"
-DISKPATH="order:/dev/mapper/fedora-home:/dev:/run/media/sylvain/STORAGE/4M"
+#DISKPATH="order:/dev/mapper/fedora-home:/dev:/run/media/sylvain/STORAGE/4M"
 Virtio_Disk[2]="96 1G $DISKPATH"
 
 QEMU_TEMPLATE=FAB
