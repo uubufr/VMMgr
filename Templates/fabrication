@@ -52,7 +52,7 @@ New_Network swvpl-prod01 "6|2a01:e0a:278:9833::|64" "2a01:e0a:278:9833::1|2a01:e
 New_Network swvpl-main "6|2a01:e0a:278:9830::|64"  "2a01:e0a:278:9830::1|2a01:e0a:278:9830::FFFF:FFFF" 2a01:e0a:278:9830:82c5:f2ff:fe06:984f
 NETWORKDEVICE="swvpl-prod01|2 swvpl-main|4"
 
-
+IOTHREADS=4
 DISKPATH="/run/media/sylvain/STORAGE/4M/$NAME"
 Virtio_Disk[0]="1 8G $DISKPATH"
 #DISKPATH="share:/run/media/sylvain/STORAGE/4M/$NAME:/run/media/sylvain/DATA/$NAME:/srv/$NAME"

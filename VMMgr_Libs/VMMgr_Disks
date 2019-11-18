@@ -77,6 +77,7 @@ function Set_Disks() {
                 fi
             done
             if [ "$DFOUND" == 1 ]; then
+                CPATH=$EPATH
                 DisksList="$DisksList|$EPATH/$EXISTS"
             else
                 CounterPATH=$OldCounter
@@ -114,8 +115,8 @@ function Set_Disks() {
                         done
                         ;;
                 esac
+                qemu-img create -f qcow2 -o cluster_size=32k "$CPATH/Qemu-Virtio-Disk_qcow2_$DSIZE-$DNUM-$NAME" $DSIZE 2>/dev/null 1>/dev/null
             fi
-            qemu-img create -f qcow2 -o cluster_size=32k "$CPATH/Qemu-Virtio-Disk_qcow2_$DSIZE-$DNUM-$NAME" $DSIZE
             DisksList="$DisksList|$CPATH/Qemu-Virtio-Disk_qcow2_$DSIZE-$DNUM-$NAME"
         done
     done
