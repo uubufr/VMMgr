@@ -207,7 +207,6 @@ case "$1" in
             fi
         fi
         ;;
-        ;;
     "reset")
         VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
         if [ "$VMCONF" == "" ]; then
