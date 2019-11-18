@@ -74,6 +74,7 @@ function Set_Disks() {
                    if [ "$ORDER" == "share" ]; then
                     CounterPATH=$(( $CounterPATH + 1 ))
                    fi
+                fi
             done
             if [ "$DFOUND" == 1 ]; then
                 DisksList="$DisksList|$EPATH/$EXISTS"
