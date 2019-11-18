@@ -10,21 +10,9 @@ MEM="1"                 # Initial Mem Size, in GB
 MAXMEM="1"               # OPTIONAL: Max Allowed mem (defaut: $MEM * 2)
 
 ### Disks ###
-
-DISKPATH="/mnt/disks/%%NAME%%/"
-
-## Note: At least 1 First disk is needed, Defaut: Virtio Disk, but if iscsi is defined and not virtio, use iscsi as first disk only
-mVDISKSIZE=""             # First virtio Disk Size. Defaut: 2GB
-mSDISKSIZE=""            # OPTIONAL: First iscsi Disk Size. Defaut: 2GB
-## Additionnals Disks
-sVDISKNUMBER=""           # OPTIONAL: number of additionals Virtio Disks
-sVDISKSIZE=""             # OPTIONAL: Size for optionals Virtio Disks
-sSDISKNUMBER=""           # OPTIONAL: number of additionals ISCSI Disks
-sSDISKSIZE=""             # OPTIONAL: Size for optionals ISCSI Disks
-
-## you can set individual disk in calling function manually:
-# Set_Disk virtio 50G Disk1
-# Set_Disk iscsi 20G /mnt/idisks/%%NAME%%-disk2
+IOTHREADS=1
+DISKPATH="/run/media/sylvain/STORAGE/4M/$NAME"
+Virtio_Disk[0]="1 8G $DISKPATH"
 
 ### choose Qemu machine Template:
 New_Network swvpl-spice "6|2a01:e0a:278:9831::|64" "2a01:e0a:278:9831::10|2a01:e0a:278:9831::FFFF" 2a01:e0a:278:9831::1
@@ -50,15 +38,7 @@ QMPTYPE=bridge
 . ./DATA/VMMgr_VirtioNet
 New_Network swvpl-prod01 "6|2a01:e0a:278:9833::|64" "2a01:e0a:278:9833::1|2a01:e0a:278:9833::FFFF:FFFF"
 New_Network swvpl-main "6|2a01:e0a:278:9830::|64"  "2a01:e0a:278:9830::1|2a01:e0a:278:9830::FFFF:FFFF" 2a01:e0a:278:9830:82c5:f2ff:fe06:984f
-NETWORKDEVICE="swvpl-prod01|2 swvpl-main|4"
-
-IOTHREADS=1
-DISKPATH="/run/media/sylvain/STORAGE/4M/$NAME"
-Virtio_Disk[0]="1 8G $DISKPATH"
-#DISKPATH="share:/run/media/sylvain/STORAGE/4M/$NAME:/run/media/sylvain/DATA/$NAME:/srv/$NAME"
-#Virtio_Disk[1]="4 4G $DISKPATH"
-#DISKPATH="order:/dev/mapper/fedora-home:/dev:/run/media/sylvain/STORAGE/4M"
-#Virtio_Disk[2]="96 1G $DISKPATH"
+NETWORKDEVICE="swvpl-main|1"
 
 QEMU_TEMPLATE=FAB
 
