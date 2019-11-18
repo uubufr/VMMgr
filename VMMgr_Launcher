@@ -155,25 +155,75 @@ case "$1" in
     "enable")
         ;;
     "stop")
+        VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
+        if [ "$VMCONF" == "" ]; then
+            echo "$2 not found in DB"
+        else
+            . $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF
+            if [ "$TELNET" == "on" ]; then
+                IPPORT=$(Set_Service_Listen $TELNETIP $TELNETIPVER $TELNETTYPE $NAME telnet $TELNETPORT)
+                { echo "system_powerdown"; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
+            fi
+    
+            if [ "$QMP" == "on" ]; then
+                IPPORT=$(Set_Service_Listen $QMPIP $QMPIPVER $QMPTYPE $NAME qmp $QMPPORT)
+                { echo  { echo '{ "execute": "qmp_capabilities" } { "execute": "system_powerdown" } { "execute": "quit" }'; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
+            fi
+        fi
         ;;
     "group")
         ;;
     "status")
-        if [ "$TELNET" == "on" ]; then
-            TIP=${TELNETTPL##*monitor telnet:}
-            TIP=${TIP%%,server,nowait}
-            { echo "info status"; sleep 1; } | telnet ${TIP%:*} ${TIP##*:}
-        fi
+         VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
+        if [ "$VMCONF" == "" ]; then
+            echo "$2 not found in DB"
+        else
+            . $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF
+            if [ "$TELNET" == "on" ]; then
+                IPPORT=$(Set_Service_Listen $TELNETIP $TELNETIPVER $TELNETTYPE $NAME telnet $TELNETPORT)
+                { echo "info status"; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
+            fi
     
-        if [ "$QMP" == "on" ]; then
-            TIP=${QMPTPL##*chardev socket,id=qmp01,host=}
-            TIP=${TIP%%,server,nowait*}
-            { echo '{ "execute": "qmp_capabilities" } { "execute": "query-status" }'; sleep 1; } | telnet ${TIP%%,*} ${TIP##*port=}
+            if [ "$QMP" == "on" ]; then
+                IPPORT=$(Set_Service_Listen $QMPIP $QMPIPVER $QMPTYPE $NAME qmp $QMPPORT)
+                { echo '{ "execute": "qmp_capabilities" } { "execute": "query-status" }'; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
+            fi
         fi
         ;;
     "kill")
+        VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
+        if [ "$VMCONF" == "" ]; then
+            echo "$2 not found in DB"
+        else
+            . $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF
+            if [ "$TELNET" == "on" ]; then
+                IPPORT=$(Set_Service_Listen $TELNETIP $TELNETIPVER $TELNETTYPE $NAME telnet $TELNETPORT)
+                { echo "quit"; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
+            fi
+    
+            if [ "$QMP" == "on" ]; then
+                IPPORT=$(Set_Service_Listen $QMPIP $QMPIPVER $QMPTYPE $NAME qmp $QMPPORT)
+                { echo  { echo '{ "execute": "qmp_capabilities" } { "execute": "quit" }'; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
+            fi
+        fi
+        ;;
         ;;
     "reset")
+        VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
+        if [ "$VMCONF" == "" ]; then
+            echo "$2 not found in DB"
+        else
+            . $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF
+            if [ "$TELNET" == "on" ]; then
+                IPPORT=$(Set_Service_Listen $TELNETIP $TELNETIPVER $TELNETTYPE $NAME telnet $TELNETPORT)
+                { echo "system_reset"; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
+            fi
+    
+            if [ "$QMP" == "on" ]; then
+                IPPORT=$(Set_Service_Listen $QMPIP $QMPIPVER $QMPTYPE $NAME qmp $QMPPORT)
+                { echo  { echo '{ "execute": "qmp_capabilities" } { "execute": "system_reset" } { "execute": "quit" }'; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
+            fi
+        fi
         ;;
     "ipmistart")
         ;;
@@ -184,16 +234,28 @@ case "$1" in
     "define")
         ;;
     "connect")
-        case "$2" in
-            "spice")
-                remote-viewer $VMMgr_PATH/R-SPICE/s-$3
-            ;;
-            "telnet")
-                telnet $(Db_Get_IPPORT $VMMgr_PATH $3 telnet | tr \| \  )
-            ;;
-            "qmp")
-            ;;
-        esac
+        VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
+        if [ "$VMCONF" == "" ]; then
+            echo "$2 not found in DB"
+        else
+            . $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF
+            case "$3" in
+                "spice")
+                        remote-viewer $VMMGR_CONFIG_PATH/R-SPICE/$2
+                ;;
+                "telnet")
+                    IPPORT=$(Set_Service_Listen $TELNETIP $TELNETIPVER $TELNETTYPE $NAME telnet $TELNETPORT)
+                    telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
+                ;;
+                "qmp")
+                    IPPORT=$(Set_Service_Listen $QMPIP $QMPIPVER $QMPTYPE $NAME qmp $QMPPORT)
+                    telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
+                ;;
+                "vnc")
+                    remote-viewer $VMMGR_CONFIG_PATH/R-VNC/$2
+                ;;
+            esac
+        fi
         ;;
     *)
         ;;

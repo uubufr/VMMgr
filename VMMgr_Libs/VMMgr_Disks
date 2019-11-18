@@ -43,7 +43,7 @@ function Set_Disks() {
     DisksList=""
     DNUM=0
     CPATH=""
-    for ARRAYNUM in $(seq 0 ${#Virtio_Disk[@]}); do
+    for ARRAYNUM in $(seq 1 ${#Virtio_Disk[@]}); do
         read -r DNUMBER DSIZE DPATH <<< $(echo "${Virtio_Disk[$ARRAYNUM]}")
         if [ "$DNUMBER" == "" ]; then continue; fi
         case "${DPATH%%:*}" in
