@@ -250,7 +250,6 @@ function Start_VM_From_Config() {
         NUMDEV=$(( $NUMDEV + ${NET#*|} ))
     done
     
-    . $VMMGR_CONFIG_PATH/DATA/VMMgr_Disks
     export Virtio_Disk
     DisksList=$(Set_Disks $NAME)
     Set_Virtio_Disks $NAME $IOTHREADS $DisksList

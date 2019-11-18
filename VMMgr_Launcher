@@ -53,7 +53,7 @@ fi
 . $VMMGR_DATA_PATH/VMMgr_Libs/VMMgr_Db
 . $VMMGR_DATA_PATH/VMMgr_Libs/VMMgr_Functions
 . $VMMGR_DATA_PATH/VMMgr_Libs/VMMgr_Networks
-
+. $VMMGR_DATA_PATH/VMMgr_Libs/VMMgr_Disks
 Check_System
 
 case "$1" in
