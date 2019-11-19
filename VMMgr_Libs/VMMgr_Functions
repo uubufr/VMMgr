@@ -256,8 +256,8 @@ function Start_VM_From_Config() {
     unset Virtio_Disk
     
     sleep 2
-    echo "qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS"
-    qemu-system-x86_64 ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS
+    echo "qemu-system-x86_64 -name $NAME ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS"
+    qemu-system-x86_64 -name $NAME ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS
     sleep 2
     if  [ "$VNC" == "on" ] && [ "$VNCPWD" != "" ]; then
             { echo "set_password vnc $VNCPWD"; sleep 1; } | telnet $VNCIP $VNCPORT
