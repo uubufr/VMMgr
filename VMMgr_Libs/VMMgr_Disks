@@ -43,8 +43,8 @@ function Set_Disks() {
     DisksList=""
     DNUM=0
     CPATH=""
-    for ARRAYNUM in $(seq 1 ${#Virtio_Disk[@]}); do
-        read -r DNUMBER DSIZE DPATH <<< $(echo "${Virtio_Disk[$ARRAYNUM]}")
+    for ARRAYNUM in $(seq 0 ${#Virtio_Disk[@]}); do
+        read -r DNUMBER DSIZE DPATH <<< $(echo "${Virtio_Disk[$(( $ARRAYNUM -1 ))]}")
         if [ "$DNUMBER" == "" ]; then continue; fi
         case "${DPATH%%:*}" in
             "order")
@@ -116,8 +116,8 @@ function Set_Disks() {
                         ;;
                 esac
                 qemu-img create -f qcow2 -o cluster_size=32k "$CPATH/Qemu-Virtio-Disk_qcow2_$DSIZE-$DNUM-$NAME" $DSIZE 2>/dev/null 1>/dev/null
+                DisksList="$DisksList|$CPATH/Qemu-Virtio-Disk_qcow2_$DSIZE-$DNUM-$NAME"
             fi
-            DisksList="$DisksList|$CPATH/Qemu-Virtio-Disk_qcow2_$DSIZE-$DNUM-$NAME"
         done
     done
     echo ${DisksList#|}
