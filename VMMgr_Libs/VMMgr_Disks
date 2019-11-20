@@ -178,7 +178,7 @@ function Set_Virtio_Disks() {
             
             TOTALCACHE=$(( $L2CACHE + $REFCACHE ))
             
-            DRIVEOPT="${!DISKTPL},l2-cache-size=$L2CACHE,refcount-cache-size=$REFCACHE,cache-size=$TOTALCACHE"
+            DRIVEOPT="${!DISKTPL},l2-cache-size=$L2CACHE,cache-size=$TOTALCACHE"
         fi
         DRIVES="$DRIVES-drive file=$DISK,id=virtio-disk$COUNT,node-name=$DISKHD,$DRIVEOPT -device virtio-blk-pci,iothread=iothread$THREAD,ioeventfd=on,event_idx=on,scsi=off,config-wce=off,drive=virtio-disk$COUNT,bus=pci.$PCIBRIDGE,addr=0x$(echo "ibase=10;obase=16;$PCOUNT" | bc).0x0 "
         #DRIVES="$DRIVES-drive file=$DISK,if=none,format=qcow2,id=virtio-disk$COUNT,cache=directsync,aio=native,werror=enospc,rerror=report -device virtio-blk-pci,iothread=iothread$THREAD,ioeventfd=on,event_idx=on,scsi=off,config-wce=off,drive=virtio-disk$COUNT,bus=pci.$PCIBRIDGE,addr=0x$(echo "ibase=10;obase=16;$PCOUNT" | bc).0x0 "
