@@ -1,0 +1,23 @@
+#! /bin/bash
+#
+# script name: VMMgr_VirtioDisk
+# autor: Sylvain Girod ( uubu at gmx dot fr )
+# version: 0.04
+# description: VirtioDisk Vars and Templates
+#
+# VAR for VirtioDisk should avoid '-' char
+### Best with SSD
+SSDCOW="format=qcow2,if=none,cache=directsync,aio=threads,werror=enospc,rerror=report,snapshot=on,cache-clean-interval=900,discard=on,detect-zeroes=unmap,pass-discard-request=on,pass-discard-snapshot=on,pass-discard-other=off,overlap-check=cached"
+### Best for Read
+HDCOWR="format=qcow2,if=none,cache=writethough,aio=threads,werror=enospc,rerror=report,snapshot=on,cache-clean-interval=900,discard=on,detect-zeroes=unmap,pass-discard-request=on,pass-discard-snapshot=on,pass-discard-other=off,overlap-check=cached"
+### Best for Write and NFS
+HDCOWW="format=qcow2,if=none,cache=none,aio=threads,werror=enospc,rerror=report,snapshot=on,cache-clean-interval=900,discard=on,detect-zeroes=unmap,pass-discard-request=on,pass-discard-snapshot=on,pass-discard-other=off,overlap-check=cached"
+### Using DPDK
+HDDPDK="format=raw,if=none,cache=none,aio=threads,werror=enospc,rerror=report"
+
+
+## Matching qemu-image create options
+SSDCOW_IMG="-f qcow2 -o cluster_size=128k"
+HDCOWR_IMG="-f qcow2 -o cluster_size=128k"
+HDCOWW_IMG="-f qcow2 -o cluster_size=256k"
+HDDPDK_IMG="-f raw"
