@@ -43,5 +43,5 @@ NETWORKDEVICE="swvpl-main|1"
 QEMU_TEMPLATE=FAB
 
 ###env for spice:
-EMU_AUDIO_DRV=spice
+QEMU_AUDIO_DRV=spice
 SPICE_DEBUG_ALLOW_MC=0
