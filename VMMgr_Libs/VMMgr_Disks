@@ -40,11 +40,13 @@ function Set_Pci_Bridge() {
 # Args:
 #   $1: Vm Name
 function Set_Disks() {
+    . $VMMGR_CONFIG_PATH/DATA/VMMgr_VirtioDisk
     DisksList=""
     DNUM=0
     CPATH=""
-    for ARRAYNUM in $(seq 0 ${#Virtio_Disk[@]}); do
-        read -r DNUMBER DSIZE DPATH <<< $(echo "${Virtio_Disk[$(( $ARRAYNUM -1 ))]}")
+    for ARRAYNUM in $(seq 1 ${#Virtio_Disk[@]}); do
+        read -r DNUMBER DSIZE DPATH DTPL <<< $(echo "${Virtio_Disk[$(( $ARRAYNUM - 1 ))]}")
+        if [ "$DTPL" == "" ]; then DTPL="SSDCOW"; fi
         if [ "$DNUMBER" == "" ]; then continue; fi
         case "${DPATH%%:*}" in
             "order")
@@ -61,14 +63,19 @@ function Set_Disks() {
         CounterPATH="1"
         for drive in $(seq 1 $DNUMBER); do
             DNUM=$(( DNUM + 1 ))
+
+            ### Calculate vdxx name
+            read VDX VDY <<< $(echo "ibase=10;obase=26;$(( $DNUM - 1 ))" | bc)
+            if [ "$VDY" == "" ]; then VDY=$VDX; VDX=""; fi
+            VDNAME="vd$(awk -v hda=$VDX -v hdb=$VDY 'BEGIN{ i=hda+96; if ( hda > 0 ) printf "%c", i; x=hdb+97; printf "%c", x }')"
+            DRIVENAME="Qemu-Virtio-Disk_$NAME-$DSIZE-$VDNAME-$DTPL"
             
-            ### First, we need to find if disk exists:
-            EXISTS="Qemu-Virtio-Disk_qcow2_$DSIZE-$DNUM-$NAME"
+            ### First, we need to find existing disk:
             DFOUND=0
             OldCounter=$CounterPATH
             for EPATH in $( echo $DPATH | tr : \  ); do
                 [ -d $EPATH ] || mkdir -p $EPATH
-                if [ -r "$EPATH/$EXISTS" ]; then
+                if [ -r "$EPATH/$DRIVENAME" ]; then
                     DFOUND=1; break;
                 else
                    if [ "$ORDER" == "share" ]; then
@@ -77,8 +84,8 @@ function Set_Disks() {
                 fi
             done
             if [ "$DFOUND" == 1 ]; then
-                CPATH=$EPATH
-                DisksList="$DisksList|$EPATH/$EXISTS"
+                CPATH=${EPATH%/}
+                DisksList="$DisksList|$EPATH/$DRIVENAME"
             else
                 CounterPATH=$OldCounter
                 case "$ORDER" in
@@ -115,8 +122,11 @@ function Set_Disks() {
                         done
                         ;;
                 esac
-                qemu-img create -f qcow2 -o cluster_size=32k "$CPATH/Qemu-Virtio-Disk_qcow2_$DSIZE-$DNUM-$NAME" $DSIZE 2>/dev/null 1>/dev/null
-                DisksList="$DisksList|$CPATH/Qemu-Virtio-Disk_qcow2_$DSIZE-$DNUM-$NAME"
+                IFS=-  read QN QS QV QT <<< $( echo ${DRIVENAME#Qemu-Virtio-Disk_})
+                QIMG=$QT\_IMG
+                if [ "${!QIMG}" == "" ]; then QIMG="SSDCOW_IMG"; fi         ## Missing Var for qemu_create
+                qemu-img create ${!QIMG} "$CPATH/$DRIVENAME" $DSIZE 2>/dev/null 1>/dev/null
+                DisksList="$DisksList|$CPATH/$DRIVENAME"
             fi
         done
     done
@@ -130,20 +140,57 @@ function Set_Disks() {
 #   $2: Num Threads
 #   $3: DiskLists
 function Set_Virtio_Disks() {
-    IOTHREADS=$(Set_Disk_Threads $2)
+    . $VMMGR_CONFIG_PATH/DATA/VMMgr_VirtioDisk
     COUNT=0;PCOUNT=0
     PCIBRIDGE=1
     declare -i THREAD=1
     for DISK in $(echo $3 | tr \| \  ); do
+
+        ### Max 0x1F (31) drive per pci-device
         COUNT=$(( $COUNT + 1 ))
         PCOUNT=$(( $PCOUNT + 1 ))
         if [ $PCOUNT -gt 31 ]; then
             PCIBRIDGE=$(( $PCIBRIDGE + 1 ))
             PCOUNT=1
         fi
-        DRIVES="$DRIVES-drive file=$DISK,if=none,format=qcow2,id=virtio-disk$COUNT,cache=directsync,aio=native,werror=enospc,rerror=report -device virtio-blk-pci,iothread=iothread$THREAD,ioeventfd=on,event_idx=on,scsi=off,config-wce=off,drive=virtio-disk$COUNT,bus=pci.$PCIBRIDGE,addr=0x$(echo "ibase=10;obase=16;$PCOUNT" | bc).0x0 "
+
+        ### Extract Template and hd name from disk name:
+        IFS=- read DISKNAME DISKSIZE DISKHD DISKTPL <<< $(echo ${DISK##*Qemu-Virtio-Disk_})
+
+        ### make -drive and -device params
+        echo $DISK
+ 
+        DRIVEOPT=${!DISKTPL}
+        HDFORMAT=${DISKTPL}_IMG; HDFORMAT=${!HDFORMAT}; HDFORMAT=${HDFORMAT#*-f }; HDFORMAT=${HDFORMAT%% *}
+        if [ "$HDFORMAT" == "qcow2" ]; then
+            # l2-cache-size = Disk_size_Byte / ( cluster_size / 8)
+            # refcount-cache-size = disk_size_GB * ( cluster_size * 8 / refcount_bits )
+            # cache-size= l2-cache-size + refcount-cache-size
+ 
+            DISKSIZEO=$(numfmt --from=iec $DISKSIZE)
+            CLUSTERSIZE=${DISKTPL}_IMG; CLUSTERSIZE=${!CLUSTERSIZE}; CLUSTERSIZE=${CLUSTERSIZE#*cluster_size=}; CLUSTERSIZE=${CLUSTERSIZE^^}; CLUSTERSIZE=${CLUSTERSIZE%% k}
+            if [ "$CLUSTERSIZE" == "" ]; then CLUSTERSIZE=64K; fi
+            CLUSTERSIZE=$(numfmt --from=iec ${CLUSTERSIZE^^})
+            L2CLUSTERSIZE=$(( $CLUSTERSIZE / 8 ))
+            L2CACHE=$(( $DISKSIZEO / $L2CLUSTERSIZE ))
+        
+            REFCOUNTBIT=16
+            REFCLUSTERSIZE=$(( $CLUSTERSIZE * 8 / $REFCOUNTBIT ))
+            REFCACHE=$(( ${DISKSIZE%G} * $REFCLUSTERSIZE ))
+            
+            TOTALCACHE=$(( $L2CACHE + $REFCACHE ))
+            
+            DRIVEOPT="${!DISKTPL},l2-cache-size=$L2CACHE,refcount-cache-size=$REFCACHE,cache-size=$TOTALCACHE"
+        fi
+        
+        echo "-drive file=$DISK,id=virtio-disk$COUNT,node-name=$DISKHD,$DRIVEOPT -device virtio-blk-pci,iothread=iothread$THREAD,ioeventfd=on,event_idx=on,scsi=off,config-wce=off,drive=virtio-disk$COUNT,bus=pci.$PCIBRIDGE,addr=0x$(echo "ibase=10;obase=16;$PCOUNT" | bc).0x0 "
+        DRIVES="$DRIVES-drive file=$DISK,id=virtio-disk$COUNT,node-name=$DISKHD,${!DISKTPL} -device virtio-blk-pci,iothread=iothread$THREAD,ioeventfd=on,event_idx=on,scsi=off,config-wce=off,drive=virtio-disk$COUNT,bus=pci.$PCIBRIDGE,addr=0x$(echo "ibase=10;obase=16;$PCOUNT" | bc).0x0 "
+        #DRIVES="$DRIVES-drive file=$DISK,if=none,format=qcow2,id=virtio-disk$COUNT,cache=directsync,aio=native,werror=enospc,rerror=report -device virtio-blk-pci,iothread=iothread$THREAD,ioeventfd=on,event_idx=on,scsi=off,config-wce=off,drive=virtio-disk$COUNT,bus=pci.$PCIBRIDGE,addr=0x$(echo "ibase=10;obase=16;$PCOUNT" | bc).0x0 "
         THREAD=$(( $THREAD + 1 )); [ $THREAD -gt $2 ] && THREAD=1
     done
+
+    ### Generate iothreads and pci-bridge
+    IOTHREADS=$(Set_Disk_Threads $2)
     PCIs=$(Set_Pci_Bridge $PCIBRIDGE)
     echo $IOTHREADS $PCIs $DRIVES
 }
