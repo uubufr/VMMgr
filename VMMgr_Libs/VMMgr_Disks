@@ -158,8 +158,6 @@ function Set_Virtio_Disks() {
         IFS=- read DISKNAME DISKSIZE DISKHD DISKTPL <<< $(echo ${DISK##*Qemu-Virtio-Disk_})
 
         ### make -drive and -device params
-        echo $DISK
- 
         DRIVEOPT=${!DISKTPL}
         HDFORMAT=${DISKTPL}_IMG; HDFORMAT=${!HDFORMAT}; HDFORMAT=${HDFORMAT#*-f }; HDFORMAT=${HDFORMAT%% *}
         if [ "$HDFORMAT" == "qcow2" ]; then
@@ -182,9 +180,7 @@ function Set_Virtio_Disks() {
             
             DRIVEOPT="${!DISKTPL},l2-cache-size=$L2CACHE,refcount-cache-size=$REFCACHE,cache-size=$TOTALCACHE"
         fi
-        
-        echo "-drive file=$DISK,id=virtio-disk$COUNT,node-name=$DISKHD,$DRIVEOPT -device virtio-blk-pci,iothread=iothread$THREAD,ioeventfd=on,event_idx=on,scsi=off,config-wce=off,drive=virtio-disk$COUNT,bus=pci.$PCIBRIDGE,addr=0x$(echo "ibase=10;obase=16;$PCOUNT" | bc).0x0 "
-        DRIVES="$DRIVES-drive file=$DISK,id=virtio-disk$COUNT,node-name=$DISKHD,${!DISKTPL} -device virtio-blk-pci,iothread=iothread$THREAD,ioeventfd=on,event_idx=on,scsi=off,config-wce=off,drive=virtio-disk$COUNT,bus=pci.$PCIBRIDGE,addr=0x$(echo "ibase=10;obase=16;$PCOUNT" | bc).0x0 "
+        DRIVES="$DRIVES-drive file=$DISK,id=virtio-disk$COUNT,node-name=$DISKHD,$DRIVEOPT -device virtio-blk-pci,iothread=iothread$THREAD,ioeventfd=on,event_idx=on,scsi=off,config-wce=off,drive=virtio-disk$COUNT,bus=pci.$PCIBRIDGE,addr=0x$(echo "ibase=10;obase=16;$PCOUNT" | bc).0x0 "
         #DRIVES="$DRIVES-drive file=$DISK,if=none,format=qcow2,id=virtio-disk$COUNT,cache=directsync,aio=native,werror=enospc,rerror=report -device virtio-blk-pci,iothread=iothread$THREAD,ioeventfd=on,event_idx=on,scsi=off,config-wce=off,drive=virtio-disk$COUNT,bus=pci.$PCIBRIDGE,addr=0x$(echo "ibase=10;obase=16;$PCOUNT" | bc).0x0 "
         THREAD=$(( $THREAD + 1 )); [ $THREAD -gt $2 ] && THREAD=1
     done
