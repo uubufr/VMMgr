@@ -46,7 +46,7 @@ function Set_Disks() {
     CPATH=""
     for ARRAYNUM in $(seq 1 ${#Virtio_Disk[@]}); do
         read -r DNUMBER DSIZE DPATH DTPL <<< $(echo "${Virtio_Disk[$(( $ARRAYNUM - 1 ))]}")
-        if [ "$DTPL" == "" ]; then DTPL="SSDCOW"; fi
+        if [ "$DTPL" == "" ]; then DTPL="SSDCOW"; fi        # Default Device Template
         if [ "$DNUMBER" == "" ]; then continue; fi
         case "${DPATH%%:*}" in
             "order")
@@ -163,6 +163,7 @@ function Set_Virtio_Disks() {
         if [ "$HDFORMAT" == "qcow2" ]; then
             # l2-cache-size = Disk_size_Byte / ( cluster_size / 8)
             # refcount-cache-size = disk_size_GB * ( cluster_size * 8 / refcount_bits )
+            #   for short: refcount-cache-size = ( l2-cache-size / 4 )
             # cache-size= l2-cache-size + refcount-cache-size
  
             DISKSIZEO=$(numfmt --from=iec $DISKSIZE)

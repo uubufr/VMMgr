@@ -1,0 +1,92 @@
+#! /bin/bash
+#
+# script name: VMMgr_CPUs
+# autor: Sylvain Girod ( uubu at gmx dot fr )
+# version: 0.04
+# description: CPU/SMP/NUMA/MACHINE functions
+#
+# Functions:
+# Get_Nb_Sockets: Get Number of Physical CPU
+# Get_Total_CPUs: Get all cpus on the system
+# Get_Core_Number: Get Core list on a physical cpu
+# Get_Core_Threads: return threads on a core
+# Get_Core_Id: Get corresponding core ID
+
+# Function: Get_Nb_Sockets
+# Description: Get Number of Physical CPU
+# Args: none
+function Get_Nb_Sockets() {
+    for cpu in $(ls -1d /sys/devices/system/cpu/cpu[0-9]*); do
+        cat $cpu/topology/physical_package_id
+    done
+}
+
+# Function: Get_Total_CPUs
+# Description: Get all cpus on the system
+# Args: none
+function Get_Total_CPUs() {
+    ls -1d /sys/devices/system/cpu/cpu[0-9]* | wc -l
+done
+}
+
+
+# Function: Get_Core_Number
+# Description: Get Core list on a physical cpu
+# Args:
+#   $1: Physical ID
+function Get_Core_Number() {
+    for cpu in $(ls -1d /sys/devices/system/cpu/cpu[0-9]*); do
+        if [ "$(cat $cpu/topology/physical_package_id)" == $1 ]; then
+            cat $cpu/topology/core_id
+        fi
+    done
+}
+
+# Function: Get_Core_Threads
+# Description: return threads on a core
+# Args:
+#   $1: cpu number
+function Get_Core_Threads() {
+    cat /sys/devices/system/cpu/cpu$1/topology/thread_siblings_list
+}
+
+# Function: Get_Core_Id
+# Description: Get corresponding core ID
+# Args:
+#   $1: cpu number
+function Get_Core_Id() {
+    cat /sys/devices/system/cpu/cpu$1/topology/core_id
+}
+
+function Map_SMP_1CPU() {
+    NBSOCKETS=$(Get_Nb_Sockets | sort | uniq | wc -l)
+    SOCKETCORES=$(Get_Core_Number 0 | sort | uniq | wc -l)
+    CORETHREADS=$(Get_Core_Threads 0)
+    if [ "$CORETHREADS" == "${CORETHREADS##*,}" ]; then
+        HYPERTHREAD=1
+    else
+        HYPERTHREAD=2
+    fi
+echo "-smp cores=$SOCKETCORES,threads=$HYPERTHREAD,sockets=1"
+}
+
+#   $1: number of cores
+#   $2: nomber of sockets
+function Map_SMP_NUMA() {
+    CORETHREADS=$(Get_Core_Threads 0)
+    if [ "$CORETHREADS" == "${CORETHREADS##*,}" ]; then
+        HYPERTHREAD=1
+    else
+        HYPERTHREAD=2
+    fi
+    echo "-smp cores=$1,threads=$HYPERTHREAD,sockets=$2"
+}
+
+function Set_NUMA_NODE() {
+
+}
+
+faut arriver à un truc du genre:
+
+-numa node node,nodeid=$X,cpus= ,cpus=,
+-numa cpu,node-id=$X,socket-id=$X,core-id=$Y,thread-id=$Z,thread-id=$Z2
