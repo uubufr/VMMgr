@@ -1,0 +1,91 @@
+#! /bin/bash
+#
+# script name: VMMgr_CPU
+# autor: Sylvain Girod ( uubu at gmx dot fr )
+# version: 0.04
+# description: CPU/SMP/NUMA/Machines templates Vars and Templates
+#
+
+### portable ###
+PORTABLE="kvm64"
+HOST="host,+x2apic,+kvm_pv_eoi,+kvm_pv_unhalt,+kvm_nopiodelay"
+NESTED="host,+vmx,+x2apic,+kvm_pv_eoi,+kvm_pv_unhalt,+kvm_nopiodelay"
+
+
+CPUTPL=$HOST
+
+### SMP ###
+
+
+
+### NUMA ###
+
+
+### Machines ###
+MACHINETPL="q35,accel=kvm"
+
+
+
+
+
+NUMA4="-numa node,nodeid=0,cpus=0,cpus=4 -numa node,nodeid=1,cpus=1,cpus=5 -numa node,nodeid=2,cpus=2,cpus=6 -numa node,nodeid=3,cpus=3,cpus=7"
+NUMA8="-numa node,nodeid=0,cpus=0,cpus=4,cpus=8,cpus=12 -numa node,nodeid=1,cpus=1,cpus=5,cpus=9,cpus=13 -numa node,nodeid=2,cpus=2,cpus=6,cpus=10,cpus=14 -numa node,nodeid=3,cpus=3,cpus=7,cpus=11,cpus=15"
+# SMP systems
+SMP2="-smp cores=1,threads=2,sockets=1,maxcpus=2"
+SMP8="-smp cores=4,threads=2,sockets=1,maxcpus=8"
+SMP16="-smp cores=8,threads=2,sockets=1,maxcpus=16"
+
+
+number of physical cpus: 
+MAXSOCKETS=$(cat /proc/cpuinfo | grep "physical id" | awk '{print $4}' | sort | uniq | wc -l)
+number of cores: (all physical id):
+MAXCORES=$(cat /proc/cpuinfo | grep "core id" | awk '{print $4}' | sort | uniq | wc -l)
+
+number of cores: 1 physical id:
+
+MAXSOCKETCORES=$(cat /proc/cpuinfo | egrep -A 2 "^physical id(.*)+$SOCKETNUMBER$" | egrep "cpu cores" | awk '{print $4}' | sort | uniq | wc -l)
+
+number of theards per core:
+HYPERTHREAD=$(cat /proc/cpuinfo | egrep -A 2 "^physical id(.*)+$ID$" | egrep "^core id(.*)+0$" | wc -l)
+
+
+so matching one socket with real cpu 0
+
+PHYSICALSMP="cores=$MAXSOCKETCORES,threads=$HYPERTHREAD,sockets=1"
+
+connaite le numéro de cpu associé avec chaque threads d'un coeur:"'
+
+
+function list_physical_id() {
+for cpu in $(ls -1d /sys/devices/system/cpu/cpu[0-9]*); do
+    cat $cpu/topology/physical_package_id
+done
+}
+
+MAXSOCKETCORES=$(list_physical_id  | sort | uniq | wc -l)
+
+function list_num_core() {
+    ls -1d /sys/devices/system/cpu/cpu[0-9]* | wc -l
+done
+}
+
+function get_cores() {
+    for cpu in $(ls -1d /sys/devices/system/cpu/cpu[0-9]*); do
+        if [ "$(cat $cpu/topology/physical_package_id)" == $1 ]; then
+            cat $cpu/topology/core_id
+        fi
+    done
+}
+
+get_cores 0 | sort | uniq | wc -l
+
+
+# $1: cpu number:
+function get_threads() {
+cat /sys/devices/system/cpu/cpu$1/topology/thread_siblings_list
+}
+# $1: cpu number
+function get_coreid() {
+    cat /sys/devices/system/cpu/cpu$1/topology/core_id
+}
+
