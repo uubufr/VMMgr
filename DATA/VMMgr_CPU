@@ -6,7 +6,7 @@
 # description: CPU/SMP/NUMA/Machines templates Vars and Templates
 #
 
-### portable ###
+### CPU templates ###
 PORTABLE="kvm64"
 HOST="host,+x2apic,+kvm_pv_eoi,+kvm_pv_unhalt,+kvm_nopiodelay"
 NESTED="host,+vmx,+x2apic,+kvm_pv_eoi,+kvm_pv_unhalt,+kvm_nopiodelay"
@@ -20,6 +20,7 @@ SMP1HT=$(Set_Custom_SMP 1 1)
 MAX=$(Map_SMP_1CPU $(Get_Total_CPUs))
 SMP4HT=$(Set_Custom_SMP 1 1)
 SMP1TOMAX=$(Map_SMP_1CPU)
+SMPMAXNUMA=$(Map_SMP_1CPU $(Get_Total_CPUs) on)
 
 ### Machines ###
 MACHINE35="q35,accel=kvm"
