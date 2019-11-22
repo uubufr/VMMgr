@@ -84,9 +84,9 @@ function Check_System() {
 #   $2: $MAXMEM
 #   $3: Max Slots (optional)
 function Check_MEM() {
- [ $1 ] || return 0
+ [ "$1" ] || return 0
  if [ $1 -gt $MAXSYS ]; then MEM=$MAXSYS; else MEM=$1; fi
- if [ ! $2 ]; then 
+ if [ ! "$2" ]; then 
     MAXMEM=$(( $MEM * 2 ));
  elif [ $2 -gt $MAXSYS ]; then
     MAXMEM=$MAXSYS
