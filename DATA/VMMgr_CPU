@@ -21,6 +21,7 @@ MAX=$(Map_SMP_1CPU $(Get_Total_CPUs))
 SMP4HT=$(Set_Custom_SMP 1 1)
 SMP1TOMAX=$(Map_SMP_1CPU)
 SMPMAXNUMA=$(Map_SMP_1CPU $(Get_Total_CPUs) on)
+SMP4NUMA=$(Set_Custom_SMP 4 1 4 on)
 
 ### Machines ###
 MACHINE35="q35,accel=kvm"
