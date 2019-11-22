@@ -118,12 +118,12 @@ case "$1" in
         #   4) if disabled or systemctl return no unit, start manually
             if [ ! "$2" ]; then
                 echo "Usage $0 start <vm name>"
+            elif [ -r "$VMMGR_CONFIG_PATH/QEMU_CONFIGS/$2" ] && [ ! "$3" == "regen" ]; then
+                qemu-system-x86_64 -daemonize -readconfig $VMMGR_CONFIG_PATH/QEMU_CONFIGS/$2
             else
                 VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
                 if [ "$VMCONF" == "" ]; then
                     echo "$2 not found in DB"
-                elif [ -r "$VMMGR_CONFIG_PATH/QEMU_CONFIGS/$VMCONF" ] && [ ! "$3" == "regen" ]; then
-                    qemu-system-x86_64 -daemonize -readconfig $VMMGR_CONFIG_PATH/QEMU_CONFIGS/$VMCONF
                 else
                     SYSD=$(Db_isEnabled_VM $VMMGR_DB_PATH $2)
                     if [ "$SYSD" == "1" ]; then
