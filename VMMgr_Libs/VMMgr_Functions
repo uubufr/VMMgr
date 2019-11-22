@@ -29,6 +29,8 @@ function Check_Softwares() {
     qemu-system_x86_64
     openIPMI_lanserv
     sqlite3
+    
+    virglrenderer
 }
 
 # Function: Check_System
