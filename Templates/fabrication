@@ -7,7 +7,7 @@
 GROUP=""
 NAME="%%NAME%%"         # Unique Name
 MEM=1                # Initial Mem Size, in GB
-MAXMEM=2               # OPTIONAL: Max Allowed mem (defaut: $MEM * 2)
+#MAXMEM=2               # OPTIONAL: Max Allowed mem (defaut: $MEM * 2)
 SLOT=2
 CPU=HOST
 SMPTPL=MAX
