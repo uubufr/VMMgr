@@ -245,7 +245,6 @@ function Start_VM_From_Config() {
     
     . $VMMGR_CONFIG_PATH/DATA/VMMgr_CPU
     CORE="-machine ${!MACHINETPL} ${!SMPTPL}"
-    echo "memory"$MEM $MAXMEM $SLOT
     MEMORY=$(Check_MEM $MEM $MAXMEM $SLOT)
     
     if [ "$VMMGR_TEST" == "TEST" ]; then
