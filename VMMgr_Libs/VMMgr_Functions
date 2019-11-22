@@ -300,7 +300,7 @@ function Start_VM_From_Config() {
             if [ "$TELNET" == "on" ]; then
                 TIP=${TELNETTPL##*monitor telnet:}
                 TIP=${TIP%%,server,nowait}
-                { echo "change DVD $(rpm -ql edk2-ovmf | grep OVMF_VARS.fd | head -1)"; echo "system_reset"; sleep 1; } | telnet ${TIP%:*} ${TIP##*:}
+                { echo "change DVD $(rpm -ql edk2-ovmf | grep EnrollDefaultKeys.efi | head -1)"; echo "system_reset"; sleep 1; } | telnet ${TIP%:*} ${TIP##*:}
                 if [ "$SPICE" == "on" ]; then
                     . $VMMGR_PATH/VMMgr_Launcher connect $NAME spice
                 fi
