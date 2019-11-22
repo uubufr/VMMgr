@@ -113,10 +113,10 @@ function Set_UEFI() {
         
     if [ ! -d $VMMGR_DATA_PATH/UEFI/$NAME/ ]; then 
         mkdir -p $VMMGR_DATA_PATH/UEFI/$NAME/
-        cp $(rpm -ql edk2-ovmf | grep OVMF_CODE$SECURE.fd | head -1) $VMMGR_DATA_PATH/UEFI/$NAME/
+        #cp $(rpm -ql edk2-ovmf | grep OVMF_CODE$SECURE.fd | head -1) $VMMGR_DATA_PATH/UEFI/$NAME/
         cp $(rpm -ql edk2-ovmf | grep OVMF_VARS.fd | head -1) $VMMGR_DATA_PATH/UEFI/$NAME/
     fi
-    echo "-drive if=pflash,format=raw,file=$VMMGR_DATA_PATH/UEFI/$NAME/OVMF_CODE$SECURE.fd -drive if=pflash,format=raw,file=$VMMGR_DATA_PATH/UEFI/$NAME/OVMF_VARS.fd -global isa-debugcon.iobase=0x402 -debugcon file:$VMMGR_DATA_PATH/UEFI/$NAME/OVMF_LOG.log"
+    echo "-drive if=pflash,format=raw,file=$(rpm -ql edk2-ovmf | grep OVMF_CODE$SECURE.fd | head -1) -drive if=pflash,format=raw,file=$VMMGR_DATA_PATH/UEFI/$NAME/OVMF_VARS.fd -global isa-debugcon.iobase=0x402 -debugcon file:$VMMGR_DATA_PATH/UEFI/$NAME/OVMF_LOG.log"
 }
 
 # Function: Set_IPMI
