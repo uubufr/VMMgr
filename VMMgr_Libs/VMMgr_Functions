@@ -269,9 +269,8 @@ function Start_VM_From_Config() {
         FIRMWARE=$BIOS
         echo "BIOS=$FIRMWARE"
     else
+        [ ! -d $VMMGR_DATA_PATH/UEFI/$NAME/ ] && SETUPSECUREBOOT="1"
         FIRMWARE=$(Set_UEFI $NAME on)
-        echo "UEFI=$FIRMWARE"
-        SETUPSECUREBOOT="1"
     fi
     
     if [ "$VMMGR_TEST" == "TEST" ]; then
@@ -289,9 +288,7 @@ function Start_VM_From_Config() {
             TIP=${TELNETTPL##*monitor telnet:}
             TIP=${TIP%%,server,nowait}
             { echo "info status"; sleep 1; } | telnet ${TIP%:*} ${TIP##*:}
-        fi
-        
-        if [ "$QMP" == "on" ]; then
+        elif [ "$QMP" == "on" ]; then
             TIP=${QMPTPL##*chardev socket,id=qmp01,host=}
             TIP=${TIP%%,server,nowait*}
             { echo '{ "execute": "qmp_capabilities" } { "execute": "query-status" }'; sleep 1; } | telnet ${TIP%%,*} ${TIP##*port=}
@@ -308,7 +305,7 @@ function Start_VM_From_Config() {
                 echo "#################################################"
                 echo "" 
                 
-            if [ "$TELNET" == "off" ]; then
+            if [ "$TELNET" == "on" ]; then
                 TIP=${TELNETTPL##*monitor telnet:}
                 TIP=${TIP%%,server,nowait}
                 { echo "change DVD $(rpm -ql edk2-ovmf | grep UefiShell.iso | head -1)"; echo "system_reset"; sleep 1; } | telnet ${TIP%:*} ${TIP##*:}
