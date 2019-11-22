@@ -95,7 +95,11 @@ function Check_MEM() {
     MAXMEM=$2
  fi
  if [ $3 ]; then SLOT=$3; else SLOT=1; fi
- echo "-m "$MEM"G,slots=$SLOT,maxmem=$MAXMEM""G"
+ if [ $MEM -eq $MAXMEM ]; then
+    echo "-m "$MEM"G,slots=$SLOT"
+ else
+    echo "-m "$MEM"G,slots=$SLOT,maxmem=$MAXMEM""G"
+ fi
 }
 
 # Function: Set_IPMI
