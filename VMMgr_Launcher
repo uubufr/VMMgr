@@ -166,9 +166,7 @@ case "$1" in
             if [ "$TELNET" == "on" ]; then
                 IPPORT=$(Set_Service_Listen $TELNETIP $TELNETIPVER $TELNETTYPE $NAME telnet $TELNETPORT)
                 { echo "system_powerdown"; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
-            fi
-    
-            if [ "$QMP" == "on" ]; then
+            elif [ "$QMP" == "on" ]; then
                 IPPORT=$(Set_Service_Listen $QMPIP $QMPIPVER $QMPTYPE $NAME qmp $QMPPORT)
                 { echo  { echo '{ "execute": "qmp_capabilities" } { "execute": "system_powerdown" } { "execute": "quit" }'; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
             fi
@@ -185,9 +183,7 @@ case "$1" in
             if [ "$TELNET" == "on" ]; then
                 IPPORT=$(Set_Service_Listen $TELNETIP $TELNETIPVER $TELNETTYPE $NAME telnet $TELNETPORT)
                 { echo "info status"; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
-            fi
-    
-            if [ "$QMP" == "on" ]; then
+            elif [ "$QMP" == "on" ]; then
                 IPPORT=$(Set_Service_Listen $QMPIP $QMPIPVER $QMPTYPE $NAME qmp $QMPPORT)
                 { echo '{ "execute": "qmp_capabilities" } { "execute": "query-status" }'; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
             fi
@@ -202,9 +198,7 @@ case "$1" in
             if [ "$TELNET" == "on" ]; then
                 IPPORT=$(Set_Service_Listen $TELNETIP $TELNETIPVER $TELNETTYPE $NAME telnet $TELNETPORT)
                 { echo "quit"; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
-            fi
-    
-            if [ "$QMP" == "on" ]; then
+            elif [ "$QMP" == "on" ]; then
                 IPPORT=$(Set_Service_Listen $QMPIP $QMPIPVER $QMPTYPE $NAME qmp $QMPPORT)
                 { echo  { echo '{ "execute": "qmp_capabilities" } { "execute": "quit" }'; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
             fi
@@ -219,9 +213,7 @@ case "$1" in
             if [ "$TELNET" == "on" ]; then
                 IPPORT=$(Set_Service_Listen $TELNETIP $TELNETIPVER $TELNETTYPE $NAME telnet $TELNETPORT)
                 { echo "system_reset"; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
-            fi
-    
-            if [ "$QMP" == "on" ]; then
+            elif [ "$QMP" == "on" ]; then
                 IPPORT=$(Set_Service_Listen $QMPIP $QMPIPVER $QMPTYPE $NAME qmp $QMPPORT)
                 { echo  { echo '{ "execute": "qmp_capabilities" } { "execute": "system_reset" } { "execute": "quit" }'; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
             fi
@@ -258,6 +250,34 @@ case "$1" in
                 ;;
             esac
         fi
+        ;;
+    "load")
+        VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
+        if [ "$VMCONF" == "" ]; then
+            echo "$2 not found in DB"
+        else
+            if [ ! "$3" ]; then no
+            case "$3" in
+                "virtiowin")
+                        ISO=$VMMGR_ISO_PATH/virtio-win.iso
+                ;;
+                *)
+                    if [ -f "$3" ]; then
+                        ISO=$3
+                    elif [ -f "$VMMGR_ISO_PATH/$3" ]; then
+                        ISO="$VMMGR_ISO_PATH/$3"
+                    fi
+                ;;
+            esac
+        fi
+        ;;
+     "wintools")
+        ### Virtio Win
+        wget https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso --directory-prefix=$VMMGR_ISO_PATH/
+        ### QEMU Guest Agent
+        wget https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-qemu-ga/qemu-ga-win-100.0.0.0-3.el7ev/qemu-ga-x64.msi --directory-prefix=$VMMGR_ISO_PATH/
+        ### Spice Guest Tools
+        wget https://www.spice-space.org/download/windows/spice-guest-tools/spice-guest-tools-latest.exe --directory-prefix=$VMMGR_ISO_PATH/
         ;;
     *)
         ;;
