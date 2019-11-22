@@ -269,6 +269,20 @@ case "$1" in
                         fi
                     ;;
                 esac
+                . $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF
+                if [ "$TELNET" == "on" ]; then
+                    IPPORT=$(Set_Service_Listen $TELNETIP $TELNETIPVER $TELNETTYPE $NAME telnet $TELNETPORT)
+                    { echo "change DVD $ISO"; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
+                    if [ "$4" == "reset" ]; then
+                        { echo "system_reset $ISO"; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
+                    fi
+                elif [ "$QMP" == "on" ]; then
+                    IPPORT=$(Set_Service_Listen $QMPIP $QMPIPVER $QMPTYPE $NAME qmp $QMPPORT)
+                    { echo '{ "execute": "qmp_capabilities" } { "execute": "change DVD $ISO" }'; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
+                    if [ "$4" == "reset" ]; then
+                        { echo  { echo '{ "execute": "qmp_capabilities" } { "execute": "system_reset" } { "execute": "quit" }'; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
+                    fi
+                fi
             fi
         fi
         ;;
