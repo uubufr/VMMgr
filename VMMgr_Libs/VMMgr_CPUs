@@ -114,7 +114,7 @@ function Set_Custom_SMP() {
 #   $1: Nb of Numa nodes
 function Set_NUMA_NODE() {
     if [ "$1" == "1" ]; then
-        echo "-numa node,nodeid=0 -numa cpu node-id=0,socket-id=0"
+        echo "-numa node,nodeid=0 -numa cpu,node-id=0,socket-id=0"
     else
         NUMANODES=""
         for i in $(seq 0 $(( $1 - 1)) ); do
