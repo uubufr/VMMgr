@@ -5,9 +5,9 @@
 # version: 0.02
 # description: Template for %%NAME%%
 GROUP=""
-NAME="%%NAME%%"         # Unique Name
-MEM=1                # Initial Mem Size, in GB
-MAXMEM=1               # OPTIONAL: Max Allowed mem (defaut: $MEM * 2)
+NAME="%%NAME%%"
+MEM=1
+MAXMEM=1
 SLOT=2
 CPU=HOST
 SMPTPL=MAX

@@ -1,34 +1,34 @@
 # VMMgr
-Simple script bash pour gérer des machines virtuelles sous Qemu/Kvm
+Bash Script for Qemu/Kvm Virtual Machines Management based on templates and variables
 
-La définition des machines virtuelles s'appuyent sur des templates, qui peuvent tous être personnalisés.
+## How to Start?
 
-Pour créer une machine virtuelle, lancer simplement:
+**This script require some steps before it start working, please see Starting With VMMgr before doing anything!!!!!**
 
-./VMMgr_Launcher create MyVM linux-base
 
-Cela va copier le template linux-base dans VM-CONFIGS, en personnalisant les variables tel le nom de la vm.
+Create a new VM named MyVM based on template 'Linux-base'
 
-Cette copie peut donc être personnalisé, puis démarré:
+**./VMMgr_Launcher create MyVM linux-base**
 
-./VMMgr_Launcher start MyVM
+Customize your VM as needed, the config is found in VM-CONFIGS directory
 
-il est possible d'accéder à la VM en utilisant SPICE, un fichier est créé dans R-SPICE
-L'accès à la VM peut se faire de différentes manières:
+Then start the VM:
 
-./VMMgr_Launcher connect telnet MyVM
+**./VMMgr_Launcher start MyVM**
 
-pour un accès telnet, mais un accès qmp et spice sont également possible
+Insert CDROM using:
 
-Pour arrêter une VM:
+**./VMMgr_Launcher load test Fedora31.iso reset**
+
+And connect using SPICE:
+
+**./VMMgr_Launcher connect MyVM spice**
+
+
+To Stop VM:
 
 ./VMMgr_Launcher stop MyVM
 
-Pour la supprimer:
-
-./VMMgr_Launcher delete MyVM [--data]
-
-L'option --data supprime également les fichiers disques
 
 
 
