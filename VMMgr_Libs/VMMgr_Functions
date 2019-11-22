@@ -82,40 +82,19 @@ function Check_System() {
 # Args:
 #   $1: $MEM
 #   $2: $MAXMEM
+#   $3: Max Slots (optional)
 function Check_MEM() {
- if [ "$1" ]; then
-  if [ "$2" ]; then
-   echo $2
-  else
-   MAXMEM=$(( $1 * 2 ))
-   MAXSYS=$(( $(grep "MemTotal: " /proc/meminfo  | awk '{print $2}' ) / 1024 / 1024 ))
-   if [ $MAXMEM -gt $MAXSYS ]; then $MAXMEM == $MAXSYS; fi
-   echo $MAXMEM
-  fi
- else
-   return 0
+ [ $1 ] || return 0
+ if [ $1 -gt $MAXSYS ]; then MEM=$MAXSYS; else MEM=$1; fi
+ if [ ! $2 ]; then 
+    MAXMEM=$(( $MEM * 2 ));
+ elif [ $2 -gt $MAXSYS ]; then
+    MAXMEM=$MAXSYS
+ else 
+    MAXMEM=$2
  fi
-}
-
-# Function: Set_NetDev
-# Description: Create tap interfaces
-# Args:
-#   $1: VM Name
-#   $2: Bridge name
-#   $3: Number of tap devices
-#   $4: -netdev template
-#   $5: -device template
-#   $6: Addr
-function Set_NetDev() {
-    Create_Bridge $2 $BRIDGETOOL on
-    for NETNUMBER in $(seq 1 $3 ); do
-        MAC="mac="$(Set_MAC $VMMGR_DB_PATH $(( $6 + $NETNUMBER )) $1)
-        TAPUP="script=$VMMGR_DATA_PATH/TAPSCRIPTS/tapup-$2"
-        TAPDOWN="downscript=$VMMGR_DATA_PATH/TAPSCRIPTS/tapdown-$2"
-        [ -r "$VMMGR_DATA_PATH/TAPSCRIPTS/tapup-$2" ] || ln $VMMGR_DATA_PATH/TAPSCRIPTS/tapup $VMMGR_DATA_PATH/TAPSCRIPTS/tapup-$2
-        [ -r "$VMMGR_DATA_PATH/TAPSCRIPTS/tapdown-$2" ] || ln $VMMGR_DATA_PATH/TAPSCRIPTS/tapdown $VMMGR_DATA_PATH/TAPSCRIPTS/tapdown-$2
-        echo "-netdev tap,id=virtio-tap$(( $6 + $NETNUMBER )),$TAPUP,$TAPDOWN,$4 -device virtio-net-pci,netdev=virtio-tap$(( $6 + $NETNUMBER )),$MAC,id=drive-virtio-tap$(( $6 + $NETNUMBER )),$5 "
-     done
+ if [ $3 ]; then SLOT=$3; else SLOT=1; fi
+ MEM="-m $MEM\G,slots=SLOT,maxmem=$MAXMEM""G"
 }
 
 # Function: Set_IPMI
@@ -256,8 +235,19 @@ function Start_VM_From_Config() {
     unset Virtio_Disk
     
     sleep 2
-    echo "qemu-system-x86_64 -name $NAME ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS"
-    qemu-system-x86_64 -name $NAME ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS
+    
+    ### CPU/SMP/NUMA/MACHINE ###
+    
+    . $VMMGR_CONFIG_PATH/DATA/VMMgr_CPU
+    CORE="${!MACHINETPL} ${!SMPTLP}"
+    MEMORY=$(Check_MEM $MEM $MAXMEM $SLOT)
+    
+    
+    if [ "$VMMGR_TEST" == "TEST" ]; then
+        echo "qemu-system-x86_64 -name $NAME $CORE ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS"
+    else
+        qemu-system-x86_64 -name $NAME $CORE ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS
+    fi
     sleep 2
     if  [ "$VNC" == "on" ] && [ "$VNCPWD" != "" ]; then
             { echo "set_password vnc $VNCPWD"; sleep 1; } | telnet $VNCIP $VNCPORT

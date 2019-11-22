@@ -8,6 +8,10 @@ GROUP=""
 NAME="%%NAME%%"         # Unique Name
 MEM="1"                 # Initial Mem Size, in GB
 MAXMEM="1"               # OPTIONAL: Max Allowed mem (defaut: $MEM * 2)
+CPU=HOST
+MACHINETPL=MACHINE35
+SMPTPL=MAX
+
 
 ### Disks ###
 IOTHREADS=1

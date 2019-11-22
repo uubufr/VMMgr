@@ -7,31 +7,13 @@
 #
 # Organiser et documenter les variables
 
-
-# NEEDED VARS
-#$IPMIHOST
-#$IPMIPORT
-#$VIRTPATH
-#$SPICEIP
-#$SPICEPORT
-#$SPICEMODE
-#$SPICEPWD
-
-# Common Vars
-
-
 ### QEMU OPTIONS ###
 # Note: all options can be overwrited in a specific template #
 
 
-###Manque NUMA SMP QMP RAM
-
 
 COMMON="-daemonize -no-user-config -nodefaults -msg timestamp=on"
 CONFIG="-writeconfig $VMMGR_CONFIG_PATH/QEMU_CONFIGS/$NAME"
-MACHINE="-machine q35,accel=kvm"
-CPU64="-cpu qemu64"
-CPUKVM="-cpu host,-hypervisor,+vmx,+x2apic,+kvm_pv_eoi,+kvm_pv_unhalt,+kvm_nopiodelay"
 
 GLOBAL="-global PIIX4_PM.disable_s3=1 -global PIIX4_PM.disable_s4=1"
 PCI="-device pci-bridge,id=pci.0,chassis_nr=1"
