@@ -239,7 +239,7 @@ function Start_VM_From_Config() {
     ### CPU/SMP/NUMA/MACHINE ###
     
     . $VMMGR_CONFIG_PATH/DATA/VMMgr_CPU
-    CORE="${!MACHINETPL} ${!SMPTLP}"
+    CORE="${!MACHINETPL} ${!SMPTPL}"
     MEMORY=$(Check_MEM $MEM $MAXMEM $SLOT)
     
     
