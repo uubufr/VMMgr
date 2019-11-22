@@ -295,6 +295,9 @@ function Start_VM_From_Config() {
             TIP=${TIP%%,server,nowait*}
             { echo '{ "execute": "qmp_capabilities" } { "execute": "query-status" }'; sleep 1; } | telnet ${TIP%%,*} ${TIP##*port=}
         fi
+        
+        ### HERE, if we have UEFI Secure boot, we need to load UefiShell.iso
+        
     fi
 }
 
