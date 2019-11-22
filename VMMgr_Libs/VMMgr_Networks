@@ -436,3 +436,24 @@ function Set_Service_Listen() {
         fi
     fi
 }
+
+# Function: Set_NetDev
+# Description: Create tap interfaces
+# Args:
+#   $1: VM Name
+#   $2: Bridge name
+#   $3: Number of tap devices
+#   $4: -netdev template
+#   $5: -device template
+#   $6: Addr
+function Set_NetDev() {
+    Create_Bridge $2 $BRIDGETOOL on
+    for NETNUMBER in $(seq 1 $3 ); do
+        MAC="mac="$(Set_MAC $VMMGR_DB_PATH $(( $6 + $NETNUMBER )) $1)
+        TAPUP="script=$VMMGR_DATA_PATH/TAPSCRIPTS/tapup-$2"
+        TAPDOWN="downscript=$VMMGR_DATA_PATH/TAPSCRIPTS/tapdown-$2"
+        [ -r "$VMMGR_DATA_PATH/TAPSCRIPTS/tapup-$2" ] || ln $VMMGR_DATA_PATH/TAPSCRIPTS/tapup $VMMGR_DATA_PATH/TAPSCRIPTS/tapup-$2
+        [ -r "$VMMGR_DATA_PATH/TAPSCRIPTS/tapdown-$2" ] || ln $VMMGR_DATA_PATH/TAPSCRIPTS/tapdown $VMMGR_DATA_PATH/TAPSCRIPTS/tapdown-$2
+        echo "-netdev tap,id=virtio-tap$(( $6 + $NETNUMBER )),$TAPUP,$TAPDOWN,$4 -device virtio-net-pci,netdev=virtio-tap$(( $6 + $NETNUMBER )),$MAC,id=drive-virtio-tap$(( $6 + $NETNUMBER )),$5 "
+     done
+}
