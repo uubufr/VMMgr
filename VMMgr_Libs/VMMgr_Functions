@@ -265,7 +265,7 @@ function Start_VM_From_Config() {
     MEMORY=$(Check_MEM $MEM $MAXMEM $SLOT)
     
     ### BIOS/UEFI
-    if [ "$BIOS" == "BIOS" ]; then
+    if [ "$BIOSTYPE" == "BIOS" ]; then
         FIRMWARE=$BIOS
         echo "BIOS=$FIRMWARE"
     else
