@@ -8,18 +8,12 @@
 # Functions:
 # Check_Softwares: try to check if all required software are installed
 # Check_System: Check system requirements
-# Check_MEM: Check if MEM and MAXMEM, if MAXMEM is undefined, calculate MEM * 2
-# Set_NetDev: Create tap interfaces
+# Check_MEM: calculate and/or check MEM and MAXMEM
+# Set_UEFI: Create UEFI firmware
 # Set_IPMI: Create IPMI device, using OpenIPMI-lanserv 
 # Custom_VM_Config: Customize VM Configuration
-#
-
-## TODO:
-## Créer des units systemd
-## créer les fichiers spice
-## créer un tableau de numa
-# créer un tableau de périphériques disque
-
+# Set_Remote_Viewer: Create .vv file for remove viewer
+# Start_VM_From_Config: Start VM using VM Config file
 
 
 # Function Check_Softwares
@@ -104,6 +98,8 @@ function Check_MEM() {
  fi
 }
 
+# Function: Set_UEFI
+# Description: Create UEFI firmware
 # Args:
 #   $1: VM Name
 #   $2: (bool) Secure boot
@@ -188,11 +184,12 @@ function Set_Remote_Viewer() {
 
 # Function: Start_VM_From_Config
 # Description: Start VM using VM Config file
+#               Here, we create many things
 # Args:
 #   $1: VM Name
 #   $2: VM config path
 function Start_VM_From_Config() {
-    echo "starting $2"
+    echo "starting $1"
     if [ -r /usr/local/etc/VMMgr_.conf ]; then
         . /usr/local/etc/VMMgr_.conf
     elif [ -r $(dirname $0)/VMMgr_.conf ]; then
@@ -205,6 +202,7 @@ function Start_VM_From_Config() {
     . $2
     Get_Bridge_Tool
     
+    ### SPICE ###
     if [ "$SPICE" == "on" ]; then
         IPPORT=$(Set_Service_Listen $SPICEIP $SPICEIPVER $SPICETYPE $NAME spice $SPICEPORT)
         SPICEIP=${IPPORT%|*}; SPICEPORT=${IPPORT#*|}
@@ -215,6 +213,7 @@ function Start_VM_From_Config() {
     fi
     . $VMMGR_CONFIG_PATH/DATA/VMMgr_Devices
     
+    ### TELNET MONITOR ###
     if [ "$TELNET" == "on" ]; then
         IPPORT=$(Set_Service_Listen $TELNETIP $TELNETIPVER $TELNETTYPE $NAME telnet $TELNETPORT)
         TELNETTPL="-monitor telnet:$(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}'):${IPPORT#*|},server,nowait"
@@ -222,7 +221,7 @@ function Start_VM_From_Config() {
         TELNETTPL=""
     fi
 
-    
+    ### VNC ###
     if [ "$VNC" == "on" ]; then
         . $VMMGR_CONFIG_PATH/DATA/VMMgr_Spice
         . $2
@@ -235,6 +234,7 @@ function Start_VM_From_Config() {
         VNCTPL=TPLNULL
     fi
     
+    ### QMP MONITOR ###
     if [ "$QMP" == "on" ]; then
         IPPORT=$(Set_Service_Listen $QMPIP $QMPIPVER $QMPTYPE $NAME qmp $QMPPORT)
         QMPTPL="-chardev socket,id=qmp01,host=$(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}'),port=${IPPORT#*|},server,nowait -mon chardev=qmp01,mode=control,pretty=on"
@@ -242,6 +242,7 @@ function Start_VM_From_Config() {
         QMPTPL=""
     fi
 
+    ### Virtio NETWORK ###
     . $VMMGR_CONFIG_PATH/DATA/VMMgr_VirtioNet
     
     declare -i NUMDEV=0
@@ -250,15 +251,13 @@ function Start_VM_From_Config() {
         NUMDEV=$(( $NUMDEV + ${NET#*|} ))
     done
     
+    ### Virtio Disks ###
     export Virtio_Disk
     DisksList=$(Set_Disks $NAME)
     VIRTIODISKS=$(Set_Virtio_Disks $NAME $IOTHREADS $DisksList)
     unset Virtio_Disk
     
-    sleep 2
-    
     ### CPU/SMP/NUMA/MACHINE ###
-    
     . $VMMGR_CONFIG_PATH/DATA/VMMgr_CPU
     CORE="-machine ${!MACHINETPL} ${!SMPTPL}"
     MEMORY=$(Check_MEM $MEM $MAXMEM $SLOT)
@@ -273,17 +272,24 @@ function Start_VM_From_Config() {
         FIRMWARE=$(Set_UEFI $NAME on)
     fi
     
+    ### Ok! Now we can start VM ###
     if [ "$VMMGR_TEST" == "TEST" ]; then
         echo "qemu-system-x86_64 -name $NAME $CORE $MEMORY $FIRMWARE ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS -writeconfig $VMMGR_CONFIG_PATH/QEMU_CONFIGS/$NAME"
     else
         CONFIG="-writeconfig $VMMGR_CONFIG_PATH/QEMU_CONFIGS/$NAME"
         qemu-system-x86_64 -name $NAME $CORE $MEMORY $FIRMWARE ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS $CONFIG
-        sleep 2
+        
+        sleep 1
+        
         # Fix Duplicated ID compat_monitor0 #
         sed -i 's/compat_monitor0/compat_monitor1/g' $VMMGR_CONFIG_PATH/QEMU_CONFIGS/$NAME
+        
+        ### VNC PASSWORD ###
         if  [ "$VNC" == "on" ] && [ "$VNCPWD" != "" ]; then
                 { echo "set_password vnc $VNCPWD"; sleep 1; } | telnet $VNCIP $VNCPORT
         fi
+        
+        ### Checking if vm is running ###
         if [ "$TELNET" == "on" ]; then
             TIP=${TELNETTPL##*monitor telnet:}
             TIP=${TIP%%,server,nowait}
@@ -296,6 +302,7 @@ function Start_VM_From_Config() {
         
         ### HERE, if we have UEFI Secure boot, we need to load UefiShell.iso
         if [ "$SETUPSECUREBOOT" == "1" ]; then
+                echo ""
                 echo "#################################################"
                 echo "#         UEFI with SECUREBOOT ENABLE           #"
                 echo "# At UEFI SHELL type:                           #"
@@ -322,12 +329,3 @@ function Start_VM_From_Config() {
         fi
     fi
 }
-
-
-
-### ToDo ###
-# virtio-win:
-# stable: https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso
-# latest:https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/latest-virtio/virtio-win.iso
-# qemu-ga: https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-qemu-ga/qemu-ga-win-100.0.0.0-3.el7ev/qemu-ga-x64.msi
-# Spice-guest-tools: https://www.spice-space.org/download/windows/spice-guest-tools/spice-guest-tools-latest.exe

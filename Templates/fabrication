@@ -19,6 +19,9 @@ IOTHREADS=1
 DISKPATH="/run/media/sylvain/STORAGE/4M/$NAME"
 Virtio_Disk[0]="1 8G $DISKPATH"
 
+DISKPATH="/run/media/sylvain/STORAGE/4M/$NAME/scsi/"
+Iscsi_Disk[0]="1 8G $DISKPATH"
+
 ### choose Qemu machine Template:
 New_Network swvpl-spice "6|2a01:e0a:278:9831::|64" "2a01:e0a:278:9831::10|2a01:e0a:278:9831::FFFF" 2a01:e0a:278:9831::1
 SPICE=on
