@@ -1,0 +1,73 @@
+#! /bin/bash
+#
+# script name: VMMgr_Devices
+# autor: Sylvain Girod ( uubu at gmx dot fr )
+# version: 0.04
+# description: Various Devices needed by VMMgr_Launcher
+#
+
+### QEMU OPTIONS ###
+# Note: all options can be overwrited in a specific template #
+
+
+### we Daemonize, no default config, and timestamp in logs:
+COMMON="-daemonize -no-user-config -nodefaults -msg timestamp=on"
+
+### we disable S3 and S4:
+S34="-global PIIX4_PM.disable_s3=1 -global PIIX4_PM.disable_s4=1"
+
+### Our first pci-bridge:
+PCI="-device pci-bridge,id=pci.0,chassis_nr=1"
+
+### except old OS like Windows 7, we use xhci usb3 controller:
+USB="-device qemu-xhci,p3=15"
+
+### Mouse, Keyboard and Tablet using Virtio:
+MOUSE="-device virtio-mouse-pci"
+KEYBOARD="-device virtio-keyboard-pci"
+TABLET="-device virtio-tablet-pci"
+
+
+### DVDROM:
+IDEDVD="-drive if=none,id=DVD,readonly=on -device ide-cd,drive=DVD"
+SCSIDVD="-device virtio-scsi-pci,id=scsi -drive if=none,id=DVD,readonly=on,format=raw -device scsi-cd,wwn=0x5000aa0102030405,bus=scsi0.0,channel=0,scsi-id=1,lun=0,drive=DVD,id=scsiDVD"
+
+
+### First Graphical Card
+QXL="-device qxl-vga,id=qxl-video0,ram_size=67108864,vram_size=67108864"
+
+### Watchdog:
+WATCHDOG="-device i6300esb,id=watchdog0 -watchdog-action none"
+
+### Memory Balloon:
+BALLOON="-device virtio-balloon-pci,id=balloon0"
+
+### Random generator:
+RNG="-object rng-random,id=rng0,filename=/dev/random -device virtio-rng-pci,rng=rng0,max-bytes=1234,period=2000"
+
+### Unix Clock:
+UNIXCLOCK="-realtime mlock=off -rtc base=utc,clock=vm,driftfix=slew -global kvm-pit.lost_tick_policy=discard"
+
+### Windows Clock:
+WINDOWSCLOCK="-realtime mlock=off -rtc base=utc,clock=vm,driftfix=slew -global kvm-pit.lost_tick_policy=discard"
+
+
+### Sound card
+SOUND="-soundhw hda"
+
+
+UUID="-uuid "$(cat /proc/sys/kernel/random/uuid)
+
+
+### No Display, used when we access to vm using vnc or spice:
+NODISPLAY="-display none"
+
+
+### for egl display:
+DISPLAYEGL="-display egl-headless"
+
+
+### DEVICE TEMPLATES ###
+LXBASE="$COMMON $PCI $USB $MOUSE $KEYBOARD $IDEDVD $QXL $WATCHDOG $BALLOON $RNG $UNIXCLOCK $SOUND $NODISPLAY"
+WINDOWSBASE="$COMMON $PCI $USB $MOUSE $KEYBOARD $IDEDVD $QXL $WATCHDOG $BALLOON $RNG $WINDOWSCLOCK $SOUND $NODISPLAY"
+FAB="$COMMON $MACHINE $CPUKVM $BOOT $BIOS $PCI $USB $MOUSE $KEYBOARD $IDEDVD $QXL $WATCHDOG $BALLOON $RNG $UNIXCLOCK $SOUND $UUID $NODISPLAY"

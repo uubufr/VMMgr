@@ -7,7 +7,7 @@
 GROUP=""
 NAME="%%NAME%%"         # Unique Name
 MEM=1                # Initial Mem Size, in GB
-#MAXMEM=2               # OPTIONAL: Max Allowed mem (defaut: $MEM * 2)
+MAXMEM=1               # OPTIONAL: Max Allowed mem (defaut: $MEM * 2)
 SLOT=2
 CPU=HOST
 SMPTPL=MAX
@@ -44,7 +44,7 @@ New_Network swvpl-prod01 "6|2a01:e0a:278:9833::|64" "2a01:e0a:278:9833::1|2a01:e
 New_Network swvpl-main "6|2a01:e0a:278:9830::|64"  "2a01:e0a:278:9830::1|2a01:e0a:278:9830::FFFF:FFFF" 2a01:e0a:278:9830:82c5:f2ff:fe06:984f
 NETWORKDEVICE="swvpl-main|1"
 
-QEMU_TEMPLATE=FAB
+QEMU_TEMPLATE=LINUXBASE
 
 ###env for spice:
 QEMU_AUDIO_DRV=spice
