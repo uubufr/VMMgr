@@ -246,7 +246,8 @@ function Start_VM_From_Config() {
     if [ "$VMMGR_TEST" == "TEST" ]; then
         echo "qemu-system-x86_64 -name $NAME $CORE ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS -writeconfig $VMMGR_CONFIG_PATH/QEMU_CONFIGS/$NAME"
     else
-        qemu-system-x86_64 -name $NAME $CORE ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS "-writeconfig $VMMGR_CONFIG_PATH/QEMU_CONFIGS/$NAME"
+        CONFIG="-writeconfig $VMMGR_CONFIG_PATH/QEMU_CONFIGS/$NAME"
+        qemu-system-x86_64 -name $NAME $CORE ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS $CONFIG
         sleep 2
         if  [ "$VNC" == "on" ] && [ "$VNCPWD" != "" ]; then
                 { echo "set_password vnc $VNCPWD"; sleep 1; } | telnet $VNCIP $VNCPORT
