@@ -264,12 +264,14 @@ function Start_VM_From_Config() {
     MEMORY=$(Check_MEM $MEM $MAXMEM $SLOT)
     
     ### BIOS/UEFI
+    SETUPSECUREBOOT=0
     if [ "$BIOSTYPE" == "BIOS" ]; then
         FIRMWARE=$BIOS
         echo "BIOS=$FIRMWARE"
     else
         FIRMWARE=$(Set_UEFI $NAME on)
         echo "UEFI=$FIRMWARE"
+        SETUPSECUREBOOT="1"
     fi
     
     if [ "$VMMGR_TEST" == "TEST" ]; then
@@ -296,22 +298,29 @@ function Start_VM_From_Config() {
         fi
         
         ### HERE, if we have UEFI Secure boot, we need to load UefiShell.iso
-        if [ $BIOSTYPE="SECURE" ]; then
-            if [ "$TELNET" == "on" ]; then
-                TIP=${TELNETTPL##*monitor telnet:}
-                TIP=${TIP%%,server,nowait}
+        if [ "$SETUPSECUREBOOT" == "1" ]; then
                 echo "#################################################"
                 echo "#         UEFI with SECUREBOOT ENABLE           #"
                 echo "# At UEFI SHELL type:                           #"
                 echo "# > FS0:                                        #"
                 echo "# FS0:\> EnrollDefaultKeys.efi                  #"
                 echo "# FS0:\> reset                                  #"
+                echo "#################################################"
+                echo "" 
+                
+            if [ "$TELNET" == "off" ]; then
+                TIP=${TELNETTPL##*monitor telnet:}
+                TIP=${TIP%%,server,nowait}
                 { echo "change DVD $(rpm -ql edk2-ovmf | grep UefiShell.iso | head -1)"; echo "system_reset"; sleep 1; } | telnet ${TIP%:*} ${TIP##*:}
-                if [ "$SPICE" == "on" ]; then
-                    . $VMMGR_PATH/VMMgr_Launcher connect $NAME spice
-                fi
             elif [ "$QMP" == "on" ]; then
-                echo "qmp"
+                TIP=${QMPTPL##*chardev socket,id=qmp01,host=}
+                TIP=${TIP%%,server,nowait*}
+                { echo '{ "execute": "qmp_capabilities" } { "execute": "change DVD $(rpm -ql edk2-ovmf | grep UefiShell.iso | head -1)" } { "execute": "system_reset" }'; sleep 1; } | telnet ${TIP%%,*} ${TIP##*port=}
+            fi
+            if [ "$SPICE" == "on" ]; then
+                . $VMMGR_PATH/VMMgr_Launcher connect $NAME spice
+            elif [ "$VNC" == "on" ]; then
+                . $VMMGR_PATH/VMMgr_Launcher connect $NAME vnc
             fi
         fi
     fi
