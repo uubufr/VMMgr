@@ -198,11 +198,12 @@ function Start_VM_From_Config() {
         echo "No config VMMgr_.conf found, abording..."
         return
     fi
-    . $VMMGR_CONFIG_PATH/DATA/VMMgr_Spice
-    . $2
+    
     Get_Bridge_Tool
     
     ### SPICE ###
+    . $VMMGR_CONFIG_PATH/DATA/VMMgr_Spice
+    . $2
     if [ "$SPICE" == "on" ]; then
         IPPORT=$(Set_Service_Listen $SPICEIP $SPICEIPVER $SPICETYPE $NAME spice $SPICEPORT)
         SPICEIP=${IPPORT%|*}; SPICEPORT=${IPPORT#*|}
@@ -211,7 +212,6 @@ function Start_VM_From_Config() {
     else
         SPICETPL=TPLNULL
     fi
-    . $VMMGR_CONFIG_PATH/DATA/VMMgr_Devices
     
     ### TELNET MONITOR ###
     if [ "$TELNET" == "on" ]; then
@@ -223,11 +223,11 @@ function Start_VM_From_Config() {
 
     ### VNC ###
     if [ "$VNC" == "on" ]; then
-        . $VMMGR_CONFIG_PATH/DATA/VMMgr_Spice
+        . $VMMGR_CONFIG_PATH/DATA/VMMgr_VNC
         . $2
         IPPORT=$(Set_Service_Listen $VNCIP $VNCIPVER $VNCTYPE $NAME vnc $VNCPORT)
         VNCIP=$(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}'); VNCPORT=${IPPORT#*|}
-        . $VMMGR_CONFIG_PATH/DATA/VMMgr_VNC
+        
         echo "Remote Viewer with x509 do not work, please use another vnc viewer like Remina"
         Set_Remote_Viewer vnc $VNCTPL $NAME $IPPORT $VNCPWD
     else
@@ -252,6 +252,7 @@ function Start_VM_From_Config() {
     done
     
     ### Virtio Disks ###
+    . $VMMGR_CONFIG_PATH/DATA/VMMgr_Devices
     export Virtio_Disk
     DisksList=$(Set_Disks $NAME)
     VIRTIODISKS=$(Set_Virtio_Disks $NAME $IOTHREADS $DisksList)
@@ -276,8 +277,8 @@ function Start_VM_From_Config() {
     if [ "$VMMGR_TEST" == "TEST" ]; then
         echo "qemu-system-x86_64 -name $NAME $CORE $MEMORY $FIRMWARE ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS -writeconfig $VMMGR_CONFIG_PATH/QEMU_CONFIGS/$NAME"
     else
-        CONFIG="-writeconfig $VMMGR_CONFIG_PATH/QEMU_CONFIGS/$NAME"
-        qemu-system-x86_64 -name $NAME $CORE $MEMORY $FIRMWARE ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS $CONFIG
+        WCONFIG="-writeconfig $VMMGR_CONFIG_PATH/QEMU_CONFIGS/$NAME"
+        qemu-system-x86_64 -name $NAME $CORE $MEMORY $FIRMWARE ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS $WCONFIG
         
         sleep 1
         
@@ -285,8 +286,14 @@ function Start_VM_From_Config() {
         sed -i 's/compat_monitor0/compat_monitor1/g' $VMMGR_CONFIG_PATH/QEMU_CONFIGS/$NAME
         
         ### VNC PASSWORD ###
-        if  [ "$VNC" == "on" ] && [ "$VNCPWD" != "" ]; then
-                { echo "set_password vnc $VNCPWD"; sleep 1; } | telnet $VNCIP $VNCPORT
+        if [ "$TELNET" == "on" ]; then
+            TIP=${TELNETTPL##*monitor telnet:}
+            TIP=${TIP%%,server,nowait}
+            { echo "set_password vnc $VNCPWD"; sleep 1; } | telnet ${TIP%:*} ${TIP##*:}
+        elif [ "$QMP" == "on" ]; then
+            TIP=${QMPTPL##*chardev socket,id=qmp01,host=}
+            TIP=${TIP%%,server,nowait*}
+            { echo '{ "execute": "qmp_capabilities" } { "execute": "set_password vnc $VNCPWD" }'; sleep 1; } | telnet ${TIP%%,*} ${TIP##*port=}
         fi
         
         ### Checking if vm is running ###
