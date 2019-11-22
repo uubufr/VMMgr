@@ -36,6 +36,11 @@ SCSIDVD="-device virtio-scsi-pci,id=scsi -drive if=none,id=DVD,readonly=on,forma
 ### First Graphical Card
 QXL="-device qxl-vga,id=qxl-video0,ram_size=67108864,vram_size=67108864"
 
+
+### for 3D display
+### NOTE: not tested, vfio need lot of steps and requirement, not tested at this time.
+#VIRTIOGPU="device vfio-pci,host=00:00:02.0,x-vga=off,bus=pcie.0,addr=0x2,x-igd-opregion=on -device virtio-gpu-pci,virgl=on"
+
 ### Watchdog:
 WATCHDOG="-device i6300esb,id=watchdog0 -watchdog-action none"
 
@@ -67,7 +72,21 @@ NODISPLAY="-display none"
 DISPLAYEGL="-display egl-headless"
 
 
+### vmgenid device:
+VMGENID"-device vmgenid"
+
+### pvpanic:
+PANIC="-device pvpanic"
+
+### vmcoreinfo
+VMCORE="-device vmcoreinfo"
+
+### TPM
+
+### ccid
+
+
 ### DEVICE TEMPLATES ###
-LINUXBASE="$COMMON $PCI $USB $MOUSE $KEYBOARD $SCSIDVD $QXL $WATCHDOG $BALLOON $RNG $UNIXCLOCK $SOUND $NODISPLAY"
-WINDOWSBASE="$COMMON $PCI $USB $MOUSE $KEYBOARD $IDEDVD $QXL $WATCHDOG $BALLOON $RNG $WINDOWSCLOCK $SOUND $NODISPLAY"
-FAB="$COMMON $MACHINE $CPUKVM $BOOT $BIOS $PCI $USB $MOUSE $KEYBOARD $IDEDVD $QXL $WATCHDOG $BALLOON $RNG $UNIXCLOCK $SOUND $UUID $NODISPLAY"
+LINUXBASE="$COMMON $PCI $USB $MOUSE $KEYBOARD $SCSIDVD $QXL $WATCHDOG $BALLOON $RNG $UNIXCLOCK $SOUND $NODISPLAY $VMGENID $PVPANIC $VMCORE"
+WINDOWSBASE="$COMMON $PCI $USB $MOUSE $KEYBOARD $IDEDVD $QXL $WATCHDOG $BALLOON $RNG $WINDOWSCLOCK $SOUND $NODISPLAY $VMGENID"
+FAB="$COMMON $MACHINE $CPUKVM $BOOT $BIOS $PCI $USB $MOUSE $KEYBOARD $IDEDVD $QXL $WATCHDOG $BALLOON $RNG $UNIXCLOCK $SOUND $UUID $NODISPLAY $VMGENID $PVPANIC $VMCORE"
