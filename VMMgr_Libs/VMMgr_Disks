@@ -163,7 +163,6 @@ function Set_Virtio_Disks() {
         if [ "$HDFORMAT" == "qcow2" ]; then
             # l2-cache-size = Disk_size_Byte / ( cluster_size / 8)
             # refcount-cache-size = disk_size_GB * ( cluster_size * 8 / refcount_bits )
-            #   for short: refcount-cache-size = ( l2-cache-size / 4 )
             # cache-size= l2-cache-size + refcount-cache-size
  
             DISKSIZEO=$(numfmt --from=iec $DISKSIZE)
@@ -190,4 +189,45 @@ function Set_Virtio_Disks() {
     IOTHREADS=$(Set_Disk_Threads $2)
     PCIs=$(Set_Pci_Bridge $PCIBRIDGE)
     echo $IOTHREADS $PCIs $DRIVES
+}
+
+# Args:
+#   $1: VM Name
+#   $2: nb of disks
+#   $3: PATH
+function Set_Iscsi_Disks() {
+    VirtioSCSI="-device virtio-scsi-pci,id=scsi"
+    WWN="5000c50000000000"
+    if [ ! -d $3 ]; then mkdir -p $3; fi
+    
+      for ARRAYNUM in $(seq 1 ${#Iscsi_Disk[@]}); do
+        read -r DNUMBER DSIZE DPATH DTPL <<< $(echo "${Iscsi_Disk[$(( $ARRAYNUM - 1 ))]}")
+        
+    for DISKNB in $(seq 1 $1); do
+        HEXNUMBER=$(echo "ibase=10;obase=16;$DISKNB" | bc)
+        WWNUM=$(echo "ibase=16;obase=16; $WWN + $HEXNUMBER" | bc )
+        DRIVENAME="Qemu-ISCSI-Disk_$1-$DSIZE-$VDNAME-"
+        echo "-drive file=$3/$HDNAME,if=none,format=qcow2,id=scsi-disk$DISKNB,cache=directsync,aio=native -device scsi-hd,wwn=0x$WWNUM,drive=scsi-diskS$DISKNB"
+        
+    done
+   export VSCSI="-device virtio-scsi-pci,id=scsi"
+    for numdrv in $(seq 1 $1); do
+
+        # Disk management:
+        pathnb=$numdrv
+            while [ $pathnb -gt ${#diskpath[@]} ]; do
+            pathnb=$(( $pathnb - ${#diskpath[@]} ));
+        done
+
+        disque=$(( $(( $numdrv - 1 )) / ${#diskpath[@]} ))
+
+        HDPATH=$(echo ${diskpath[$pathnb]}/diskS$((disque + 1 )))
+
+        if [ ! -f $HDPATH ]; then
+            qemu-img create -f qcow2 -o cluster_size=32k $HDPATH $HDSIZE
+        fi
+
+        ASCSI[$numdrv]="-drive file=$HDPATH,if=none,format=qcow2,id=virtio-diskS$numdrv,cache=directsync,aio=native -device scsi-hd,wwn=0x5000c50015ea71a$numdrv,drive=virtio-diskS$numdrv"
+    done
+    export ASCSI
 }
