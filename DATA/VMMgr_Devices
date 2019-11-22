@@ -73,7 +73,7 @@ DISPLAYEGL="-display egl-headless"
 
 
 ### vmgenid device:
-VMGENID"-device vmgenid"
+VMGENID="-device vmgenid"
 
 ### pvpanic:
 PANIC="-device pvpanic"
