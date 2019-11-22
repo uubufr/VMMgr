@@ -11,6 +11,11 @@
 # Get_Core_Number: Get Core list on a physical cpu
 # Get_Core_Threads: return threads on a core
 # Get_Core_Id: Get corresponding core ID
+# Map_SMP_1CPU: map the first physical CPU
+# Set_Custom_SMP: Generate custom -smp config
+# Set_NUMA_NODE: Generate Numa defs
+
+
 
 # Function: Get_Nb_Sockets
 # Description: Get Number of Physical CPU
@@ -26,7 +31,6 @@ function Get_Nb_Sockets() {
 # Args: none
 function Get_Total_CPUs() {
     ls -1d /sys/devices/system/cpu/cpu[0-9]* | wc -l
-done
 }
 
 
@@ -58,6 +62,11 @@ function Get_Core_Id() {
     cat /sys/devices/system/cpu/cpu$1/topology/core_id
 }
 
+# Function: Map_SMP_1CPU
+# Descrition: map the first physical CPU
+# Args:
+#   $1: Initial cpus for start vm
+#   $2: (bool) Nb of Numa nodes
 function Map_SMP_1CPU() {
     NBSOCKETS=$(Get_Nb_Sockets | sort | uniq | wc -l)
     SOCKETCORES=$(Get_Core_Number 0 | sort | uniq | wc -l)
@@ -67,26 +76,53 @@ function Map_SMP_1CPU() {
     else
         HYPERTHREAD=2
     fi
-echo "-smp cores=$SOCKETCORES,threads=$HYPERTHREAD,sockets=1"
+    SMP=$(echo "-smp ${1:-1},cores=$SOCKETCORES,threads=$HYPERTHREAD,sockets=1,maxcpus=$(( $SOCKETCORES * $HYPERTHREAD * $NBSOCKETS ))")
+    if [ "$2" == "" ] || [ "$2" == "off" ]; then
+        SMP="$SMP $(Set_NUMA_NODE 1)"
+    elif [ "$2" == "on" ]; then
+        SMP="$SMP $(Set_NUMA_NODE $SOCKETCORES)"
+    fi
+    echo $SMP
 }
 
+# Function: Set_Custom_SMP
+# Desrciption: Generate custom -smp config
 #   $1: number of cores
 #   $2: nomber of sockets
-function Map_SMP_NUMA() {
+#   $3: Initial cpus for start vm
+#   $4: (bool) Nb of Numa nodes
+function Set_Custom_SMP() {
     CORETHREADS=$(Get_Core_Threads 0)
     if [ "$CORETHREADS" == "${CORETHREADS##*,}" ]; then
         HYPERTHREAD=1
     else
         HYPERTHREAD=2
     fi
-    echo "-smp cores=$1,threads=$HYPERTHREAD,sockets=$2"
+    MAXCPUS=$(( $1 * $HYPERTHREAD * $2 ))
+    SMP=$(echo "-smp ${3:-$MAXCPUS},cores=$1,threads=$HYPERTHREAD,sockets=$2,maxcpus=$MAXCPUS")
+    if [ "$4" == "" ] || [ "$4" == "off" ]; then
+        SMP="$SMP $(Set_NUMA_NODE 1)"
+    elif [ "$4" == "on" ]; then
+        SMP="$SMP $(Set_NUMA_NODE $1)"
+    fi
+    echo $SMP
 }
 
+# Function: Set_NUMA_NODE
+# Description: Generate Numa defs
+# Args:
+#   $1: Nb of Numa nodes
 function Set_NUMA_NODE() {
-
+    if [ "$1" == "1" ]; then
+        echo "-numa node,nodeid=0 -numa cpu node-id=0,socket-id=0"
+    else
+        NUMANODES=""
+        for i in $(seq 0 $(( $1 - 1)) ); do
+            NUMANODES="$NUMANODES $(echo "-numa node,nodeid=$i")"
+        done
+        for i in $(seq 0 $(( $1 - 1 )) ); do
+            NUMANODES="$NUMANODES $(echo "-numa cpu,node-id=$i,socket-id=0,core-id=$i ")"
+        done
+        echo $NUMANODES
+    fi
 }
-
-faut arriver à un truc du genre:
-
--numa node node,nodeid=$X,cpus= ,cpus=,
--numa cpu,node-id=$X,socket-id=$X,core-id=$Y,thread-id=$Z,thread-id=$Z2
