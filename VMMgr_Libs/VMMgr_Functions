@@ -267,8 +267,10 @@ function Start_VM_From_Config() {
     ### BIOS/UEFI
     if [ "$BIOS" == "BIOS" ]; then
         FIRMWARE=$BIOS
+        echo "BIOS=$FIRMWARE"
     else
         FIRMWARE=$(Set_UEFI $NAME on)
+        echo "UEFI=$FIRMWARE"
     fi
     
     if [ "$VMMGR_TEST" == "TEST" ]; then
