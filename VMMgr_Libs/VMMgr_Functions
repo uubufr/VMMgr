@@ -274,10 +274,10 @@ function Start_VM_From_Config() {
     fi
     
     if [ "$VMMGR_TEST" == "TEST" ]; then
-        echo "qemu-system-x86_64 -name $NAME $CORE $MEMORY ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS -writeconfig $VMMGR_CONFIG_PATH/QEMU_CONFIGS/$NAME"
+        echo "qemu-system-x86_64 -name $NAME $CORE $MEMORY $FIRMWARE${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS -writeconfig $VMMGR_CONFIG_PATH/QEMU_CONFIGS/$NAME"
     else
         CONFIG="-writeconfig $VMMGR_CONFIG_PATH/QEMU_CONFIGS/$NAME"
-        qemu-system-x86_64 -name $NAME $CORE $FIRMWARE $MEMORY ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS $CONFIG
+        qemu-system-x86_64 -name $NAME $CORE $MEMORY $FIRMWARE ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS $CONFIG
         sleep 2
         # Fix Duplicated ID compat_monitor0 #
         sed -i 's/compat_monitor0/compat_monitor1/g' $VMMGR_CONFIG_PATH/QEMU_CONFIGS/$NAME
