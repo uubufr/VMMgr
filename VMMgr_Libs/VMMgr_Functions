@@ -247,21 +247,21 @@ function Start_VM_From_Config() {
         echo "qemu-system-x86_64 -name $NAME $CORE ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS -writeconfig $VMMGR_CONFIG_PATH/QEMU_CONFIGS/$NAME"
     else
         qemu-system-x86_64 -name $NAME $CORE ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS "-writeconfig $VMMGR_CONFIG_PATH/QEMU_CONFIGS/$NAME"
-    fi
-    sleep 2
-    if  [ "$VNC" == "on" ] && [ "$VNCPWD" != "" ]; then
-            { echo "set_password vnc $VNCPWD"; sleep 1; } | telnet $VNCIP $VNCPORT
-    fi
-    if [ "$TELNET" == "on" ]; then
-        TIP=${TELNETTPL##*monitor telnet:}
-        TIP=${TIP%%,server,nowait}
-        { echo "info status"; sleep 1; } | telnet ${TIP%:*} ${TIP##*:}
-    fi
-    
-    if [ "$QMP" == "on" ]; then
-        TIP=${QMPTPL##*chardev socket,id=qmp01,host=}
-        TIP=${TIP%%,server,nowait*}
-        { echo '{ "execute": "qmp_capabilities" } { "execute": "query-status" }'; sleep 1; } | telnet ${TIP%%,*} ${TIP##*port=}
+        sleep 2
+        if  [ "$VNC" == "on" ] && [ "$VNCPWD" != "" ]; then
+                { echo "set_password vnc $VNCPWD"; sleep 1; } | telnet $VNCIP $VNCPORT
+        fi
+        if [ "$TELNET" == "on" ]; then
+            TIP=${TELNETTPL##*monitor telnet:}
+            TIP=${TIP%%,server,nowait}
+            { echo "info status"; sleep 1; } | telnet ${TIP%:*} ${TIP##*:}
+        fi
+        
+        if [ "$QMP" == "on" ]; then
+            TIP=${QMPTPL##*chardev socket,id=qmp01,host=}
+            TIP=${TIP%%,server,nowait*}
+            { echo '{ "execute": "qmp_capabilities" } { "execute": "query-status" }'; sleep 1; } | telnet ${TIP%%,*} ${TIP##*port=}
+        fi
     fi
 }
 
