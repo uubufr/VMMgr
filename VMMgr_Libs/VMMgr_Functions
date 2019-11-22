@@ -244,9 +244,9 @@ function Start_VM_From_Config() {
     MEMORY=$(Check_MEM $MEM $MAXMEM $SLOT)
     
     if [ "$VMMGR_TEST" == "TEST" ]; then
-        echo "qemu-system-x86_64 -name $NAME $CORE ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS"
+        echo "qemu-system-x86_64 -name $NAME $CORE ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS -writeconfig $VMMGR_CONFIG_PATH/QEMU_CONFIGS/$NAME"
     else
-        qemu-system-x86_64 -name $NAME $CORE ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS
+        qemu-system-x86_64 -name $NAME $CORE ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS "-writeconfig $VMMGR_CONFIG_PATH/QEMU_CONFIGS/$NAME"
     fi
     sleep 2
     if  [ "$VNC" == "on" ] && [ "$VNCPWD" != "" ]; then
