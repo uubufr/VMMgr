@@ -95,7 +95,7 @@ function Check_MEM() {
     MAXMEM=$2
  fi
  if [ $3 ]; then SLOT=$3; else SLOT=1; fi
- MEM="-m $MEM\G,slots=SLOT,maxmem=$MAXMEM""G"
+ echo "-m $MEM\G,slots=SLOT,maxmem=$MAXMEM""G"
 }
 
 # Function: Set_IPMI
