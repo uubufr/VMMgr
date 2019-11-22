@@ -27,7 +27,7 @@ And connect using SPICE:
 
 To Stop VM:
 
-./VMMgr_Launcher stop MyVM
+**./VMMgr_Launcher stop MyVM**
 
 
 
