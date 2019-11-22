@@ -302,7 +302,7 @@ function Start_VM_From_Config() {
                 TIP=${TIP%%,server,nowait}
                 { echo "change DVD $(rpm -ql edk2-ovmf | grep OVMF_VARS.fd | head -1)"; echo "system_reset"; sleep 1; } | telnet ${TIP%:*} ${TIP##*:}
                 if [ "$SPICE" == "on" ]; then
-                    . ./VMMGr_Launher connect $NAME spice
+                    . ./VMMGr_Launcher connect $NAME spice
                 fi
             elif [ "$QMP" == "on" ]; then
                 echo "qmp"
