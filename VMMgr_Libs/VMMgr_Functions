@@ -197,7 +197,7 @@ function Start_VM_From_Config() {
     else
         SPICETPL=TPLNULL
     fi
-    . VMMgr_Vars
+    . $VMMGR_CONFIG_PATH/DATA/VMMgr_Devices
     
     if [ "$TELNET" == "on" ]; then
         IPPORT=$(Set_Service_Listen $TELNETIP $TELNETIPVER $TELNETTYPE $NAME telnet $TELNETPORT)
