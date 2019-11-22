@@ -15,7 +15,7 @@ COMMON="-daemonize -no-user-config -nodefaults -msg timestamp=on"
 
 ### BOOT and BIOS
 BOOT="-boot menu=on,strict=off,splash=$VMMGR_DATA_PATH/UEFI/splash640.bmp,splash-time=5000"
-BIOS="-bios /usr/share/qemu/bios-256k.bin -L /usr/share/qemu/"
+BIOS="-bios $(rpm -ql qemu-system-x86-core | grep "bios-256k.bin") -L /usr/share/qemu/"
 
 ### we disable S3 and S4:
 S34="-global PIIX4_PM.disable_s3=1 -global PIIX4_PM.disable_s4=1"
