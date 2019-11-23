@@ -321,7 +321,7 @@ function Set_Scsi_Disks() {
         TOTALCACHE=$(( $L2CACHE + $REFCACHE ))
         DRIVEOPT="aio=threads,werror=enospc,rerror=report,snapshot=on,cache-clean-interval=900,discard=on,detect-zeroes=unmap,pass-discard-request=on,pass-discard-snapshot=on,pass-discard-other=off,overlap-check=cached,cache=directsync,aio=native,l2-cache-size=$L2CACHE,cache-size=$TOTALCACHE"
         HEXNUMBER=$(echo "ibase=10;obase=10;$COUNT" | bc)
-        DRIVES=$DRIVES"-drive file=$DISK,id=scsi-disk$COUNT,if=none,forwat=qcow2,node-name=$DISKHD,$DRIVEOPT -device scsi-hd,wwn=0x$(echo "ibase=16;obase=10;$WWN+$HEXNUMBER" | bc | tr -d \  ),drive=scsi-disk$COUNT "
+        DRIVES=$DRIVES"-drive file=$DISK,id=scsi-disk$COUNT,if=none,format=qcow2,node-name=$DISKHD,$DRIVEOPT -device scsi-hd,wwn=0x$(echo "ibase=16;obase=10;$WWN+$HEXNUMBER" | bc | tr -d \  ),drive=scsi-disk$COUNT "
     done
     echo "-device virtio-scsi-pci,id=scsi "$DRIVES
 }
