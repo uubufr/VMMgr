@@ -258,6 +258,12 @@ function Start_VM_From_Config() {
     VIRTIODISKS=$(Set_Virtio_Disks $NAME $IOTHREADS $DisksList)
     unset Virtio_Disk
     
+    ### SCSI Disks ###
+    export Scsi_Disk
+    DisksList=$(Set_SDisks $NAME)
+    SCSIDISKS=$(Set_Scsi_Disks $NAME $DisksList)
+    unset Scsi_Disk
+    
     ### CPU/SMP/NUMA/MACHINE ###
     . $VMMGR_CONFIG_PATH/DATA/VMMgr_CPU
     CORE="-machine ${!MACHINETPL} ${!SMPTPL}"
