@@ -116,10 +116,10 @@ case "$1" in
         #   2) Check if enabled
         #   3) if enabled, use systemctl to start vm
         #   4) if disabled or systemctl return no unit, start manually
+            . $VMMGR_CONFIG_PATH/VM_CONFIGS/$2
+            echo "use config: $USEQEMUCONFIG"
             if [ ! "$2" ]; then
                 echo "Usage $0 start <vm name>"
-            . $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF
-            echo "use config: $USEQEMUCONFIG"
             elif [ -r "$VMMGR_CONFIG_PATH/QEMU_CONFIGS/$2" ] && [ ! "$3" == "regen" ] && [ "$USEQEMUCONFIG" != "no" ]; then
                 qemu-system-x86_64 -daemonize -readconfig $VMMGR_CONFIG_PATH/QEMU_CONFIGS/$2
             else
