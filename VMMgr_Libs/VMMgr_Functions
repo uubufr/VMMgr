@@ -278,7 +278,9 @@ function Start_VM_From_Config() {
     if [ "$BIOSTYPE" == "BIOS" ]; then
         FIRMWARE=$BIOS
         echo "BIOS=$FIRMWARE"
-    else
+    elif [ "$BIOSTYPE" == "UEFI" ]; then
+       FIRMWARE=$(Set_UEFI $NAME)
+    elif [ "$BIOSTYPE" == "SECURE" ]; then
         [ ! -d $VMMGR_DATA_PATH/UEFI/$NAME/ ] && SETUPSECUREBOOT="1"
         FIRMWARE=$(Set_UEFI $NAME on)
     fi
