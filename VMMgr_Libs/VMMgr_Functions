@@ -323,7 +323,7 @@ function Start_VM_From_Config() {
         fi
         
         ### Load Install DVD and reset
-        INSERTDVD=$(cat VM_CONFIGS/live.conf | grep '^INSTALLISO' | cut -d= -f2 | tr -d \" )
+        INSERTDVD=$(cat $2 | grep '^INSTALLISO' | cut -d= -f2 | tr -d \" )
         if [ "$INSERTDVD" ]; then
              $VMMGR_PATH/VMMgr_Launcher load $NAME $INSERTDVD reset
              sed -i -e 's/\(^INSTALLISO=.*$\)/#\1/' $2
