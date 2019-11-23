@@ -181,7 +181,6 @@ function Set_Virtio_Disks() {
             DRIVEOPT="${!DISKTPL},l2-cache-size=$L2CACHE,cache-size=$TOTALCACHE"
         fi
         DRIVES="$DRIVES-drive file=$DISK,id=virtio-disk$COUNT,node-name=$DISKHD,$DRIVEOPT -device virtio-blk-pci,iothread=iothread$THREAD,ioeventfd=on,event_idx=on,scsi=off,config-wce=off,drive=virtio-disk$COUNT,bus=pci.$PCIBRIDGE,addr=0x$(echo "ibase=10;obase=16;$PCOUNT" | bc).0x0 "
-        #DRIVES="$DRIVES-drive file=$DISK,if=none,format=qcow2,id=virtio-disk$COUNT,cache=directsync,aio=native,werror=enospc,rerror=report -device virtio-blk-pci,iothread=iothread$THREAD,ioeventfd=on,event_idx=on,scsi=off,config-wce=off,drive=virtio-disk$COUNT,bus=pci.$PCIBRIDGE,addr=0x$(echo "ibase=10;obase=16;$PCOUNT" | bc).0x0 "
         THREAD=$(( $THREAD + 1 )); [ $THREAD -gt $2 ] && THREAD=1
     done
 
@@ -191,11 +190,156 @@ function Set_Virtio_Disks() {
     echo $IOTHREADS $PCIs $DRIVES
 }
 
+# Function: Set_SDisks
+# Description: Get disk list, check if they already exists and if not, create it
 # Args:
 #   $1: VM Name
 #   $2: nb of disks
 #   $3: PATH
-function Set_Iscsi_Disks() {
+# Note: Set_Disks and Set_SDisks should be merged
+function Set_SDisks() {
+    DisksList=""
+    DNUM=0
+    CPATH=""
+    for ARRAYNUM in $(seq 1 ${#Scsi_Disk[@]}); do
+        read -r DNUMBER DSIZE DPATH DTPL <<< $(echo "${Scsi_Disk[$(( $ARRAYNUM - 1 ))]}")
+        if [ "$DNUMBER" == "" ]; then continue; fi
+        case "${DPATH%%:*}" in
+            "order")
+                ORDER="order"
+                ;;
+            "share")
+                ORDER="share"
+                ;;
+            *)
+                ORDER="share"
+                ;;
+        esac
+        
+        CounterPATH="1"
+        for drive in $(seq 1 $DNUMBER); do
+            DNUM=$(( DNUM + 1 ))
+
+            ### Calculate sdxx name
+            read SDX SDY <<< $(echo "ibase=10;obase=26;$(( $DNUM - 1 ))" | bc)
+            if [ "$SDY" == "" ]; then SDY=$SDX; SDX=""; fi
+            SDNAME="sd$(awk -v hda=$SDX -v hdb=$SDY 'BEGIN{ i=hda+96; if ( hda > 0 ) printf "%c", i; x=hdb+97; printf "%c", x }')"
+            DRIVENAME="Qemu-Scsi-Disk_$NAME-$DSIZE-$SDNAME"
+            
+            ### First, we need to find existing disk:
+            DFOUND=0
+            OldCounter=$CounterPATH
+            for EPATH in $( echo $DPATH | tr : \  ); do
+                [ -d $EPATH ] || mkdir -p $EPATH
+                if [ -r "$EPATH/$DRIVENAME" ]; then
+                    DFOUND=1; break;
+                else
+                   if [ "$ORDER" == "share" ]; then
+                    CounterPATH=$(( $CounterPATH + 1 ))
+                   fi
+                fi
+            done
+            if [ "$DFOUND" == 1 ]; then
+                CPATH=${EPATH%/}
+                DisksList="$DisksList|$EPATH/$DRIVENAME"
+            else
+                CounterPATH=$OldCounter
+                case "$ORDER" in
+                    "share")
+                        DPATH=${DPATH#share:}
+                            CPATH=$( echo $DPATH | cut -d: -f $CounterPATH)
+                            if [ "$CPATH" == "" ]; then
+                                CounterPATH=1
+                                CPATH=$( echo $DPATH | cut -d: -f $CounterPATH)
+                            fi
+                            CounterPATH=$(( $CounterPATH + 1 ))
+                        ;;
+                    "order")
+                        DPATH=${DPATH#order:}
+                        # Here, we need to check if we have enough space on the disk, if not, we check next path:
+                        CPATH=$( echo $DPATH | cut -d: -f $CounterPATH)
+                        IAVAIL=$(echo "$(df --block-size=1k --sync --output=iavail $CPATH | tail -1)K" | numfmt --from=iec )
+                        AVAIL=$(echo "$(df --block-size=1k --sync --output=avail $CPATH | tail -1)K" | numfmt --from=iec )
+                        OSIZE=$(echo 8G | numfmt --from=iec)
+                        AVAIL=$(( $AVAIL - $OSIZE ))
+                        
+                        # Not enough space left on the device
+                        while [ $AVAIL -le "0" ]; do
+                            CounterPATH=$(( $CounterPATH + 1 ))
+                            CPATH=$( echo $DPATH | cut -d: -f $CounterPATH)
+                            if [ "$CPATH" == "" ]; then                     # end of path list, so no space left anywhere, error
+                                break;
+                            else                                            # Checking next path
+                                IAVAIL=$(echo "$(df --block-size=1k --sync --output=iavail $CPATH | tail -1)K" | numfmt --from=iec )
+                                AVAIL=$(echo "$(df --block-size=1k --sync --output=avail $CPATH | tail -1)K" | numfmt --from=iec )
+                                OSIZE=$(echo 8G | numfmt --from=iec)
+                                AVAIL=$(( $AVAIL - $OSIZE ))
+                            fi
+                        done
+                        ;;
+                esac
+                IFS=-  read QN QS QV <<< $( echo ${DRIVENAME#Qemu-Scsi-Disk_})
+                qemu-img create -f qcow2 -o cluster_size=32k "$CPATH/$DRIVENAME" $DSIZE 2>/dev/null 1>/dev/null
+                DisksList="$DisksList|$CPATH/$DRIVENAME"
+            fi
+        done
+    done
+    echo ${DisksList#|}
+}
+
+# Function: Set_Scsi_Disks
+# Description: Déclare iothreads, pci-bridges, and drives
+# Args:
+#   $1: Vm Name
+#   $3: DiskLists
+function Set_Scsi_Disks() {
+    DRIVES=""
+    COUNT=0
+     WWN="5000C50000000000"
+    declare -i THREAD=1
+    for DISK in $(echo $2 | tr \| \  ); do
+    echo "Disk: $DISK"
+        ### Max 0x1F (31) drive per pci-device
+        COUNT=$(( $COUNT + 1 ))
+
+        ### Extract hd name from disk name:
+        IFS=- read DISKNAME DISKSIZE DISKHD <<< $(echo ${DISK##*Qemu-Scsi-Disk_})
+        echo "$DISKNAME, $DISKSIZE, $DISKHD"
+        ### make -drive and -device params
+            # l2-cache-size = Disk_size_Byte / ( cluster_size / 8)
+            # refcount-cache-size = disk_size_GB * ( cluster_size * 8 / refcount_bits )
+            # cache-size= l2-cache-size + refcount-cache-size
+ 
+        DISKSIZEO=$(numfmt --from=iec $DISKSIZE)
+        CLUSTERSIZE=32K
+        CLUSTERSIZE=$(numfmt --from=iec ${CLUSTERSIZE^^})
+        L2CLUSTERSIZE=$(( $CLUSTERSIZE / 8 ))
+        L2CACHE=$(( $DISKSIZEO / $L2CLUSTERSIZE ))
+     
+        REFCOUNTBIT=16
+        REFCLUSTERSIZE=$(( $CLUSTERSIZE * 8 / $REFCOUNTBIT ))
+        REFCACHE=$(( ${DISKSIZE%G} * $REFCLUSTERSIZE ))
+           
+        TOTALCACHE=$(( $L2CACHE + $REFCACHE ))
+        DRIVEOPT="aio=threads,werror=enospc,rerror=report,snapshot=on,cache-clean-interval=900,discard=on,detect-zeroes=unmap,pass-discard-request=on,pass-discard-snapshot=on,pass-discard-other=off,overlap-check=cached,cache=directsync,aio=native,l2-cache-size=$L2CACHE,cache-size=$TOTALCACHE"
+        HEXNUMBER=$(echo "ibase=10;obase=10;$COUNT" | bc)
+        DRIVES=$DRIVES"-drive file=$DISK,id=scsi-disk$COUNT,if=none,forwat=qcow2,node-name=$DISKHD,$DRIVEOPT -device scsi-hd,wwn=0x$(echo "ibase=16;obase=10;$WWN+$HEXNUMBER" | bc | tr -d \  ),drive=scsi-disk$COUNT "
+    done
+    echo "-device virtio-scsi-pci,id=scsi "$DRIVES
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
     VirtioSCSI="-device virtio-scsi-pci,id=scsi"
     WWN="5000c50000000000"
     if [ ! -d $3 ]; then mkdir -p $3; fi

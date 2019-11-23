@@ -1,0 +1,47 @@
+#! /bin/bash
+#
+# script name: %%NAME%%
+# autor: Sylvain Girod ( uubu at gmx dot fr )
+# version: 0.05
+# description: Template for Linux Base
+#               1 CPU
+#               1GB RAM
+#               1HD 8G - Virtio-Disk
+#               1 iface - Virtio-Net
+#               Telnet and Spice
+# ToDo: IPVER=4, VNC=off, qmp=off
+GROUP=""
+NAME="%%NAME%%"         # Unique Name
+MEM="1"                 # Initial Mem Size, in GB
+MAXMEM="1"              # OPTIONAL: Max Allowed mem (defaut: $MEM * 2)
+
+### Disks ###
+IOTHREADS=1
+DISKPATH="~/VMs/$NAME"
+Virtio_Disk[0]="1 8G $DISKPATH"
+
+
+New_Network VM-Bridge "4|10.98.98.0|24" "10.98.98.10|10.98.98.100" 10.98.98.1
+SPICEIPVER=4
+SPICEMODE=plaintext
+SPICE=on
+SPICEIP=VM-Bridge
+SPICETYPE=bridge
+SPICETPL=SPICECLEAR
+
+TELNETIPVER=4
+TELNET=on
+TELNETIP=VM-Bridge
+TELNETTYPE=bridge
+
+VNC=off
+QMP=off
+
+. ./DATA/VMMgr_VirtioNet
+NETWORKDEVICE="VM-Bridge|1"
+
+QEMU_TEMPLATE=FAB
+
+###env for spice:
+EMU_AUDIO_DRV=spice
+SPICE_DEBUG_ALLOW_MC=0
