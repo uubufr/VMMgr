@@ -198,7 +198,7 @@ function Start_VM_From_Config() {
         echo "No config VMMgr_.conf found, abording..."
         return
     fi
-    
+    . $VMMGR_CONFIG_PATH/DATA/VMMgr_Devices
     Get_Bridge_Tool
     
     ### SPICE ###
@@ -254,7 +254,6 @@ function Start_VM_From_Config() {
     
     ### Virtio Disks ###
     if [ "$Virtio_Disk" ]; then
-        . $VMMGR_CONFIG_PATH/DATA/VMMgr_Devices
         export Virtio_Disk
         DisksList=$(Set_Disks $NAME)
         VIRTIODISKS=$(Set_Virtio_Disks $NAME $IOTHREADS $DisksList)
