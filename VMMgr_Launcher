@@ -116,39 +116,17 @@ case "$1" in
         #   2) Check if enabled
         #   3) if enabled, use systemctl to start vm
         #   4) if disabled or systemctl return no unit, start manually
-            . $VMMGR_CONFIG_PATH/VM_CONFIGS/$2
-            echo "use config: $USEQEMUCONFIG"
             if [ ! "$2" ]; then
                 echo "Usage $0 start <vm name>"
-            elif [ -r "$VMMGR_CONFIG_PATH/QEMU_CONFIGS/$2" ] && [ ! "$3" == "regen" ] && [ "$USEQEMUCONFIG" != "no" ]; then
-                qemu-system-x86_64 -daemonize -readconfig $VMMGR_CONFIG_PATH/QEMU_CONFIGS/$2
             else
                 VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
-                if [ "$VMCONF" == "" ]; then
+                if  [ "$VMCONF" == "" ]; then
                     echo "$2 not found in DB"
                 else
-                    SYSD=$(Db_isEnabled_VM $VMMGR_DB_PATH $2)
-                    if [ "$SYSD" == "1" ]; then
-                        SYSDSTATUS=$(systemctl status "VM_$2.service" 2>&1>/dev/null)
-                        case "$SYSDSTATUS" in
-                            "0")
-                                echo "$2 already running!"
-                            ;;
-                            "1")
-                                echo "Unknown error"
-                            ;;
-                            "2")
-                                echo "Unknown error"
-                            ;;
-                            "3")
-                                systemctl start "VM_$2.service" 2>&1>/dev/null
-                            ;;
-                            "4")
-                                Start_VM_From_Config $2 $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF
-                            ;;
-                        esac
+                    if  [ -r "$VMMGR_CONFIG_PATH/QEMU_CONFIGS/$2" ] && [ ! "$3" == "regen" ] && [ "$USEQEMUCONFIG" != "no" ]; then
+                        qemu-system-x86_64 -daemonize -readconfig $VMMGR_CONFIG_PATH/QEMU_CONFIGS/$2
                     else
-                        if [ ! -r $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF ]; then
+                         if [ ! -r $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF ]; then
                             echo "VM $2 not found"
                         else
                             Start_VM_From_Config $2 $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF
@@ -156,6 +134,44 @@ case "$1" in
                     fi
                 fi
             fi
+                
+                
+#            elif [ -r "$VMMGR_CONFIG_PATH/QEMU_CONFIGS/$2" ] && [ ! "$3" == "regen" ] && [ "$USEQEMUCONFIG" != "no" ]; then
+#                qemu-system-x86_64 -daemonize -readconfig $VMMGR_CONFIG_PATH/QEMU_CONFIGS/$2
+            #else
+                #VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
+                #if [ "$VMCONF" == "" ]; then
+             #       echo "$2 not found in DB"
+                #else
+                    #SYSD=$(Db_isEnabled_VM $VMMGR_DB_PATH $2)
+                    #if [ "$SYSD" == "1" ]; then
+                        #SYSDSTATUS=$(systemctl status "VM_$2.service" 2>&1>/dev/null)
+                        #case "$SYSDSTATUS" in
+                            #"0")
+                             #echo "$2 already running!"
+                            #;;
+                            #"1")
+                                #echo "Unknown error"
+                            #;;
+                            #"2")
+                                #echo "Unknown error"
+                            #;;
+                            #"3")
+                                #systemctl start "VM_$2.service" 2>&1>/dev/null
+                            #;;
+                            #"4")
+                                #Start_VM_From_Config $2 $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF
+                            #;;
+                        #esac
+                    #else
+                        #if [ ! -r $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF ]; then
+                            #echo "VM $2 not found"
+                        #else
+                            #Start_VM_From_Config $2 $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF
+                        #fi
+                    #fi
+                #fi
+            #fi
         ;;
     "enable")
         ;;
