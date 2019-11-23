@@ -21,16 +21,16 @@ VNCSECURE="$VNCSECRETS -vnc $VNCDISPLAY,$VNCPASSWD,$VNCCREDS,$VNCEXCLUSIVE"
 VNCREV="-vnc $VNCREV"
 
 # How to correctly set certs:
-#openssl rand -out /etc/pki/services/vnc/vnc-master.secret -base64 -rand=/dev/random 32
-#openssl rand -out /etc/pki/services/vnc/vnc-iv.secret -base64 -rand=/dev/random 16
-#PASS=$(cat /dev/random | tr -dc 'a-zA-Z0-9' | fold -w 64 | head -n 1)
-#VNCSEC0=$(printf $PASS | openssl enc -aes-256-cbc -a -K $(base64 -d /etc/pki/services/vnc/vnc-master.secret | hexdump -v -e '/1 "%02X"') -iv $(base64 -d /etc/pki/services/vnc/vnc-iv.secret | hexdump -v -e '/1 "%02X"') | tr -d "\n" )
-#echo $VNCSEC0 > /etc/pki/services/vnc/vnc-data
-#unset $VNCSEC0
-#cd /etc/pki/services/vnc/
-#cp ../spice/hvppl-fedora01.key server-key.pem
-#openssl rsa -in server-key.pem -out server-key.pem2
-#echo $PASS
-#openssl rsa -aes-256-cbc -in server-key.pem2 -out server-key.pem
-#chmod 0600 *
-#chown sylvain: *
+# openssl rand -out /etc/pki/services/vnc/vnc-master.secret -base64 -rand=/dev/random 32
+# openssl rand -out /etc/pki/services/vnc/vnc-iv.secret -base64 -rand=/dev/random 16
+# PASS=$(cat /dev/random | tr -dc 'a-zA-Z0-9' | fold -w 64 | head -n 1)
+# VNCSEC0=$(printf $PASS | openssl enc -aes-256-cbc -a -K $(base64 -d /etc/pki/services/vnc/vnc-master.secret | hexdump -v -e '/1 "%02X"') -iv $(base64 -d /etc/pki/services/vnc/vnc-iv.secret | hexdump -v -e '/1 "%02X"') | tr -d "\n" )
+# echo $VNCSEC0 > /etc/pki/services/vnc/vnc-data
+# unset $VNCSEC0
+# cd /etc/pki/services/vnc/
+# cp ../spice/hvppl-fedora01.key server-key.pem
+# openssl rsa -in server-key.pem -out server-key.pem2
+# echo $PASS
+# openssl rsa -aes-256-cbc -in server-key.pem2 -out server-key.pem
+# chmod 0600 *
+# chown qemu:qemu *
