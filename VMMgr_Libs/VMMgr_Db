@@ -236,7 +236,7 @@ function Db_Set_MAC() {
         if [ "$SUBMAC" == "" ]; then SUBMAC=0; else SUBMAC=$(( $SUBMAC + 1 )); fi
         echo "insert into MAC (VMiD, SUBMAC, NETID) values ('$VMID', '$SUBMAC', '$3');" | sqlite3 $1/VMMGR_.db
         EXISTS=$(echo "select printf('%06X', SUBMAC) from MAC where VMiD='$VMID' AND NETID='$3';" | sqlite3 $1/VMMGR_.db)
-    else
+    fi
  fi
  echo $EXISTS
 }
