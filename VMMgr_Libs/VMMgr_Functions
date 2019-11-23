@@ -298,14 +298,16 @@ function Start_VM_From_Config() {
         sed -i 's/compat_monitor0/compat_monitor1/g' $VMMGR_CONFIG_PATH/QEMU_CONFIGS/$NAME
         
         ### VNC PASSWORD ###
-        if [ "$TELNET" == "on" ]; then
-            TIP=${TELNETTPL##*monitor telnet:}
-            TIP=${TIP%%,server,nowait}
-            { echo "set_password vnc $VNCPWD"; sleep 1; } | telnet ${TIP%:*} ${TIP##*:}
-        elif [ "$QMP" == "on" ]; then
-            TIP=${QMPTPL##*chardev socket,id=qmp01,host=}
-            TIP=${TIP%%,server,nowait*}
-            { echo '{ "execute": "qmp_capabilities" } { "execute": "set_password vnc $VNCPWD" }'; sleep 1; } | telnet ${TIP%%,*} ${TIP##*port=}
+        if [ "$VNC" == "on" ]; then
+            if [ "$TELNET" == "on" ]; then
+                TIP=${TELNETTPL##*monitor telnet:}
+                TIP=${TIP%%,server,nowait}
+                { echo "set_password vnc $VNCPWD"; sleep 1; } | telnet ${TIP%:*} ${TIP##*:}
+            elif [ "$QMP" == "on" ]; then
+                TIP=${QMPTPL##*chardev socket,id=qmp01,host=}
+                TIP=${TIP%%,server,nowait*}
+                { echo '{ "execute": "qmp_capabilities" } { "execute": "set_password vnc $VNCPWD" }'; sleep 1; } | telnet ${TIP%%,*} ${TIP##*port=}
+            fi
         fi
         
         ### Checking if vm is running ###
