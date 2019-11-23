@@ -123,6 +123,7 @@ case "$1" in
                 if  [ "$VMCONF" == "" ]; then
                     echo "$2 not found in DB"
                 else
+                    . $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF
                     if  [ -r "$VMMGR_CONFIG_PATH/QEMU_CONFIGS/$2" ] && [ ! "$3" == "regen" ] && [ "$USEQEMUCONFIG" != "no" ]; then
                         qemu-system-x86_64 -daemonize -readconfig $VMMGR_CONFIG_PATH/QEMU_CONFIGS/$2
                     else
