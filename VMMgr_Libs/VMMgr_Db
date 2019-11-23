@@ -38,7 +38,8 @@ CREATE TABLE VM(
     VMiD INTEGER PRIMARY KEY,
     Name TEXT NOT NULL,
     Config TEXT NOT NULL,
-    Enabled INTEGER
+    Enabled INTEGER,
+    UUID TEXT NOT NULL
 );
 
 CREATE TABLE SPICE(
@@ -106,10 +107,11 @@ EOF
 #   $1: Db Path (parent dir)
 #   $2: VM name
 #   $3: Config name
+#   $4: UUID
 function Db_Create_VM() {
  EXISTS=$(echo "select VMiD from VM where Name='$2';" | sqlite3 $1/VMMGR_.db)
  if [ "$EXISTS" == "" ]; then
-  echo "insert into VM ( Name, Config, Enabled) values ('$2', '$3','0');" | sqlite3 $1/VMMGR_.db
+  echo "insert into VM ( Name, Config, Enabled, UUID) values ('$2', '$3','0', '$4');" | sqlite3 $1/VMMGR_.db
   echo "select VMiD from VM where Name='$2';"| sqlite3 $1/VMMGR_.db
  else
   echo $EXISTS
@@ -312,4 +314,13 @@ function Db_Set_SVC() {
 #   $3: Last IP
 function Db_Update_Net_NextIP() {
     echo "update NETWORKS SET LAST='$3' WHERE IFACE='$2';" | sqlite3 $1/VMMGR_.db
+}
+
+# Function Get_Db_UUID
+# Description: Get uuid
+# Args:
+#   $1: Db Path (parent dir)
+#   $2: VM name
+function Get_Db_UUID() {
+    echo "select UUID from VM where Name='$2';" | sqlite3 $1/VMMGR_.db
 }

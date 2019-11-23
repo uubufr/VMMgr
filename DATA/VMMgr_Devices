@@ -54,19 +54,17 @@ BALLOON="-device virtio-balloon-pci,id=balloon0"
 ### Random generator:
 RNG="-object rng-random,id=rng0,filename=/dev/random -device virtio-rng-pci,rng=rng0,max-bytes=1234,period=2000"
 
+### overcommit:
+OVERCOMMIT="-overcommit -cpu-pm=on -mem-lock=on"
+
 ### Unix Clock:
-UNIXCLOCK="-realtime mlock=off -rtc base=utc,clock=vm,driftfix=slew -global kvm-pit.lost_tick_policy=discard"
+UNIXCLOCK="-rtc base=utc,clock=vm,driftfix=none -global kvm-pit.lost_tick_policy=discard"
 
 ### Windows Clock:
-WINDOWSCLOCK="-realtime mlock=off -rtc base=utc,clock=vm,driftfix=slew -global kvm-pit.lost_tick_policy=discard"
-
+WINDOWSCLOCK="-rtc base=localtime,clock=vm,driftfix=none -global kvm-pit.lost_tick_policy=discard"
 
 ### Sound card
 SOUND="-soundhw hda"
-
-
-UUID="-uuid "$(cat /proc/sys/kernel/random/uuid)
-
 
 ### No Display, used when we access to vm using vnc or spice:
 NODISPLAY="-display none"
@@ -91,6 +89,5 @@ VMCORE="-device vmcoreinfo"
 
 
 ### DEVICE TEMPLATES ###
-LINUXBASE="$COMMON $BOOT $PCI $USB $MOUSE $KEYBOARD $IDEDVD $QXL $WATCHDOG $BALLOON $RNG $UNIXCLOCK $SOUND $NODISPLAY $VMGENID $PVPANIC $VMCORE"
-WINDOWSBASE="$COMMON $BOOT $PCI $USB $MOUSE $KEYBOARD $IDEDVD $QXL $WATCHDOG $BALLOON $RNG $WINDOWSCLOCK $SOUND $NODISPLAY $VMGENID"
-FAB="$COMMON $MACHINE $CPUKVM $BOOT $BIOS $PCI $USB $MOUSE $KEYBOARD $IDEDVD $QXL $WATCHDOG $BALLOON $RNG $UNIXCLOCK $SOUND $UUID $NODISPLAY $VMGENID $PVPANIC $VMCORE"
+LINUXBASE="$COMMON $BOOT $PCI $USB $MOUSE $KEYBOARD $IDEDVD $QXL $WATCHDOG $BALLOON $RNG $OVERCOMMIT $UNIXCLOCK $SOUND $NODISPLAY $VMGENID $PVPANIC $VMCORE"
+WINDOWSBASE="$COMMON $BOOT $PCI $USB $MOUSE $KEYBOARD $IDEDVD $QXL $WATCHDOG $BALLOON $RNG $OVERCOMMIT $WINDOWSCLOCK $SOUND $NODISPLAY $VMGENID"
