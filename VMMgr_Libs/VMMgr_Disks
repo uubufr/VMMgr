@@ -298,17 +298,15 @@ function Set_Scsi_Disks() {
      WWN="5000C50000000000"
     declare -i THREAD=1
     for DISK in $(echo $2 | tr \| \  ); do
-    echo "Disk: $DISK"
         ### Max 0x1F (31) drive per pci-device
         COUNT=$(( $COUNT + 1 ))
 
         ### Extract hd name from disk name:
         IFS=- read DISKNAME DISKSIZE DISKHD <<< $(echo ${DISK##*Qemu-Scsi-Disk_})
-        echo "$DISKNAME, $DISKSIZE, $DISKHD"
         ### make -drive and -device params
-            # l2-cache-size = Disk_size_Byte / ( cluster_size / 8)
-            # refcount-cache-size = disk_size_GB * ( cluster_size * 8 / refcount_bits )
-            # cache-size= l2-cache-size + refcount-cache-size
+        # l2-cache-size = Disk_size_Byte / ( cluster_size / 8)
+        # refcount-cache-size = disk_size_GB * ( cluster_size * 8 / refcount_bits )
+        # cache-size= l2-cache-size + refcount-cache-size
  
         DISKSIZEO=$(numfmt --from=iec $DISKSIZE)
         CLUSTERSIZE=32K
