@@ -14,7 +14,7 @@ GROUP=""
 NAME="%%NAME%%"         # Unique Name
 MEM="2"                 # Initial Mem Size, in GB
 MAXMEM="2"              # OPTIONAL: Max Allowed mem (defaut: $MEM * 2)
-BIOSTYPE="BIOS"
+BIOSTYPE="UEFI"
 
 
 New_Network VM-Bridge "4|10.98.98.0|24" "10.98.98.10|10.98.98.100" 10.98.98.1
