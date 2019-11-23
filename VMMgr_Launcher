@@ -119,6 +119,7 @@ case "$1" in
             if [ ! "$2" ]; then
                 echo "Usage $0 start <vm name>"
             . $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF
+            echo "use config: $USEQEMUCONFIG"
             elif [ -r "$VMMGR_CONFIG_PATH/QEMU_CONFIGS/$2" ] && [ ! "$3" == "regen" ] && [ "$USEQEMUCONFIG" != "no" ]; then
                 qemu-system-x86_64 -daemonize -readconfig $VMMGR_CONFIG_PATH/QEMU_CONFIGS/$2
             else
