@@ -321,38 +321,11 @@ function Start_VM_From_Config() {
             { echo '{ "execute": "qmp_capabilities" } { "execute": "query-status" }'; sleep 1; } | telnet ${TIP%%,*} ${TIP##*port=}
         fi
         
-        ### HERE, if we have UEFI Secure boot, we need to load UefiShell.iso
-        INSTALLISO
-        
+        ### Load Install DVD and reset
         INSERTDVD=$(cat VM_CONFIGS/live.conf | grep '^INSTALLISO' | cut -d= -f2 | tr -d \" )
         if [ "$INSERTDVD" ]; then
              $VMMGR_PATH/VMMgr_Launcher load $NAME $INSERTDVD reset
-        fi
-        if [ "$SETUPSECUREBOOT" == "1" ]; then
-                echo ""
-                echo "#################################################"
-                echo "#         UEFI with SECUREBOOT ENABLE           #"
-                echo "# At UEFI SHELL type:                           #"
-                echo "# > FS0:                                        #"
-                echo "# FS0:\> EnrollDefaultKeys.efi                  #"
-                echo "# FS0:\> reset                                  #"
-                echo "#################################################"
-                echo "" 
-                
-        #    if [ "$TELNET" == "on" ]; then
-        #        TIP=${TELNETTPL##*monitor telnet:}
-        #        TIP=${TIP%%,server,nowait}
-        #        { echo "change DVD $(rpm -ql edk2-ovmf | grep UefiShell.iso | head -1)"; echo "system_reset"; sleep 1; } | telnet ${TIP%:*} ${TIP##*:}
-        #    elif [ "$QMP" == "on" ]; then
-        #        TIP=${QMPTPL##*chardev socket,id=qmp01,host=}
-        #        TIP=${TIP%%,server,nowait*}
-        #        { echo '{ "execute": "qmp_capabilities" } { "execute": "change DVD $(rpm -ql edk2-ovmf | grep UefiShell.iso | head -1)" } { "execute": "system_reset" }'; sleep 1; } | telnet ${TIP%%,*} ${TIP##*port=}
-        #    fi
-        #    if [ "$SPICE" == "on" ]; then
-        #        . $VMMGR_PATH/VMMgr_Launcher connect $NAME spice
-        #    elif [ "$VNC" == "on" ]; then
-        #        . $VMMGR_PATH/VMMgr_Launcher connect $NAME vnc
-        #    fi
+             sed -i -e 's/\(^INSTALLISO=.*$\)/#\1/' $2
         fi
     fi
 }
