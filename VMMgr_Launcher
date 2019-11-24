@@ -152,8 +152,8 @@ case "$1" in
                     echo "VM $2 not found in DB"
                 else
                     Db_Delete_VM $VMMGR_DB_PATH $2
-                    if [ -r $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF ] && [ "$3" == "config" ]; then
-                        rm $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF
+                    if [ -r $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF ] && [ "$3" == "config" ]; then
+                        rm $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
                     fi
                 fi
             fi
@@ -173,14 +173,14 @@ case "$1" in
                 if  [ "$VMCONF" == "" ]; then
                     echo "$2 not found in DB"
                 else
-                    . $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF
+                    . $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
                     if  [ -r "$VMMGR_CONFIG_PATH/QEMU_CONFIGS/$2" ] && [ ! "$3" == "regen" ] && [ "$USEQEMUCONFIG" != "no" ]; then
                         qemu-system-x86_64 -daemonize -readconfig $VMMGR_CONFIG_PATH/QEMU_CONFIGS/$2
                     else
-                         if [ ! -r $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF ]; then
+                         if [ ! -r $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF ]; then
                             echo "VM $2 not found"
                         else
-                            Start_VM_From_Config $2 $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF
+                            Start_VM_From_Config $2 $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
                         fi
                     fi
                 fi
@@ -211,14 +211,14 @@ case "$1" in
                                 #systemctl start "VM_$2.service" 2>&1>/dev/null
                             #;;
                             #"4")
-                                #Start_VM_From_Config $2 $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF
+                                #Start_VM_From_Config $2 $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
                             #;;
                         #esac
                     #else
-                        #if [ ! -r $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF ]; then
+                        #if [ ! -r $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF ]; then
                             #echo "VM $2 not found"
                         #else
-                            #Start_VM_From_Config $2 $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF
+                            #Start_VM_From_Config $2 $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
                         #fi
                     #fi
                 #fi
@@ -231,7 +231,7 @@ case "$1" in
         if [ "$VMCONF" == "" ]; then
             echo "$2 not found in DB"
         else
-            . $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF
+            . $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
             if [ "$TELNET" == "on" ]; then
                 IPPORT=$(Set_Service_Listen $TELNETIP $TELNETIPVER $TELNETTYPE $NAME telnet $TELNETPORT)
                 { echo "system_powerdown"; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
@@ -248,7 +248,7 @@ case "$1" in
         if [ "$VMCONF" == "" ]; then
             echo "$2 not found in DB"
         else
-            . $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF
+            . $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
             if [ "$TELNET" == "on" ]; then
                 IPPORT=$(Set_Service_Listen $TELNETIP $TELNETIPVER $TELNETTYPE $NAME telnet $TELNETPORT)
                 { echo "info status"; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
@@ -263,7 +263,7 @@ case "$1" in
         if [ "$VMCONF" == "" ]; then
             echo "$2 not found in DB"
         else
-            . $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF
+            . $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
             if [ "$TELNET" == "on" ]; then
                 IPPORT=$(Set_Service_Listen $TELNETIP $TELNETIPVER $TELNETTYPE $NAME telnet $TELNETPORT)
                 { echo "quit"; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
@@ -278,7 +278,7 @@ case "$1" in
         if [ "$VMCONF" == "" ]; then
             echo "$2 not found in DB"
         else
-            . $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF
+            . $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
             if [ "$TELNET" == "on" ]; then
                 IPPORT=$(Set_Service_Listen $TELNETIP $TELNETIPVER $TELNETTYPE $NAME telnet $TELNETPORT)
                 { echo "system_reset"; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
@@ -301,7 +301,7 @@ case "$1" in
         if [ "$VMCONF" == "" ]; then
             echo "$2 not found in DB"
         else
-            . $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF
+            . $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
             case "$3" in
                 "spice")
                         nohup remote-viewer $VMMGR_CONFIG_PATH/R-SPICE/$2 &
@@ -338,7 +338,7 @@ case "$1" in
                         fi
                     ;;
                 esac
-                . $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF
+                . $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
                 if [ "$TELNET" == "on" ]; then
                     IPPORT=$(Set_Service_Listen $TELNETIP $TELNETIPVER $TELNETTYPE $NAME telnet $TELNETPORT)
                     { echo "change DVD $ISO"; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
