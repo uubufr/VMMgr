@@ -101,6 +101,7 @@ case "$1" in
             echo "VMMGR_.db saved to: ~/VMMgr_.db.bkp$(date --iso)"
         fi
         echo "Do you want to save you DB backup? [y/N]"; read answer
+        if [ "$answer" == "Y" ]; then
             cp -r /var/lib/VMMGR/DB_BKP ~/VMMgr_.DB_BKP
             echo "DB backups saved to: ~/DB_BKP"
         fi
