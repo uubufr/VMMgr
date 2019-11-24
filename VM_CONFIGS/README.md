@@ -1,6 +1,6 @@
 # VM_CONFIGS
 
-This directory will contain all you VM definition, used for create a VM.
+This directory contain all you VM definition, used for create a VM.
 
 This command make a copy of a template:
 
