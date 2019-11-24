@@ -40,7 +40,7 @@ function Set_Pci_Bridge() {
 # Args:
 #   $1: Vm Name
 function Set_Disks() {
-    . $VMMGR_CONFIG_PATH/DATA/VMMgr_VirtioDisk
+    . $VMMGR_DATA_PATH/DATA/VMMgr_VirtioDisk
     DisksList=""
     DNUM=0
     CPATH=""
@@ -140,7 +140,7 @@ function Set_Disks() {
 #   $2: Num Threads
 #   $3: DiskLists
 function Set_Virtio_Disks() {
-    . $VMMGR_CONFIG_PATH/DATA/VMMgr_VirtioDisk
+    . $VMMGR_DATA_PATH/DATA/VMMgr_VirtioDisk
     COUNT=0;PCOUNT=0
     PCIBRIDGE=1
     declare -i THREAD=1
