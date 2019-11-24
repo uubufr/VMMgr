@@ -89,7 +89,7 @@ case "$1" in
         cp $(pwd)/VMMgr_Launcher /usr/local/bin/ && chown qemu:qemu /usr/local/bin/VMMgr_Launcher && chmod g+x /usr/local/bin/VMMgr_Launcher
         cp -r $(pwd)/VMMgr_Libs/* /usr/local/lib/ && chown qemu:qemu /usr/local/bin/VMMgr_Launcher
         cp -r $(pwd)/VMMgr_.conf /etc/VMMGR/ && chown qemu:qemu /etc/VMMGR/VMMgr_.conf
-        cp -r $(pwd)/VMMGR_.db /var/lib/VMMGR/DB/ && chown qemu:qemu /var/lib/VMMGR/DB/VMMGR_.db
+        [ -r $(pwd)/VMMGR_.db ] && cp -r $(pwd)/VMMGR_.db /var/lib/VMMGR/DB/ && chown qemu:qemu /var/lib/VMMGR/DB/VMMGR_.db
         cp -r $(pwd)/{Configs,DATA,DB_BKP,QEMU_CONFIGS,R-SPICE,R-VNC,TAPSCRIPTS,Templates,UEFI,VM_CONFIGS} /var/lib/VMMGR/ && chown -R qemu:qemu /var/lib/VMMGR
         sed -i 's/^\(\VMMGR_.*\)$//g' /etc/VMMGR/VMMgr_.conf
         sed -i 's/^#\(\VMMGR_.*\)$/\1/g' /etc/VMMGR/VMMgr_.conf
@@ -108,7 +108,7 @@ case "$1" in
         rm -rf /etc/VMMGR
         rm -rf /var/lib/VMMGR
         rm /usr/local/bin/VMMgr_Launcher
-        rm $(ls -1 /usr/local/lib/VMMgr_*)
+        rm /usr/local/lib/VMMgr_{CPUs,Db,Disks,Functions,Networks}
         ;;
     "create")
             # Args:
