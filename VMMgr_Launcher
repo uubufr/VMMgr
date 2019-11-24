@@ -71,7 +71,7 @@ else
 fi
 
 # Loading Libs
-if [ -d $VMMGR_LIB_PATH ]; then
+if [ -r $VMMGR_LIB_PATH/VMMgr_Functions ]; then
     . $VMMGR_LIB_PATH/VMMgr_Db
     . $VMMGR_LIB_PATH/VMMgr_Functions
     . $VMMGR_LIB_PATH/VMMgr_Networks
@@ -94,7 +94,7 @@ case "$1" in
         fi
         [ -d /var/lib/VMMGR/ ] || mkdir -p /var/lib/VMMGR/{DB,ISO}
         cp $(pwd)/VMMgr_Launcher /usr/local/bin/ && chown qemu:qemu /usr/local/bin/VMMgr_Launcher && chmod g+x /usr/local/bin/VMMgr_Launcher
-        cp -r $(pwd)/VMMgr_Libs/* /usr/local/lib/ && chown qemu:qemu /usr/local/bin/VMMgr_Launcher
+        cp -r $(pwd)/VMMgr_Libs/VMMgr_* /usr/local/lib/ && chown qemu:qemu /usr/local/lib/VMMgr_*
         [ -r $(pwd)/VMMGR_.db ] && cp -r $(pwd)/VMMGR_.db /var/lib/VMMGR/DB/ && chown qemu:qemu /var/lib/VMMGR/DB/VMMGR_.db
         cp -r $(pwd)/{Configs,DATA,DB_BKP,QEMU_CONFIGS,R-SPICE,R-VNC,TAPSCRIPTS,Templates,UEFI,VM_CONFIGS} /var/lib/VMMGR/ && chown -R qemu:qemu /var/lib/VMMGR && chmod -R 770 /var/lib/VMMGR
         ;;
