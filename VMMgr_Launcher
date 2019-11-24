@@ -124,13 +124,11 @@ case "$1" in
                  else
                     VMCONF=$(Check_Existing_VM $2)
                     if [ "$VMCONF" == "" ]; then VMCONF="$2.conf"; fi
-                    echo "on verif: $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF "
-                    echo "et on doit avoir $VMMGR_DB_PATH"
-                    if [ -r $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF ]; then 
-                        echo "Warning, config file $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF already exists"
+                    if [ -r $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF ]; then 
+                        echo "Warning, config file $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF already exists"
                     else
-                        cp $VMMGR_DATA_PATH/Templates/$3 $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF
-                        Custom_VM_Config $2 $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF
+                        cp $VMMGR_DATA_PATH/Templates/$3 $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
+                        Custom_VM_Config $2 $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
                     fi
                     UUID="-uuid "$(cat /proc/sys/kernel/random/uuid)
                     VMID=$(Db_Create_VM $VMMGR_DB_PATH $2 $VMCONF $(cat /proc/sys/kernel/random/uuid))
