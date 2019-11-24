@@ -114,6 +114,7 @@ case "$1" in
         rm -rf /var/lib/VMMGR
         rm /usr/local/bin/VMMgr_Launcher
         rm /usr/local/lib/VMMgr_{CPUs,Db,Disks,Functions,Networks}
+        rm -rf /var/run/VMMGR
         ;;
     "create")
             # Args:
