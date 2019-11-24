@@ -71,11 +71,11 @@ else
 fi
 
 # Loading Libs
-. $VMMGR_LIB_PATH/VMMgr_Libs/VMMgr_Db
-. $VMMGR_LIB_PATH/VMMgr_Libs/VMMgr_Functions
-. $VMMGR_LIB_PATH/VMMgr_Libs/VMMgr_Networks
-. $VMMGR_LIB_PATH/VMMgr_Libs/VMMgr_Disks
-. $VMMGR_LIB_PATH/VMMgr_Libs/VMMgr_CPUs
+. $VMMGR_LIB_PATH/VMMgr_Db
+. $VMMGR_LIB_PATH/VMMgr_Functions
+. $VMMGR_LIB_PATH/VMMgr_Networks
+. $VMMGR_LIB_PATH/VMMgr_Disks
+. $VMMGR_LIB_PATH/VMMgr_CPUs
 Check_System
 
 case "$1" in
