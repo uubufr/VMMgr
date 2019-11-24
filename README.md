@@ -1,5 +1,7 @@
 # VMMgr
-Bash Script for Qemu/Kvm Virtual Machines Management based on templates and variables
+Bash Script for Qemu/Kvm Virtual Machines Management based on templates and variables.
+
+This is for testing purpose and explore qemu options, for production use, use real tools like LibVirt.
 
 ## How to Start?
 
