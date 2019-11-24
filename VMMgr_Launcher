@@ -46,7 +46,7 @@ MYID=$(id -u)
 RUNERROR=0
 if [ "$MYID" == "0" ]; then
         if [ "$1" == "install" ] || [ "$1" == "uninstall" ]; then
-                echo "I will $1 VMMGR..."
+                echo "${1^}ing VMMGR..."
         else
                 echo "Error, except 'install' and 'uninstall' commands, I refuse to run as root."
                 RUNERROR=1
@@ -96,19 +96,19 @@ case "$1" in
         ;;
     "uninstall")
         echo "Before Uninstall, do you want to save your DB? [Y/n]"; read answer
-        if [ "$answer" == "Y" ] || [  "$answer" == "" ]; then
+        if [ "${answer^^}" == "Y" ] || [  "$answer" == "" ]; then
             cp /var/lib/VMMGR/DB/VMMGR_.db ~/VMMgr_.db.bkp$(date --iso)
             echo "VMMGR_.db saved to: ~/VMMgr_.db.bkp$(date --iso)"
         fi
         echo "Do you want to save you DB backup? [y/N]"; read answer
-        if [ "$answer" == "Y" ]; then
+        if [ "${answer^^}" == "Y" ]; then
             cp -r /var/lib/VMMGR/DB_BKP ~/VMMgr_.DB_BKP
             echo "DB backups saved to: ~/DB_BKP"
         fi
         rm -rf /etc/VMMGR
         rm -rf /var/lib/VMMGR
         rm /usr/local/bin/VMMgr_Launcher
-        rm /usr/local/lib/VMMgr_*
+        rm $(ls -1 /usr/local/lib/VMMgr_*)
         ;;
     "create")
             # Args:
