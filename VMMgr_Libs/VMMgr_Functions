@@ -42,34 +42,43 @@ function Check_Softwares() {
 # Description: Helper for hypervisor configuration
 # Args: no
 function Check_Requirements() {
+    echo "Checking..."
+    echo ""
     PACKAGES=$(Check_Softwares "qemu-system-x86|sqlite edk2-ovmf|virt-viewer" 0)
     if [ "$PACKAGES" ]; then
         echo "You must install the following packages: $PACKAGES"
+        echo ""
     fi
     PACKAGES=$(Check_Softwares "NetworkManager|openvswitch|virglrenderer|dpdk" 0)
     if [ "$PACKAGES" ]; then
         echo "You can install the following optionals packages: $PACKAGES"
+        echo ""
     fi
     PACKAGES=$(Check_Softwares "ulatencyd" 1)
     if [ "$PACKAGES" ]; then
         echo "You should delete following packages: $PACKAGES"
+        echo ""
     fi
     
     if [ "$(getent group qemu)" == "" ]; then
         echo "You must create group 'qemu'"
         echo "kvm user must in this group too"
+        echo ""
     fi
     
     echo "Sudoers: You must ensure the following rules ares set:"
     echo "Cmnd_Alias VMMGRCMD= /usr/sbin/ip, /usr/sbin/brctl, /usr/bin/ovs-vsctl, /usr/bin/nmcli, /usr/sbin/setcap"
     echo "%qemu ALL=(root:root) NOPASSWD: VMMGRCMD"
+    echo ""
     
     ISOPATH=$(sudo -u qemu ls -l $VMMGR_ISO_PATH 2>/dev/null)
     if [ "$ISOPATH" == "" ]; then
         echo "If you plan to use systemd, you ISO PATH ($VMMGR_ISO_PATH) must be readable by qemu user"
+        echo ""
     fi
     
     echo "DISKPATH: if you plan to use systemd, your DISKPATH var in your VM configs must be readable by qemu user"
+    echo ""
     
     for KERNELOPT in $(echo "nodelayacct transparent_hugepage=madvise elevator=deadline kvm-intel.nested=1 iommu=1 intel_iommu=on kvm-intel.ept=1"); do
         if [ "$(cat /proc/cmdline | grep $KERNELOPT)" == "" ]; then
@@ -79,14 +88,17 @@ function Check_Requirements() {
     if [ "$OPTIONS" ]; then
         echo "You should add the following kernel options in your grub.cfg:"
         echo $OPTIONS
+        echo ""
     fi
 
     if [ "$(tuned-adm list | grep hypervisor)" == "" ]; then
         echo "You should install tuned profile provided by copying Configs/tuned.conf in /etc/tuned/hypervisor/"
+        echo ""
     fi
     
     if [ "$(tuned-adm active | grep hypervisor)" == "" ]; then
         echo "tuned profile hypervisor is not active!"
+        echo ""
     fi
 }
 
