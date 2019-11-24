@@ -1,0 +1,18 @@
+[Unit]
+Description=Virtual Machine: %%NAME%%
+Documentation=man:qemu(8)
+After=network.target remote-fs.target nss-lookup.target
+
+[Install]
+WantedBy=multi-user.target
+
+
+[Service]
+User=qemu
+Group=qemu
+NoNewPrivileges=True
+WorkingDirectory=
+Type=simple
+ExecStart=%%VMMGRPATH%% start %%NAME%%
+ExecStop=%%VMMGRPATH%% stop %%name%%
+OOMPolicy=stop
