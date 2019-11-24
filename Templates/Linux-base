@@ -17,7 +17,7 @@ MAXMEM="1"              # OPTIONAL: Max Allowed mem (defaut: $MEM * 2)
 
 ### Disks ###
 IOTHREADS=1
-DISKPATH="~/VMs/$NAME"
+DISKPATH=$HOME/VMs/$NAME
 Virtio_Disk[0]="1 8G $DISKPATH"
 
 
