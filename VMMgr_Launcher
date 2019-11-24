@@ -90,7 +90,7 @@ case "$1" in
         cp -r $(pwd)/VMMgr_Libs/* /usr/local/lib/ && chown qemu:qemu /usr/local/bin/VMMgr_Launcher
         cp -r $(pwd)/VMMgr_.conf /etc/VMMGR/ && chown qemu:qemu /etc/VMMGR/VMMgr_.conf
         [ -r $(pwd)/VMMGR_.db ] && cp -r $(pwd)/VMMGR_.db /var/lib/VMMGR/DB/ && chown qemu:qemu /var/lib/VMMGR/DB/VMMGR_.db
-        cp -r $(pwd)/{Configs,DATA,DB_BKP,QEMU_CONFIGS,R-SPICE,R-VNC,TAPSCRIPTS,Templates,UEFI,VM_CONFIGS} /var/lib/VMMGR/ && chown -R qemu:qemu /var/lib/VMMGR
+        cp -r $(pwd)/{Configs,DATA,DB_BKP,QEMU_CONFIGS,R-SPICE,R-VNC,TAPSCRIPTS,Templates,UEFI,VM_CONFIGS} /var/lib/VMMGR/ && chown -R qemu:qemu /var/lib/VMMGR && chmod -R 660 /var/lib/VMMGR
         sed -i 's/^\(\VMMGR_.*\)$//g' /etc/VMMGR/VMMgr_.conf
         sed -i 's/^#\(\VMMGR_.*\)$/\1/g' /etc/VMMGR/VMMgr_.conf
         ;;
