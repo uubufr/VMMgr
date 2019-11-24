@@ -35,7 +35,6 @@ TELNETTYPE=bridge
 VNC=off
 QMP=off
 
-. ./DATA/VMMgr_VirtioNet
 NETWORKDEVICE="VM-Bridge|1"
 
 QEMU_TEMPLATE=LINUXBASE
