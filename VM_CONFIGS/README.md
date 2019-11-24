@@ -17,11 +17,15 @@ usefull to convert your customized config into template:
 
 copy you customize vm def into Template directory, and change the following:
 
-script name: %%NAME%%
-...
-description: Template for %%NAME%%
-...
-NAME="%%NAME%%"
+> script name: %%NAME%%
+
+> ...
+
+> description: Template for %%NAME%%
+
+> ...
+
+> NAME="%%NAME%%"
 
 
 **%%NAME%%** will be further replaced by the name of your new VM.
