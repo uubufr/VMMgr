@@ -17,14 +17,70 @@
 
 
 # Function Check_Softwares
-# Description: try to check if all required software are installed
-# Args: no args
+# Description: try to check if all packaged are installed or not
+# Args:
+#   $1: Software List
+#   $2: (bool) Not Installed=0, Installed=1 
 function Check_Softwares() {
-    qemu-system_x86_64
-    openIPMI_lanserv
-    sqlite3
-    edk2-ovmf
-    virglrenderer
+    TOBEINSTALL=""
+    PACKAGENEEDED=$(echo $1 | tr \|  \   )
+    for PACKAGE in $(echo $PACKAGENEEDED); do
+        if [ "$(rpm -qa $PACKAGE)" == "" ]; then
+            TOBEINSTALL="$TOBEINSTALL $PACKAGE"
+        else
+            INSTALLED="$PACKAGE"
+        fi
+    done
+    if [ $2 -eq 0 ]; then
+        echo $TOBEINSTALL
+    else
+        echo $INSTALLED
+    fi
+}
+
+# Function: Check_Requirements
+# Description: Helper for hypervisor configuration
+# Args: no
+function Check_Requirements() {
+    PACKAGES=$(Check_Softwares "qemu-system-x86|sqlite edk2-ovmf|virt-viewer" 0)
+    if [ "$PACKAGES" ]; then
+        echo "You must install the following packages: $PACKAGES"
+    fi
+    PACKAGES=$(Check_Softwares "NetworkManager|openvswitch|virglrenderer|dpdk" 0)
+    if [ "$PACKAGES" ]; then
+        echo "You can install the following optionals packages: $PACKAGES"
+    fi
+    PACKAGES=$(Check_Softwares "ulatencyd" 1)
+    if [ "$PACKAGES" ]; then
+        echo "You should delete following packages: $PACKAGES"
+    fi
+    
+    if [ "$(getent group qemu)" == "" ]; then
+        echo "You must create group 'qemu'"
+        echo "kvm user must in this group too"
+    fi
+    
+    echo "Sudoers: You must ensure the following rules ares set:"
+    echo "Cmnd_Alias VMMGRCMD= /usr/sbin/ip, /usr/sbin/brctl, /usr/bin/ovs-vsctl, /usr/bin/nmcli, /usr/sbin/setcap"
+    echo "%qemu ALL=(root:root) NOPASSWD: VMMGRCMD"
+    
+    for KERNELOPT in $(echo "nodelayacct transparent_hugepage=madvise elevator=deadline kvm-intel.nested=1 iommu=1 intel_iommu=on kvm-intel.ept=1"); do
+        if [ "$(cat /proc/cmdline | grep $KERNELOPT)" == "" ]; then
+            OPTIONS="$OPTIONS $KERNELOPT"
+        fi
+    done
+    if [ "$OPTIONS" ]; then
+        echo "You should add the following kernel options in your grub.cfg:"
+        echo $OPTIONS
+    fi
+
+    if [ "$(tuned-adm list | grep hypervisor)" == "" ]; then
+        echo "You should install tuned profile provided by copying Configs/tuned.conf in /etc/tuned/hypervisor/"
+    fi
+    
+    if [ "$(tuned-adm active | grep hypervisor)" == "" ]; then
+        echo "tuned profile hypervisor is not active!"
+    fi
 }
 
 # Function: Check_System
@@ -35,7 +91,7 @@ function Check_Softwares() {
 #   2: Check perms on /dev/net/tun, /dev/vhost-net and /dev/kvm
 #   3: Set cap_net_admin on qemu-system_x86_64
 function Check_System() {
-    if [ "$(sudo modinfo vhost-net -F intree)" != "Y" ]; then
+    if [ "$(modinfo vhost-net -F intree)" != "Y" ]; then
         sudo modprobe vhost vhost-net
     fi
     
@@ -54,7 +110,7 @@ function Check_System() {
         sudo chmod 0666 /dev/kvm
     fi
 
-    sudo getcap /usr/bin/qemu-system-x86_64 | grep cap_net_admin+ep > /dev/null
+    getcap /usr/bin/qemu-system-x86_64 | grep cap_net_admin+ep > /dev/null
     if [ $? -ne 0 ]; then
         sudo setcap cap_net_admin+ep /usr/bin/qemu-system-x86_64
     fi

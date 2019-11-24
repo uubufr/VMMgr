@@ -40,26 +40,74 @@
 # 0.17 Gestion des groupes
 
 # on charge les variables et paths nécessaire à l'exécution du script
-if [ -r /usr/local/etc/VMMgr_.conf ]; then
- . /usr/local/etc/VMMgr_.conf
+
+### except install and uninstall, we never run as root:
+MYID=$(id -u)
+RUNERROR=0
+if [ "$MYID" == "0" ]; then
+        if [ "$1" == "install" ] || [ "$1" == "uninstall" ]; then
+                echo "I will $1 VMMGR..."
+        else
+                echo "Error, except 'install' and 'uninstall' commands, I refuse to run as root."
+                RUNERROR=1
+        fi
+else
+        if [ "$1" == "install" ] || [ "$1" == "uninstall" ]; then
+                echo "Error, '$1' commands need root privileges"
+                RUNERROR=1
+        fi
+fi
+if [ "$RUNERROR" == 1 ]; then
+        exit -1
+fi
+
+if [ -r /etc/VMMGR/VMMgr_.conf ]; then
+ . /etc/VMMGR/VMMgr_.conf
 elif [ -r $(dirname $0)/VMMgr_.conf ]; then
  . $(dirname $0)/VMMgr_.conf
 else
  echo "No config VMMgr_.conf found, abording..."
- return
+ exit -1
 fi
 
 # Loading Libs
-. $VMMGR_DATA_PATH/VMMgr_Libs/VMMgr_Db
-. $VMMGR_DATA_PATH/VMMgr_Libs/VMMgr_Functions
-. $VMMGR_DATA_PATH/VMMgr_Libs/VMMgr_Networks
-. $VMMGR_DATA_PATH/VMMgr_Libs/VMMgr_Disks
-. $VMMGR_DATA_PATH/VMMgr_Libs/VMMgr_CPUs
+. $VMMGR_LIB_PATH/VMMgr_Libs/VMMgr_Db
+. $VMMGR_LIB_PATH/VMMgr_Libs/VMMgr_Functions
+. $VMMGR_LIB_PATH/VMMgr_Libs/VMMgr_Networks
+. $VMMGR_LIB_PATH/VMMgr_Libs/VMMgr_Disks
+. $VMMGR_LIB_PATH/VMMgr_Libs/VMMgr_CPUs
 Check_System
 
 case "$1" in
     "check")
-        # on doit vérifier que tous les outils sont installés et au bon endroit, sinon prévenir
+        Check_Requirements
+        Check_System
+        ;;
+    "install")
+        [ -d /etc/VMMGR/ ] || mkdir /etc/VMMGR
+        [ -d /var/lib/VMMGR/ ] || mkdir -p /var/lib/VMMGR/{DB,ISO}
+        cp $(pwd)/VMMgr_Launcher /usr/local/bin/ && chown qemu:qemu /usr/local/bin/VMMgr_Launcher && chmod g+x /usr/local/bin/VMMgr_Launcher
+        cp -r $(pwd)/VMMgr_Libs/* /usr/local/lib/ && chown qemu:qemu /usr/local/bin/VMMgr_Launcher
+        cp -r $(pwd)/VMMgr_.conf /etc/VMMGR/ && chown qemu:qemu /etc/VMMGR/VMMgr_.conf
+        cp -r $(pwd)/VMMGR_.db /var/lib/VMMGR/DB/ && chown qemu:qemu /var/lib/VMMGR/DB/VMMGR_.db
+        cp -r $(pwd)/{Configs,DATA,DB_BKP,QEMU_CONFIGS,R-SPICE,R-VNC,TAPSCRIPTS,Templates,UEFI,VM_CONFIGS} /var/lib/VMMGR/ && chown -R qemu:qemu /var/lib/VMMGR
+        sed -i 's/^\(\VMMGR_.*\)$//g' /etc/VMMGR/VMMgr_.conf
+        sed -i 's/^#\(\VMMGR_.*\)$/\1/g' /etc/VMMGR/VMMgr_.conf
+        ;;
+    "uninstall")
+        echo "Before Uninstall, do you want to save your DB? [Y/n]"; read answer
+        if [ "$answer" == "Y" ] || [  "$answer" == "" ]; then
+            cp /var/lib/VMMGR/DB/VMMGR_.db ~/VMMgr_.db.bkp$(date --iso)
+            echo "VMMGR_.db saved to: ~/VMMgr_.db.bkp$(date --iso)"
+        fi
+        echo "Do you want to save you DB backup? [y/N]"; read answer
+            cp -r /var/lib/VMMGR/DB_BKP ~/VMMgr_.DB_BKP
+            echo "DB backups saved to: ~/DB_BKP"
+        fi
+        rm -rf /etc/VMMGR
+        rm -rf /var/lib/VMMGR
+        rm /usr/local/bin/VMMgr_Launcher
+        rm /usr/local/lib/VMMgr_*
         ;;
     "create")
             # Args:
@@ -315,5 +363,25 @@ case "$1" in
         wget https://www.spice-space.org/download/windows/spice-guest-tools/spice-guest-tools-latest.exe --directory-prefix=$VMMGR_ISO_PATH/
         ;;
     *)
+        echo "Usage: VMMgr_Launcher <command> <options>
+        install/uninstall: Install or uninstall on your system instead of running all in the current folder
+        check: helper to allow you to configure correctly your system
+        create <vm name> <template>: declare un new vm based on a template
+        start <vm name> <regen>: Start you vm. regen bypass existing qemu-config and use you vm config
+        stop <vm name>: stop the vm
+        kill <vm name>: force stop vm
+        reset <vm name>: reset vm
+        status <vm name>: is the vm running?
+        connect <vm name> <spice|vnc|telnet|qmp> connect to you vm
+        load <vmname> <fullpath iso|rel to iso path|virtiowin> <reset>: load iso into DVD drive, optionally reset immediatly after
+        wintools: download Windows drivers and tools in your iso path (actually: $VMMGR_ISO_PATH)
+        enable:
+        disable:
+        delete:
+        group:
+        ipmistart: start vm using ipmi
+        ipmistop: stop vm using ipmi
+        ipmistatus: get status via ipmi
+        "
         ;;
 esac
