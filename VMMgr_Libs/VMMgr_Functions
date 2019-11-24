@@ -246,8 +246,8 @@ function Set_Remote_Viewer() {
 #   $2: VM config path
 function Start_VM_From_Config() {
     echo "starting $1"
-    if [ -r /usr/local/etc/VMMgr_.conf ]; then
-        . /usr/local/etc/VMMgr_.conf
+    if [ -r /etc/VMMGR/VMMgr_.conf ]; then
+        . /etc/VMMGR/VMMgr_.conf
     elif [ -r $(dirname $0)/VMMgr_.conf ]; then
         . $(dirname $0)/VMMgr_.conf
     else
