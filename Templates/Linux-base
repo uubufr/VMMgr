@@ -15,6 +15,11 @@ NAME="%%NAME%%"         # Unique Name
 MEM="1"                 # Initial Mem Size, in GB
 MAXMEM="1"              # OPTIONAL: Max Allowed mem (defaut: $MEM * 2)
 
+BIOSTYPE="SECURE"
+
+USEQEMUCONFIG="yes"
+INSTALLISO="Fedora-Workstation-Live-x86_64-31-1.9.iso"
+
 ### Disks ###
 IOTHREADS=1
 DISKPATH=$HOME/VMs/$NAME
