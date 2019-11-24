@@ -71,12 +71,14 @@ else
 fi
 
 # Loading Libs
-. $VMMGR_LIB_PATH/VMMgr_Db
-. $VMMGR_LIB_PATH/VMMgr_Functions
-. $VMMGR_LIB_PATH/VMMgr_Networks
-. $VMMGR_LIB_PATH/VMMgr_Disks
-. $VMMGR_LIB_PATH/VMMgr_CPUs
-Check_System
+if [ -d $VMMGR_LIB_PATH ]; then
+    . $VMMGR_LIB_PATH/VMMgr_Db
+    . $VMMGR_LIB_PATH/VMMgr_Functions
+    . $VMMGR_LIB_PATH/VMMgr_Networks
+    . $VMMGR_LIB_PATH/VMMgr_Disks
+    . $VMMGR_LIB_PATH/VMMgr_CPUs
+    Check_System
+fi
 
 case "$1" in
     "check")
