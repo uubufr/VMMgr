@@ -64,6 +64,13 @@ function Check_Requirements() {
     echo "Cmnd_Alias VMMGRCMD= /usr/sbin/ip, /usr/sbin/brctl, /usr/bin/ovs-vsctl, /usr/bin/nmcli, /usr/sbin/setcap"
     echo "%qemu ALL=(root:root) NOPASSWD: VMMGRCMD"
     
+    ISOPATH=$(sudo -u qemu ls -l $VMMGR_ISO_PATH 2>/dev/null)
+    if [ "$ISOPATH" == "" ]; then
+        echo "If you plan to use systemd, you ISO PATH ($VMMGR_ISO_PATH) must be readable by qemu user"
+    fi
+    
+    echo "DISKPATH: if you plan to use systemd, your $DISKPATH var in you VM configs muse be readable by qemu user"
+    
     for KERNELOPT in $(echo "nodelayacct transparent_hugepage=madvise elevator=deadline kvm-intel.nested=1 iommu=1 intel_iommu=on kvm-intel.ept=1"); do
         if [ "$(cat /proc/cmdline | grep $KERNELOPT)" == "" ]; then
             OPTIONS="$OPTIONS $KERNELOPT"
@@ -350,7 +357,7 @@ function Start_VM_From_Config() {
         echo "qemu-system-x86_64 -pidfile /var/run/VMMGR/$NAME -name $NAME $UUID $CORE $MEMORY $FIRMWARE ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS $SCSIDISKS -writeconfig $VMMGR_DATA_PATH/QEMU_CONFIGS/$NAME"
     else
         WCONFIG="-writeconfig $VMMGR_DATA_PATH/QEMU_CONFIGS/$NAME"
-        sudo -u qemu qemu-system-x86_64 -pidfile /var/run/VMMGR/$NAME -name $NAME $UUID $CORE $MEMORY $FIRMWARE ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS $SCSIDISKS $WCONFIG
+        qemu-system-x86_64 -pidfile /var/run/VMMGR/$NAME -name $NAME $UUID $CORE $MEMORY $FIRMWARE ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS $SCSIDISKS $WCONFIG
         
         sleep 1
         
