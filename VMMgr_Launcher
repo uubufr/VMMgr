@@ -174,8 +174,8 @@ case "$1" in
                     echo "$2 not found in DB"
                 else
                     . $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
-                    if  [ -r "$VMMGR_CONFIG_PATH/QEMU_CONFIGS/$2" ] && [ ! "$3" == "regen" ] && [ "$USEQEMUCONFIG" != "no" ]; then
-                        qemu-system-x86_64 -daemonize -readconfig $VMMGR_CONFIG_PATH/QEMU_CONFIGS/$2
+                    if  [ -r "$VMMGR_DATA_PATH/QEMU_CONFIGS/$2" ] && [ ! "$3" == "regen" ] && [ "$USEQEMUCONFIG" != "no" ]; then
+                        qemu-system-x86_64 -daemonize -readconfig $VMMGR_DATA_PATH/QEMU_CONFIGS/$2
                     else
                          if [ ! -r $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF ]; then
                             echo "VM $2 not found"
@@ -187,8 +187,8 @@ case "$1" in
             fi
                 
                 
-#            elif [ -r "$VMMGR_CONFIG_PATH/QEMU_CONFIGS/$2" ] && [ ! "$3" == "regen" ] && [ "$USEQEMUCONFIG" != "no" ]; then
-#                qemu-system-x86_64 -daemonize -readconfig $VMMGR_CONFIG_PATH/QEMU_CONFIGS/$2
+#            elif [ -r "$VMMGR_DATA_PATH/QEMU_CONFIGS/$2" ] && [ ! "$3" == "regen" ] && [ "$USEQEMUCONFIG" != "no" ]; then
+#                qemu-system-x86_64 -daemonize -readconfig $VMMGR_DATA_PATH/QEMU_CONFIGS/$2
             #else
                 #VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
                 #if [ "$VMCONF" == "" ]; then
@@ -304,7 +304,7 @@ case "$1" in
             . $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
             case "$3" in
                 "spice")
-                        nohup remote-viewer $VMMGR_CONFIG_PATH/R-SPICE/$2 &
+                        nohup remote-viewer $VMMGR_DATA_PATH/R-SPICE/$2 &
                 ;;
                 "telnet")
                     IPPORT=$(Set_Service_Listen $TELNETIP $TELNETIPVER $TELNETTYPE $NAME telnet $TELNETPORT)
@@ -315,7 +315,7 @@ case "$1" in
                     telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
                 ;;
                 "vnc")
-                    nohup remote-viewer $VMMGR_CONFIG_PATH/R-VNC/$2 &
+                    nohup remote-viewer $VMMGR_DATA_PATH/R-VNC/$2 &
                 ;;
             esac
         fi
