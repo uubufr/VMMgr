@@ -124,6 +124,8 @@ case "$1" in
                  else
                     VMCONF=$(Check_Existing_VM $2)
                     if [ "$VMCONF" == "" ]; then VMCONF="$2.conf"; fi
+                    echo "on verif: $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF "
+                    echo "et on doit avoir $VMMGR_DB_PATH"
                     if [ -r $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF ]; then 
                         echo "Warning, config file $VMMGR_CONFIG_PATH/VM_CONFIGS/$VMCONF already exists"
                     else
