@@ -4,7 +4,7 @@ This directory will contain all you VM definition, used for create a VM.
 
 This command make a copy of a template:
 
-** VMMgr_Launcher create <vm name> <template> **
+** VMMgr_Launcher create "vm name" "template" **
 
 This will copy <template> in this directory, named <vm name>
 
@@ -32,4 +32,4 @@ copy you customize vm def into Template directory, and change the following:
 
 You can now create new vm using this template:
 
-** VMMgr_Launcher create <vm name> <new template> **
+** VMMgr_Launcher create "vm name" "new template" **
