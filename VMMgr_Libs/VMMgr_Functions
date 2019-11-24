@@ -69,7 +69,7 @@ function Check_Requirements() {
         echo "If you plan to use systemd, you ISO PATH ($VMMGR_ISO_PATH) must be readable by qemu user"
     fi
     
-    echo "DISKPATH: if you plan to use systemd, your $DISKPATH var in you VM configs muse be readable by qemu user"
+    echo "DISKPATH: if you plan to use systemd, your DISKPATH var in your VM configs must be readable by qemu user"
     
     for KERNELOPT in $(echo "nodelayacct transparent_hugepage=madvise elevator=deadline kvm-intel.nested=1 iommu=1 intel_iommu=on kvm-intel.ept=1"); do
         if [ "$(cat /proc/cmdline | grep $KERNELOPT)" == "" ]; then
