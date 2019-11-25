@@ -88,33 +88,36 @@ case "$1" in
     "install")
         if [ ! -d /etc/VMMGR/ ]; then
             mkdir /etc/VMMGR
-            cp -r $(pwd)/VMMgr_.conf /etc/VMMGR/ && chown qemu:qemu /etc/VMMGR/VMMgr_.conf
+            cp -r $(pwd)/VMMgr_.conf /etc/VMMGR/ && chown -R qemu:qemu /etc/VMMGR
             sed -i 's/^\(\VMMGR_.*\)$//g' /etc/VMMGR/VMMgr_.conf
             sed -i 's/^#\(\VMMGR_.*\)$/\1/g' /etc/VMMGR/VMMgr_.conf
         fi
         [ -d /var/lib/VMMGR/ ] || mkdir -p /var/lib/VMMGR/{DB,ISO}
-        cp $(pwd)/VMMgr_Launcher /usr/local/bin/ && chown qemu:qemu /usr/local/bin/VMMgr_Launcher && chmod g+x /usr/local/bin/VMMgr_Launcher
-        cp -r $(pwd)/VMMgr_Libs/VMMgr_* /usr/local/lib/ && chown qemu:qemu /usr/local/lib/VMMgr_*
-        [ -r $(pwd)/VMMGR_.db ] && cp -r $(pwd)/VMMGR_.db /var/lib/VMMGR/DB/ && chown qemu:qemu /var/lib/VMMGR/DB/VMMGR_.db
+        cp $(pwd)/VMMgr_Launcher /usr/local/bin/ && chown qemu:qemu /usr/local/bin/VMMgr_Launcher && chmod 0650 /usr/local/bin/VMMgr_Launcher
+        cp -r $(pwd)/VMMgr_Libs/VMMgr_* /usr/local/lib/ && chown qemu:qemu /usr/local/lib/VMMgr_* && chmod 0650 /usr/local/lib/VMMgr_*
+        [ -r $(pwd)/VMMGR_.db ] && cp -r $(pwd)/VMMGR_.db /var/lib/VMMGR/DB/ && chown qemu:qemu /var/lib/VMMGR/DB/VMMGR_.db && chmod 0660 /var/lib/VMMGR/DB/VMMGR_.db
         cp -r $(pwd)/{Configs,DATA,DB_BKP,QEMU_CONFIGS,R-SPICE,R-VNC,TAPSCRIPTS,Templates,UEFI,VM_CONFIGS} /var/lib/VMMGR/ && chown -R qemu:qemu /var/lib/VMMGR && chmod -R 770 /var/lib/VMMGR
-        mkdir /var/run/VMMGR && chown qemu:qemu /var/run/VMMGR
         ;;
     "uninstall")
-        echo "Before Uninstall, do you want to save your DB? [Y/n]"; read answer
-        if [ "${answer^^}" == "Y" ] || [  "$answer" == "" ]; then
-            cp /var/lib/VMMGR/DB/VMMGR_.db ~/VMMgr_.db.bkp$(date --iso)
-            echo "VMMGR_.db saved to: ~/VMMgr_.db.bkp$(date --iso)"
+        if [ -r /var/lib/VMMGR/DB/VMMGR_.db ] then
+            echo "Before Uninstall, do you want to save your DB? [Y/n]"; read answer
+            if [ "${answer^^}" == "Y" ] || [  "$answer" == "" ]; then
+                cp /var/lib/VMMGR/DB/VMMGR_.db ~/VMMgr_.db.bkp$(date --iso)
+                echo "VMMGR_.db saved to: ~/VMMgr_.db.bkp$(date --iso)"
+            fi
         fi
-        echo "Do you want to save you DB backup? [y/N]"; read answer
-        if [ "${answer^^}" == "Y" ]; then
-            cp -r /var/lib/VMMGR/DB_BKP ~/VMMgr_.DB_BKP
-            echo "DB backups saved to: ~/DB_BKP"
+        if [ "$(ls -I README.md /var/lib/VMMGR/DB_BKP)" != "" ]; then
+            echo "Do you want to save you DB backup? [y/N]"; read answer
+            if [ "${answer^^}" == "Y" ]; then
+                cp -r /var/lib/VMMGR/DB_BKP ~/VMMgr_.DB_BKP
+                echo "DB backups saved to: ~/DB_BKP"
+            fi
         fi
         echo "/etc/VMMGR directory will not be deleted"
+        echo "/usr/local/lib/VMMGR will not be deleted"
         rm -rf /var/lib/VMMGR
         rm /usr/local/bin/VMMgr_Launcher
         rm /usr/local/lib/VMMgr_{CPUs,Db,Disks,Functions,Networks}
-        rm -rf /var/run/VMMGR
         ;;
     "create")
             # Args:
