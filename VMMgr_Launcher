@@ -116,8 +116,7 @@ case "$1" in
             fi
         fi
         echo "/etc/VMMGR directory will not be deleted"
-        echo "/usr/local/lib/VMMGR will not be deleted"
-        rm -rf /var/lib/VMMGR
+        echo "/var/lib/VMMGR will not be deleted"
         rm /usr/local/bin/VMMgr_Launcher
         rm /usr/local/lib/VMMgr_{CPUs,Db,Disks,Functions,Networks}
         ;;
