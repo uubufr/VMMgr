@@ -190,7 +190,7 @@ case "$1" in
                 else
                     . $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
                     if  [ -r "$VMMGR_DATA_PATH/QEMU_CONFIGS/$2" ] && [ ! "$3" == "regen" ] && [ "$USEQEMUCONFIG" != "no" ]; then
-                        qemu-system-x86_64 -daemonize -readconfig $VMMGR_DATA_PATH/QEMU_CONFIGS/$2
+                        qemu-system-x86_64 -daemonize -pidfile /var/run/VMMGR/$NAME -display none -readconfig $VMMGR_DATA_PATH/QEMU_CONFIGS/$2
                     else
                          if [ ! -r $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF ]; then
                             echo "VM $2 not found"
