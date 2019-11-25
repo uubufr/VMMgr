@@ -125,6 +125,7 @@ function Set_Disks() {
                 IFS=-  read QN QS QV QT <<< $( echo ${DRIVENAME#Qemu-Virtio-Disk_})
                 QIMG=$QT\_IMG
                 if [ "${!QIMG}" == "" ]; then QIMG="SSDCOW_IMG"; fi         ## Missing Var for qemu_create
+                logger "Creating $DRIVENAME"
                 qemu-img create ${!QIMG} "$CPATH/$DRIVENAME" $DSIZE 2>/dev/null 1>/dev/null
                 DisksList="$DisksList|$CPATH/$DRIVENAME"
             fi
