@@ -105,6 +105,7 @@ case "$1" in
                 cp /var/lib/VMMGR/DB/VMMGR_.db ~/VMMgr_.db.bkp$(date --iso)
                 echo "VMMGR_.db saved to: ~/VMMgr_.db.bkp$(date --iso)"
             fi
+            rm /var/lib/VMMGR/DB/VMMGR_.db
         fi
         if [ "$(ls -I README.md /var/lib/VMMGR/DB_BKP)" != "" ]; then
             echo "Do you want to save you DB backup? [y/N]"; read answer
