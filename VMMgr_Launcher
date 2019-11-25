@@ -97,6 +97,7 @@ case "$1" in
         cp -r $(pwd)/VMMgr_Libs/VMMgr_* /usr/local/lib/ && chown qemu:qemu /usr/local/lib/VMMgr_* && chmod 0650 /usr/local/lib/VMMgr_*
         [ -r $(pwd)/VMMGR_.db ] && cp -r $(pwd)/VMMGR_.db /var/lib/VMMGR/DB/ && chown qemu:qemu /var/lib/VMMGR/DB/VMMGR_.db && chmod 0660 /var/lib/VMMGR/DB/VMMGR_.db
         cp -r $(pwd)/{Configs,DATA,DB_BKP,QEMU_CONFIGS,R-SPICE,R-VNC,TAPSCRIPTS,Templates,UEFI,VM_CONFIGS} /var/lib/VMMGR/ && chown -R qemu:qemu /var/lib/VMMGR && chmod -R 770 /var/lib/VMMGR
+        mkdir /var/run/VMMGR && chown -R qemu:qemu /var/run/VMMGR && chmod -R 770 /var/run/VMMGR
         ;;
     "uninstall")
         if [ -r /var/lib/VMMGR/DB/VMMGR_.db ]; then
@@ -176,6 +177,11 @@ case "$1" in
         #   2) Check if enabled
         #   3) if enabled, use systemctl to start vm
         #   4) if disabled or systemctl return no unit, start manually
+            if [ ! -r "/var/run/VMMGR" ]; then
+                sudo mkdir /var/run/VMMGR 
+                sudo chown -R qemu:qemu /var/run/VMMGR
+                sudo chmod -R 770 /var/run/VMMGR
+            fi
             if [ ! "$2" ]; then
                 echo "Usage $0 start <vm name>"
             else
