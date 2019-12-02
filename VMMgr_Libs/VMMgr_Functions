@@ -373,7 +373,7 @@ function Start_VM_From_Config() {
     
     ### CPU/SMP/NUMA/MACHINE ###
     . $VMMGR_DATA_PATH/DATA/VMMgr_CPU
-    CORE="-machine ${!MACHINETPL} ${!SMPTPL}"
+    CORE="-machine ${!MACHINETPL} ${!SMPTPL} -cpu ${!CPU}"
     MEMORY=$(Check_MEM $MEM $MAXMEM $SLOT)
     
     ### BIOS/UEFI

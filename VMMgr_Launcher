@@ -358,6 +358,5 @@ if [ -r "$LATEST" ]; then
     fi
 fi
 if [ ! -r "$LATEST" ]; then
-echo "copie"
     cp $VMMGR_DATA_PATH/DB/VMMGR_.db $VMMGR_DATA_PATH/DB_BKP/$(date '+%Y-%m-%d_%H-%M-%S')-DB.latest.bkp;
 fi
