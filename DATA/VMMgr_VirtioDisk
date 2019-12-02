@@ -7,11 +7,11 @@
 #
 # VAR for VirtioDisk should avoid '-' char
 ### Best with SSD
-SSDCOW="format=qcow2,if=none,cache=directsync,aio=threads,werror=enospc,rerror=report,snapshot=on,cache-clean-interval=900,discard=on,detect-zeroes=unmap,pass-discard-request=on,pass-discard-snapshot=on,pass-discard-other=off,overlap-check=cached"
+SSDCOW="format=qcow2,if=none,cache=directsync,aio=threads,werror=enospc,rerror=report,snapshot=off,cache-clean-interval=900,discard=on,detect-zeroes=unmap,pass-discard-request=on,pass-discard-snapshot=on,pass-discard-other=off,overlap-check=cached"
 ### Best for Read
-HDCOWR="format=qcow2,if=none,cache=writethough,aio=threads,werror=enospc,rerror=report,snapshot=on,cache-clean-interval=900,discard=on,detect-zeroes=unmap,pass-discard-request=on,pass-discard-snapshot=on,pass-discard-other=off,overlap-check=cached"
+HDCOWR="format=qcow2,if=none,cache=writethough,aio=threads,werror=enospc,rerror=report,snapshot=off,cache-clean-interval=900,discard=on,detect-zeroes=unmap,pass-discard-request=on,pass-discard-snapshot=on,pass-discard-other=off,overlap-check=cached"
 ### Best for Write and NFS
-HDCOWW="format=qcow2,if=none,cache=none,aio=threads,werror=enospc,rerror=report,snapshot=on,cache-clean-interval=900,discard=on,detect-zeroes=unmap,pass-discard-request=on,pass-discard-snapshot=on,pass-discard-other=off,overlap-check=cached"
+HDCOWW="format=qcow2,if=none,cache=none,aio=threads,werror=enospc,rerror=report,snapshot=off,cache-clean-interval=900,discard=on,detect-zeroes=unmap,pass-discard-request=on,pass-discard-snapshot=on,pass-discard-other=off,overlap-check=cached"
 ### Using DPDK
 HDDPDK="format=raw,if=none,cache=none,aio=threads,werror=enospc,rerror=report"
 

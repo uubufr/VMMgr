@@ -14,7 +14,7 @@
 COMMON="-daemonize -no-user-config -nodefaults -msg timestamp=on"
 
 ### BOOT and BIOS
-BOOT="-boot menu=on,strict=off,splash=$VMMGR_DATA_PATH/UEFI/splash640.bmp,splash-time=5000"
+BOOT="-boot menu=on,strict=off,splash=$VMMGR_DATA_PATH/UEFI/splash640.bmp,splash-time=2000"
 BIOS="-bios $(rpm -ql qemu-system-x86-core | grep "bios-256k.bin") -L $(dirname $(rpm -ql qemu-system-x86-core | grep "bios-256k.bin"))"
 
 ### we disable S3 and S4:

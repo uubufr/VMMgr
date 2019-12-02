@@ -84,7 +84,6 @@ function Set_Disks() {
                 fi
             done
             if [ "$DFOUND" == 1 ]; then
-                logger -f /var/lib/VMMGR/$NAME-log "Found existing $DRIVENAME"
                 CPATH=${EPATH%/}
                 DisksList="$DisksList|$EPATH/$DRIVENAME"
             else
@@ -126,7 +125,6 @@ function Set_Disks() {
                 IFS=-  read QN QS QV QT <<< $( echo ${DRIVENAME#Qemu-Virtio-Disk_})
                 QIMG=$QT\_IMG
                 if [ "${!QIMG}" == "" ]; then QIMG="SSDCOW_IMG"; fi         ## Missing Var for qemu_create
-                logger -f /var/lib/VMMGR/$NAME-log "Creating $DRIVENAME"
                 qemu-img create ${!QIMG} "$CPATH/$DRIVENAME" $DSIZE 2>/dev/null 1>/dev/null
                 DisksList="$DisksList|$CPATH/$DRIVENAME"
             fi
@@ -321,7 +319,7 @@ function Set_Scsi_Disks() {
         REFCACHE=$(( ${DISKSIZE%G} * $REFCLUSTERSIZE ))
            
         TOTALCACHE=$(( $L2CACHE + $REFCACHE ))
-        DRIVEOPT="aio=threads,werror=enospc,rerror=report,snapshot=on,cache-clean-interval=900,discard=on,detect-zeroes=unmap,pass-discard-request=on,pass-discard-snapshot=on,pass-discard-other=off,overlap-check=cached,cache=directsync,aio=native,l2-cache-size=$L2CACHE,cache-size=$TOTALCACHE"
+        DRIVEOPT="aio=threads,werror=enospc,rerror=report,snapshot=off,cache-clean-interval=900,discard=on,detect-zeroes=unmap,pass-discard-request=on,pass-discard-snapshot=on,pass-discard-other=off,overlap-check=cached,cache=directsync,aio=native,l2-cache-size=$L2CACHE,cache-size=$TOTALCACHE"
         HEXNUMBER=$(echo "ibase=10;obase=10;$COUNT" | bc)
         DRIVES=$DRIVES"-drive file=$DISK,id=scsi-disk$COUNT,if=none,format=qcow2,node-name=$DISKHD,$DRIVEOPT -device scsi-hd,wwn=0x$(echo "ibase=16;obase=10;$WWN+$HEXNUMBER" | bc | tr -d \  ),drive=scsi-disk$COUNT "
     done

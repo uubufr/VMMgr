@@ -14,7 +14,8 @@
 # Custom_VM_Config: Customize VM Configuration
 # Set_Remote_Viewer: Create .vv file for remove viewer
 # Start_VM_From_Config: Start VM using VM Config file
-
+# Install_VMMGR: Install VMMGR on the system
+# Uninstall_VMMGR: Remove VMMGR from the system
 
 # Function Check_Softwares
 # Description: try to check if all packaged are installed or not
@@ -260,6 +261,31 @@ function Set_Remote_Viewer() {
     sed -i "s/%%PORT%%/${4#*|}/g" $CFGPATH
 }
 
+# Function VMMGR_LOG
+# Description: log in /var/log/VMMGR/VMMgr.log
+# Args:
+#   $1: VM name
+#   $2: Action
+#   $3: Message
+# TODO:
+#      Utiliser journald
+function VMMGR_LOG() {
+    VMNAME=$1
+    VMPROC=""
+    if [ -r /var/run/VMMGR/VMMGR-$1 ]; then
+        VMPROC=$(cat /proc/VMMGR/VMMGR-$1)
+    fi
+    VMMGRPROC=$$
+    CDATE=$(date '+%A %d-%m-%Y %T')
+    
+    if [ "$VMNAME" == "VMMGR" ]; then
+        echo "$CDATE VMMgr: [$2] pid=$VMMGRPROC msg=$3" >> /var/log/VMMgr/VMMgr.log
+    else
+        [ -w /var/log/VMMgr/$VMNAME-log ] ||  touch /var/log/VMMgr/$VMNAME-log
+        echo "$CDATE VMMgr: [$2] pid=$VMPROC msg=$3" >> /var/log/VMMgr/$VMNAME-log
+    fi
+}
+
 # Function: Start_VM_From_Config
 # Description: Start VM using VM Config file
 #               Here, we create many things
@@ -376,6 +402,17 @@ function Start_VM_From_Config() {
         # Fix Duplicated ID compat_monitor0 #
         sed -i 's/compat_monitor0/compat_monitor1/g' $VMMGR_DATA_PATH/QEMU_CONFIGS/$NAME
         
+        # insert missing options, the following options are not included in the config:
+        # pidfile, uuid, display, soundhw, daemonize, no-user-config, nodefaults
+        # we add uuid and display as comments
+        
+        DISPLAY=${!QEMU_TEMPLATE}; DISPLAY=${DISPLAY##*-display}; DISPLAY=${DISPLAY%%-*}
+        if [ "$DISPLAY" != "" ]; then ADDED="# display $DISPLAY\n"; fi
+        SOUND=${!QEMU_TEMPLATE}; SOUND=${SOUND##*-soundhw}; SOUND=${SOUND%%-*}
+        if [ "$SOUND" != "" ]; then ADDED="$ADDED# soundhw $SOUND\n"; fi
+        sed -e "s/^\(\# qemu config file\)$/\1\n$ADDED/" $VMMGR_DATA_PATH/QEMU_CONFIGS/$NAME
+        
+        
         ### VNC PASSWORD ###
         if [ "$VNC" == "on" ]; then
             if [ "$TELNET" == "on" ]; then
@@ -407,4 +444,71 @@ function Start_VM_From_Config() {
              sed -i -e 's/\(^INSTALLISO=.*$\)/#\1/' $2
         fi
     fi
+}
+
+# Function: Install_VMMGR
+# Description: Install VMMGR on the system
+# Args: None
+function Install_VMMGR() {
+    # /etc/VMMGR/ and main config VMMgr_.conf
+    if [ ! -d /etc/VMMGR/ ]; then
+        mkdir /etc/VMMGR
+        cp -r $(pwd)/VMMgr_.conf /etc/VMMGR/ && chown -R qemu:qemu /etc/VMMGR
+        sed -i 's/^\(\VMMGR_.*\)$//g' /etc/VMMGR/VMMgr_.conf
+        sed -i 's/^#\(\VMMGR_.*\)$/\1/g' /etc/VMMGR/VMMgr_.conf
+    fi
+    # /var/lib/VMMGR/
+    [ -d /var/lib/VMMGR/ ] || mkdir -p /var/lib/VMMGR/{DB,ISO}
+    cp -r $(pwd)/{Configs,DATA,DB_BKP,QEMU_CONFIGS,R-SPICE,R-VNC,TAPSCRIPTS,Templates,UEFI,VM_CONFIGS} /var/lib/VMMGR/ && chown -R qemu:qemu /var/lib/VMMGR && chmod -R 770 /var/lib/VMMGR
+    
+    # Main program
+    cp $(pwd)/VMMgr_Launcher /usr/local/bin/ && chown qemu:qemu /usr/local/bin/VMMgr_Launcher && chmod 0650 /usr/local/bin/VMMgr_Launcher
+    
+    # Libs
+    cp -r $(pwd)/VMMgr_Libs/VMMgr_* /usr/local/lib/ && chown qemu:qemu /usr/local/lib/VMMgr_* && chmod 0650 /usr/local/lib/VMMgr_*
+    
+    # DB
+    [ -r $(pwd)/VMMGR_.db ] && cp -r $(pwd)/VMMGR_.db /var/lib/VMMGR/DB/ && chown qemu:qemu /var/lib/VMMGR/DB/VMMGR_.db && chmod 0660 /var/lib/VMMGR/DB/VMMGR_.db
+    
+    # /var/run/VMMGR
+    mkdir /var/run/VMMGR && chown -R qemu:qemu /var/run/VMMGR && chmod -R 770 /var/run/VMMGR
+    
+    # /var/log/VMMGR
+    if [ ! -d /var/log/VMMgr ]; then
+        mkdir /var/log/VMMgr
+        touch /var/log/VMMgr/VMMgr.log
+        chown -R qemu:qemu /var/log/VMMgr
+        chmod 770 /var/log/VMMgr
+        chmod 660 /var/log/VMMgr
+    fi
+    VMMGR_LOG "VMMGR" "INSTALL" "VMMgr is installed on your system."
+}
+
+# Function: Uninstall_VMMGR
+# Description: Remove VMMGR from the system
+# Args: None
+function Uninstall_VMMGR() {
+    # DB
+    if [ -r /var/lib/VMMGR/DB/VMMGR_.db ]; then
+        echo "Before Uninstall, do you want to save your DB? [Y/n]"; read answer
+        if [ "${answer^^}" == "Y" ] || [  "$answer" == "" ]; then
+            cp /var/lib/VMMGR/DB/VMMGR_.db ~/VMMgr_.db.bkp$(date --iso)
+            echo "VMMGR_.db saved to: ~/VMMgr_.db.bkp$(date --iso)"
+        fi
+        rm /var/lib/VMMGR/DB/VMMGR_.db
+    fi
+    # DB Backups
+    if [ "$(ls -I README.md /var/lib/VMMGR/DB_BKP)" != "" ]; then
+        echo "Do you want to save you DB backup? [y/N]"; read answer
+        if [ "${answer^^}" == "Y" ]; then
+            cp -r /var/lib/VMMGR/DB_BKP ~/VMMgr_.DB_BKP
+            echo "DB backups saved to: ~/DB_BKP"
+        fi
+    fi
+    
+    rm /usr/local/bin/VMMgr_Launcher
+    rm /usr/local/lib/VMMgr_{CPUs,Db,Disks,Functions,Networks}
+    VMMGR_LOG "VMMGR" "UNINSTALL" "VMMgr is installed on your system except:"
+    VMMGR_LOG "VMMGR" "UNINSTALL" "/etc/VMMGR directory will not be deleted"
+    VMMGR_LOG "VMMGR" "UNINSTALL" "/var/lib/VMMGR, VM configs and templates will not be deleted"
 }
