@@ -61,7 +61,7 @@ if [ "$RUNERROR" == 1 ]; then
         exit -1
 fi
 
-if [ -r /etc/VMMGR/VMMgr_.conf ]; then
+if [ -r /etc/VMMGR/VMMgr_.conf ] && [ ! "$VMMGRNOSYSCONF" ] ; then
  . /etc/VMMGR/VMMgr_.conf
 elif [ -r $(dirname $0)/VMMgr_.conf ]; then
  . $(dirname $0)/VMMgr_.conf
