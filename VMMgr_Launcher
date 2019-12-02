@@ -353,11 +353,9 @@ esac
 LATEST=$( ls $VMMGR_DATA_PATH/DB_BKP/*-DB.latest.bkp)
 if [ -r "$LATEST" ]; then
     if [ "$(sha1sum $LATEST | awk '{print $1}')" != "$(sha1sum $VMMGR_DATA_PATH/DB/VMMGR_.db | awk '{print $1}')" ]; then
-    echo "deplace"
-        TARGET=$(basename $LATEST)
+         TARGET=$(basename $LATEST)
         mv $LATEST $VMMGR_DATA_PATH/DB_BKP/${TARGET%%.latest.bkp}.bkp
     else
-     echo "match"
     fi
 fi
 if [ ! -r "$LATEST" ]; then
