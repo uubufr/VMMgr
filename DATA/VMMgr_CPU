@@ -10,7 +10,7 @@
 PORTABLE="kvm64"
 HOST="host,+x2apic,+kvm_pv_eoi,+kvm_pv_unhalt,+kvm_nopiodelay"
 NESTED="host,+vmx,+x2apic,+kvm_pv_eoi,+kvm_pv_unhalt,+kvm_nopiodelay"
-MAX="max"
+CPUMAX="max"
 
 
 CPUTPL=$HOST
