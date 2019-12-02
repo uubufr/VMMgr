@@ -61,7 +61,7 @@ if [ "$RUNERROR" == 1 ]; then
         exit -1
 fi
 
-if [ -r /etc/VMMGR/VMMgr_.conf ] && [ ! "$VMMGRNOSYSCONF" ] ; then
+if [ -r /etc/VMMGR/VMMgr_.conf ]; then
  . /etc/VMMGR/VMMgr_.conf
 elif [ -r $(dirname $0)/VMMgr_.conf ]; then
  . $(dirname $0)/VMMgr_.conf
@@ -86,6 +86,7 @@ case "$1" in
         Check_System
         ;;
     "install")
+        . ./VMMgr_Libs/VMMgr_Functions
         Install_VMMGR
         ;;
     "uninstall")
