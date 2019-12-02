@@ -155,9 +155,9 @@ case "$1" in
                 else
                     . $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
                     if  [ -r "$VMMGR_DATA_PATH/QEMU_CONFIGS/$2" ] && [ ! "$3" == "regen" ] && [ "$USEQEMUCONFIG" != "no" ]; then
-                        DISPLAY=$(grep display $VMMGR_DATA_PATH/QEMU_CONFIGS/$2 | awk '{print $3}' )
+                        DISPLAY=$(grep " display " $VMMGR_DATA_PATH/QEMU_CONFIGS/$2 | awk '{print $3}' )
                         if [ "$DISPLAY" ]; then ADDED="-display $DISPLAY "; fi
-                        SOUND=$(grep soundhw $VMMGR_DATA_PATH/QEMU_CONFIGS/$2 | awk '{print $3}' )
+                        SOUND=$(grep " soundhw " $VMMGR_DATA_PATH/QEMU_CONFIGS/$2 | awk '{print $3}' )
                         if [ "$SOUND" ]; then ADDED="$ADDED -soundhw $SOUND "; fi
                         qemu-system-x86_64 -daemonize -pidfile /var/run/VMMGR/$NAME --uuid $(Get_Db_UUID $VMMGR_DB_PATH $2) $ADDED -no-user-config -nodefaults -readconfig $VMMGR_DATA_PATH/QEMU_CONFIGS/$2
                     else
