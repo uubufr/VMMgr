@@ -10,6 +10,7 @@
 #   Db_Create_VM: Declare a new vm in db
 #   Db_Delete_VM: Delete a vm in db
 #   Db_List_VMs: List all vm form db
+#   Db_Filter_VMs: List vm form db
 #   Db_isEnabled_VM: Check if VM is enabled
 #   Db_Enabled_VM: Mark VM as Enabled
 #   Db_Disabled_VM: Mark VM as Disabled
@@ -139,6 +140,16 @@ function Db_Delete_VM() {
 #   $1: Db Path (parent dir)
 function Db_List_VMs() {
  echo "select Name from VM;" | sqlite3 $1/VMMGR_.db
+}
+
+# Function: Db_Filter_VMs
+# Description: List vm form db
+# Args:
+#   $1: Db Path (parent dir)
+#   $2: field
+#   $3: value
+function Db_Filter_VMs() {
+    echo "select Name from VM where $2='$3';" | sqlite3 $1/VMMGR_.db
 }
 
 # Function Db_isEnabled_VM

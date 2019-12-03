@@ -317,6 +317,9 @@ case "$1" in
             fi
         fi
         ;;
+    "list")
+        List_All_VM $2
+        ;;
      "wintools")
         ### Virtio Win
         wget https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso --directory-prefix=$VMMGR_ISO_PATH/

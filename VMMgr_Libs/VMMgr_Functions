@@ -16,6 +16,8 @@
 # Start_VM_From_Config: Start VM using VM Config file
 # Install_VMMGR: Install VMMGR on the system
 # Uninstall_VMMGR: Remove VMMGR from the system
+# VM_Is_Running: check if vm is running
+# List_All_VM: Get the list of VMs
 
 # Function Check_Softwares
 # Description: try to check if all packaged are installed or not
@@ -511,4 +513,74 @@ function Uninstall_VMMGR() {
     VMMGR_LOG "VMMGR" "UNINSTALL" "VMMgr is installed on your system except:"
     VMMGR_LOG "VMMGR" "UNINSTALL" "/etc/VMMGR directory will not be deleted"
     VMMGR_LOG "VMMGR" "UNINSTALL" "/var/lib/VMMGR, VM configs and templates will not be deleted"
+}
+
+# Function VM_Is_Running
+# Description: check if vm is running
+# Args:
+#   $1: VM name
+function VM_Is_Running() {
+    if [ -r "/var/run/VMMGR/$1" ]; then
+        Result=$(ps -h -q $(cat /var/run/VMMGR/$1) -o pid)
+        if [ "${Result# }" == "$(cat /var/run/VMMGR/$1)" ]; then
+            echo 1
+        else
+            echo 0
+        fi
+    else
+        echo 0
+    fi
+}
+
+# Function: List_All_VM
+# Description: Get the list of VMs
+# Args:
+#   $1: [all|running|stopped|enabled|disabled]
+function List_All_VM() {
+    case "$1" in
+            "all")
+                edb="disabled"; esys="disabled";isrun="stopped"
+                VMS=$(Db_List_VMs $VMMGR_DB_PATH)
+                for VM in $VMS; do
+                    Enabled=$(Db_isEnabled_VM $VMMGR_DB_PATH $VM)
+                    if [ "$Enabled" == "1" ]; then
+                        edb="enabled"
+                    fi
+                    systemctl --quiet is-enabled $2
+                    if [ $? -eq 0 ]; then
+                       esys="enabled"
+                    fi
+                    Running=$(VM_Is_Running $VM)
+                    if [ "$Running" == 1 ]; then
+                      isrun="running"
+                    
+                    echo "$VM: $edb(DB), $esys(systemd): $isrun"
+                done
+            ;;
+            "running")
+                Db_List_VMs $VMMGR_DB_PATH
+                for VM in $VMS; do
+                    Running=$(VM_Is_Running $VM)
+                    if [ "$Running" == 1 ]; then
+                        echo $VM
+                    fi
+                done
+            ;;
+            "enabled")
+                Db_Filter_VMs $VMMGR_DB_PATH ENABLED 1
+                
+            ;;
+            "stopped")
+                Db_List_VMs $VMMGR_DB_PATH
+                for VM in $VMS; do
+                    Running=$(VM_Is_Running $VM)
+                    if [ "$Running" == 0 ]; then
+                        echo $VM
+                    fi
+                done
+            ;;
+            "disbled")
+                Db_Filter_VMs $VMMGR_DB_PATH ENABLED 0
+            ;;
+    esac
 }
