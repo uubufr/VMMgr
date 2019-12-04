@@ -563,7 +563,7 @@ function List_All_VM() {
                 Db_List_VMs $VMMGR_DB_PATH
                 for VM in $VMS; do
                     Running=$(VM_Is_Running $VM)
-                    if [ "$Running" == 1 ]; then
+                    if [ "$Running" == "1" ]; then
                         echo $VM
                     fi
                 done
@@ -576,7 +576,7 @@ function List_All_VM() {
                 Db_List_VMs $VMMGR_DB_PATH
                 for VM in $VMS; do
                     Running=$(VM_Is_Running $VM)
-                    if [ "$Running" == 0 ]; then
+                    if [ "$Running" == "0" ]; then
                         echo $VM
                     fi
                 done
