@@ -473,7 +473,9 @@ function Install_VMMGR() {
     [ -r $(pwd)/VMMGR_.db ] && cp -r $(pwd)/VMMGR_.db /var/lib/VMMGR/DB/ && chown qemu:qemu /var/lib/VMMGR/DB/VMMGR_.db && chmod 0660 /var/lib/VMMGR/DB/VMMGR_.db
     
     # /var/run/VMMGR
-    mkdir /var/run/VMMGR && chown -R qemu:qemu /var/run/VMMGR && chmod -R 770 /var/run/VMMGR
+    if [ ! -d /var/run/VMMGR ]; then
+        mkdir /var/run/VMMGR && chown -R qemu:qemu /var/run/VMMGR && chmod -R 770 /var/run/VMMGR
+    fi
     
     # /var/log/VMMGR
     if [ ! -d /var/log/VMMgr ]; then
@@ -546,7 +548,7 @@ function List_All_VM() {
                     if [ "$Enabled" == "1" ]; then
                         edb="enabled"
                     fi
-                    systemctl --quiet is-enabled $VM
+                    systemctl --quiet is-enabled $VM 2>/dev/null
                     if [ $? -eq 0 ]; then
                        esys="enabled"
                     fi
