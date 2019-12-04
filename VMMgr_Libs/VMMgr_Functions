@@ -541,7 +541,9 @@ function List_All_VM() {
             "all")
                 edb="disabled"; esys="disabled"; isrun="stopped"
                 VMS=$(Db_List_VMs $VMMGR_DB_PATH)
+                echo "1"
                 for VM in $VMS; do
+                    echo "2"
                     Enabled=$(Db_isEnabled_VM $VMMGR_DB_PATH $VM)
                     if [ "$Enabled" == "1" ]; then
                         edb="enabled"
