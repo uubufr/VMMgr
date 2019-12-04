@@ -632,7 +632,7 @@ function Manage_Group() {
                         $VMMGR_PATH/VMMgr_Launch start $MEMBER
                         PREC=${MEMBER%;*}
                     else
-                        WAIT=$(Get_Start_Wait ${MEMBER#*;}
+                        WAIT=$(Get_Start_Wait ${MEMBER#*;})
                         if [ "${WAIT^^}" == "YES" ]; then
                             ISOK="1"; COUNT=0
                             until [ $? -eq 0 ]; do
