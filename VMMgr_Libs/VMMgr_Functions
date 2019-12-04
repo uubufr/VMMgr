@@ -560,7 +560,7 @@ function List_All_VM() {
                 done
             ;;
             "running")
-                $VMS=$(Db_List_VMs $VMMGR_DB_PATH)
+                VMS=$(Db_List_VMs $VMMGR_DB_PATH)
                 for VM in $VMS; do
                     Running=$(VM_Is_Running $VM)
                     if [ "$Running" == "1" ]; then
@@ -573,7 +573,7 @@ function List_All_VM() {
                 
             ;;
             "stopped")
-                $VMS=$(Db_List_VMs $VMMGR_DB_PATH)
+                VMS=$(Db_List_VMs $VMMGR_DB_PATH)
                 for VM in $VMS; do
                     Running=$(VM_Is_Running $VM)
                     if [ "$Running" == "0" ]; then
