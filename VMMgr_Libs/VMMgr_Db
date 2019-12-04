@@ -355,7 +355,7 @@ function Db_Get_Groups() {
 # Description: List all members of group
 # Args:
 #   $1: Db Path (parent dir)
-#   $2: VM name
+#   $2: Group name
 function Db_Get_Group_Member() {
     if [ "$2" ]; then
         echo "select NAME from VM where MemberOf='$2';" | sqlite3 $1/VMMGR_.db
