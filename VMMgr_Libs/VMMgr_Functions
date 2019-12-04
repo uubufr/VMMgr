@@ -615,7 +615,7 @@ function Manage_Group() {
                 "all")
                     Db_Get_Groups $VMMGR_DB_PATH
                 ;;
-                "*")
+                *)
                         Db_Get_Group_Member $VMMGR_DB_PATH $2
                 ;;
             esac
