@@ -539,7 +539,7 @@ function VM_Is_Running() {
 function List_All_VM() {
     case "$1" in
             "all")
-                edb="disabled"; esys="disabled";isrun="stopped"
+                edb="disabled"; esys="disabled"; isrun="stopped"
                 VMS=$(Db_List_VMs $VMMGR_DB_PATH)
                 for VM in $VMS; do
                     Enabled=$(Db_isEnabled_VM $VMMGR_DB_PATH $VM)
