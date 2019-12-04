@@ -347,11 +347,8 @@ function Get_Db_UUID() {
 # Description: list all groups
 # Args:
 #   $1: Db Path (parent dir)
-#   $2: VM name
 function Db_Get_Groups() {
-    if [ "$2" ]; then
         echo "select NAME from GROUPS;" | sqlite3 $1/VMMGR_.db
-    fi
 }
 
 # Function Db_Get_Group_Member
