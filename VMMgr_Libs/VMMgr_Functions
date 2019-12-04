@@ -412,8 +412,9 @@ function Start_VM_From_Config() {
         if [ "$DISPLAY" != "" ]; then ADDED="# display $DISPLAY\n"; fi
         SOUND=${!QEMU_TEMPLATE}; SOUND=${SOUND##*-soundhw}; SOUND=${SOUND%%-*}
         if [ "$SOUND" != "" ]; then ADDED="$ADDED# soundhw $SOUND\n"; fi
+        if [ "${!CPU}" != "" ]; then ADDED="$ADDED# cpu ${!CPU}\n"; fi
         sed -i -e "s/^\(\# qemu config file\)$/\1\n$ADDED/" $VMMGR_DATA_PATH/QEMU_CONFIGS/$NAME
-        
+
         
         ### VNC PASSWORD ###
         if [ "$VNC" == "on" ]; then
