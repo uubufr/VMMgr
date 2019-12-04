@@ -159,7 +159,7 @@ case "$1" in
                         if [ "$DISPLAY" ]; then ADDED="-display $DISPLAY "; fi
                         SOUND=$(grep "^# soundhw " $VMMGR_DATA_PATH/QEMU_CONFIGS/$2 | awk '{print $3}' )
                         if [ "$SOUND" ]; then ADDED="$ADDED -soundhw $SOUND "; fi
-                        CPU=$(grep "^# cpu " $VMMGR_DATA_PATH/QEMU_CONFIGS/$2 | awk '{print $3}' ) )
+                        CPU=$(grep "^# cpu " $VMMGR_DATA_PATH/QEMU_CONFIGS/$2 | awk '{print $3}' )
                         if [ "$CPU" ]; then ADDED="$ADDED -cpu $CPU "; fi
                         qemu-system-x86_64 -daemonize -pidfile /var/run/VMMGR/$NAME --uuid $(Get_Db_UUID $VMMGR_DB_PATH $2) $ADDED -no-user-config -nodefaults -readconfig $VMMGR_DATA_PATH/QEMU_CONFIGS/$2
                     else
