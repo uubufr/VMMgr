@@ -564,6 +564,7 @@ function List_All_VM() {
                 for VM in $VMS; do
                     Running=$(VM_Is_Running $VM)
                     if [ "$Running" == "1" ]; then
+                    echo "on a reçy $Running"
                         echo $VM
                     fi
                 done
