@@ -633,7 +633,7 @@ function Manage_Group() {
                         PREC=${MEMBER%;*}
                     else
                         WAIT=$(Get_Start_Wait ${MEMBER#*;}
-                        if [ "${WAIT^^}" == "OK" ]; then
+                        if [ "${WAIT^^}" == "YES" ]; then
                             ISOK="1"; COUNT=0
                             until [ $? -eq 0 ]; do
                                 systemctl -H "get 1rst IP" is-system-running 2>&1
