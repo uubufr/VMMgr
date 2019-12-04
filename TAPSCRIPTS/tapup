@@ -3,11 +3,11 @@
 sudo ip tuntap add mode tap $1
 sleep 0.5
 sudo ip link set dev $1 up
-BRIF=$(ls /sys/class/net/${0#*tapup-}/brif/)
-if [ "$BRIF" == "" ]; then
-    sudo ip link add name ${0#*tapup-} type bridge
-    sudo ip link set dev ${0#*tapup-} up
-fi
+#BRIF=$(ls /sys/class/net/${0#*tapup-}/brif/)
+#if [ "$BRIF" == "" ]; then
+    #sudo ip link add name ${0#*tapup-} type bridge
+    #sudo ip link set dev ${0#*tapup-} up
+#fi
 
 sudo brctl addif ${0#*tapup-} $1
 #sudo ovs-vsctl add-port swvpl-${0#*tapup-} $1
