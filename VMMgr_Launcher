@@ -345,6 +345,7 @@ case "$1" in
         disable:
         delete:
         group:
+        list <all|running|stopped|enabled|disabled> list vms
         ipmistart: start vm using ipmi
         ipmistop: stop vm using ipmi
         ipmistatus: get status via ipmi
