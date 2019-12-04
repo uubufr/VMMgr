@@ -206,12 +206,7 @@ case "$1" in
         fi
         ;;
     "group")
-        list all: liste tous les groupes
-        list <groupe>: liste les vm dans ce groupe
-        start <groupe> : pour chaque membre de ce groupe, le lancer, il faut qu on établise la précédence
-        stop <groupe> 
-        enable groupe
-        disable groupe
+            Manage_Group $2 $3
         ;;
     "status")
          VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
@@ -349,10 +344,10 @@ case "$1" in
         connect <vm name> <spice|vnc|telnet|qmp> connect to you vm
         load <vmname> <fullpath iso|rel to iso path|virtiowin> <reset>: load iso into DVD drive, optionally reset immediatly after
         wintools: download Windows drivers and tools in your iso path (actually: $VMMGR_ISO_PATH)
-        enable:
-        disable:
-        delete:
-        group:
+        enable: Install unit systemd and enable
+        disable: Disable unit systemd
+        delete: <db|conf|disks|all> delete VM
+        group: <list|start|stop|enable|disable> group management
         list <all|running|stopped|enabled|disabled> list vms
         ipmistart: start vm using ipmi
         ipmistop: stop vm using ipmi
