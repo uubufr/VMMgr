@@ -114,6 +114,7 @@ case "$1" in
                     fi
                     GROUP=$(cat $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF | grep "^GROUP=" | cut -d\" -f2)
                     VMID=$(Db_Create_VM $VMMGR_DB_PATH $2 $VMCONF $(cat /proc/sys/kernel/random/uuid) $GROUP)
+                    Db_Set_Group $VMMGR_DB_PATH $2 $GROUP
                 fi
             fi
         ;;

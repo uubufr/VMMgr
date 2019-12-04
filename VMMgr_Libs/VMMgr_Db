@@ -361,6 +361,23 @@ function Db_Get_Groups() {
 #   $2: VM name
 function Db_Get_Group_Member() {
     if [ "$2" ]; then
-        echo "select NAME from VM where GROUP='$2';" | sqlite3 $1/VMMGR_.db
+        echo "select NAME from VM where MemberOf='$2';" | sqlite3 $1/VMMGR_.db
+    fi
+}
+
+# Function: Db_Set_Group
+# Description: Add group
+# Args:
+#   $1: Db Path (parent dir)
+#   $2: VM name
+#   $3: Group Name
+function Db_Set_Group() {
+    RESULT=$(echo "select NAME from GROUPS WHERE NAME='$3';" | sqlite3 $1/VMMGR_.db)
+    if [ "$RESULT" ]; then
+        MEMEXIST=$(echo "select MEMBERS from GROUPS WHERE NAME='$3';" | sqlite3 $1/VMMGR_.db)
+        MEMEXIST="$MEMEXIST $2"
+        echo "update GROUPS SET MEMBERS='$MEMEXIST' WHERE NAME='$3';" | sqlite3 $1/VMMGR_.db
+    else
+        echo "insert into GROUPS (NAME, MEMBERS) values ( '$3', '$2' );" | sqlite3 $1/VMMGR_.db
     fi
 }
