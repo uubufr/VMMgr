@@ -41,7 +41,7 @@ CREATE TABLE VM(
     Config TEXT NOT NULL,
     Enabled INTEGER,
     UUID TEXT NOT NULL,
-    GROUP TEXT
+    MemberOf TEXT
 );
 
 CREATE TABLE SPICE(
@@ -119,7 +119,7 @@ EOF
 function Db_Create_VM() {
  EXISTS=$(echo "select VMiD from VM where Name='$2';" | sqlite3 $1/VMMGR_.db)
  if [ "$EXISTS" == "" ]; then
-  echo "insert into VM ( Name, Config, Enabled, UUID, Group) values ('$2', '$3','0', '$4', '$5');" | sqlite3 $1/VMMGR_.db
+  echo "insert into VM ( Name, Config, Enabled, UUID, MemberOf) values ('$2', '$3','0', '$4', '$5');" | sqlite3 $1/VMMGR_.db
   echo "select VMiD from VM where Name='$2';"| sqlite3 $1/VMMGR_.db
  else
   echo $EXISTS
