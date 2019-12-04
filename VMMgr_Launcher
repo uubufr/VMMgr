@@ -206,6 +206,12 @@ case "$1" in
         fi
         ;;
     "group")
+        list all: liste tous les groupes
+        list <groupe>: liste les vm dans ce groupe
+        start <groupe> : pour chaque membre de ce groupe, le lancer, il faut qu on établise la précédence
+        stop <groupe> 
+        enable groupe
+        disable groupe
         ;;
     "status")
          VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
