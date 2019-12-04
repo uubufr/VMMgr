@@ -553,7 +553,7 @@ function List_All_VM() {
                     Running=$(VM_Is_Running $VM)
                     if [ "$Running" == 1 ]; then
                       isrun="running"
-                    
+                    fi
                     echo "$VM: $edb(DB), $esys(systemd): $isrun"
                 done
             ;;
