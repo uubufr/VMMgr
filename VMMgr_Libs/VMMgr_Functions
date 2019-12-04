@@ -581,7 +581,7 @@ function List_All_VM() {
                     fi
                 done
             ;;
-            "disbled")
+            "disabled")
                 Db_Filter_VMs $VMMGR_DB_PATH Enabled 0
             ;;
     esac
