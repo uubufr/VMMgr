@@ -112,8 +112,8 @@ case "$1" in
                         cp $VMMGR_DATA_PATH/Templates/$3 $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
                         Custom_VM_Config $2 $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
                     fi
-                    UUID="-uuid "$(cat /proc/sys/kernel/random/uuid)
-                    VMID=$(Db_Create_VM $VMMGR_DB_PATH $2 $VMCONF $(cat /proc/sys/kernel/random/uuid))
+                    GROUP=$(cat $VMCONF | grep "^GROUP=" | cut -d\" -f2)
+                    VMID=$(Db_Create_VM $VMMGR_DB_PATH $2 $VMCONF $(cat /proc/sys/kernel/random/uuid) $GROUP)
                 fi
             fi
         ;;
