@@ -4,7 +4,15 @@
 # autor: Sylvain Girod ( uubu at gmx dot fr )
 # version: 0.02
 # description: Template for %%NAME%%
-GROUP=""
+GROUP="test"
+TAGS="worstations dev"
+ORDER="100"
+STARTWAIT=30    # délai en seconde avant de démarrer cette vm
+STARTWAIT=ok # on fait un test nous pour savoir si muti-users.target a été atteind dans la VM précédente
+STARTIF="systemctl -machine xxxxx status mariadb"   # Commande utilisée pour vérifier quand démarrer la VM, c'est utilisé avec order
+STOPIF=""       # Commande utilisée pour vérifier quand stopper la VM
+STOPWAIT=1      # Plus simple, on arrête qu'une fois la précédente a été arrêtée
+
 NAME="%%NAME%%"
 MEM=1
 MAXMEM=1

@@ -40,7 +40,8 @@ CREATE TABLE VM(
     Name TEXT NOT NULL,
     Config TEXT NOT NULL,
     Enabled INTEGER,
-    UUID TEXT NOT NULL
+    UUID TEXT NOT NULL,
+    GROUP TEXT
 );
 
 CREATE TABLE SPICE(
@@ -97,6 +98,11 @@ CREATE TABLE MAC(
     VMiD INTEGER,
     SUBMAC INTEGER NOT NULL,
     NETID INTERGER NOT NULL
+);
+
+CREATE TABLE GROUPS(
+    NAME TEXT NOT NULL,
+    MEMBERS TEXT
 );
 EOF
  fi
@@ -161,7 +167,7 @@ function Db_isEnabled_VM() {
  echo "select Enabled from VM where Name='$2';" | sqlite3 $1/VMMGR_.db
 }
 
-# Function Db_Enabled_VM
+# Function Db_Enable_VM
 # Description: Mark VM as Enabled
 # Args:
 #   $1: Db Path (parent dir)
@@ -334,4 +340,26 @@ function Db_Update_Net_NextIP() {
 #   $2: VM name
 function Get_Db_UUID() {
     echo "select UUID from VM where Name='$2';" | sqlite3 $1/VMMGR_.db
+}
+
+# Function Db_Get_Groups
+# Description: list all groups
+# Args:
+#   $1: Db Path (parent dir)
+#   $2: VM name
+function Db_Get_Groups() {
+    if [ "$2" ]; then
+        echo "select NAME from GROUPS;" | sqlite3 $1/VMMGR_.db
+    fi
+}
+
+# Function Db_Get_Group_Member
+# Description: List all members of group
+# Args:
+#   $1: Db Path (parent dir)
+#   $2: VM name
+function Db_Get_Group_Member() {
+    if [ "$2" ]; then
+        echo "select NAME from VM where GROUP='$2';" | sqlite3 $1/VMMGR_.db
+    fi
 }
