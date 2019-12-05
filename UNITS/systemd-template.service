@@ -5,7 +5,7 @@ After=network.target remote-fs.target nss-lookup.target %%AFTER%%
 %%BEFORE%%
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=VMMgr_.target
 
 [Service]
 User=qemu

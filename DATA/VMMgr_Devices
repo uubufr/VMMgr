@@ -17,6 +17,12 @@ COMMON="-daemonize -no-user-config -nodefaults -msg timestamp=on"
 BOOT="-boot menu=on,strict=off,splash=$VMMGR_DATA_PATH/UEFI/splash640.bmp,splash-time=2000"
 BIOS="-bios $(rpm -ql qemu-system-x86-core | grep "bios-256k.bin") -L $(dirname $(rpm -ql qemu-system-x86-core | grep "bios-256k.bin"))"
 
+# Keyboard
+KEY_LANG="-k fr"
+
+# Mem alloc
+MEMALLOC="--mem-prealloc"
+
 ### we disable S3 and S4:
 S34="-global PIIX4_PM.disable_s3=1 -global PIIX4_PM.disable_s4=1"
 
