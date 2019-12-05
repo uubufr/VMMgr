@@ -661,7 +661,7 @@ function Manage_Group() {
                 for MEMBER in $ORDER; do
                     if [ "$PREC" ]; then
                         if [ "$PREC" == ${MEMBER%;*} ]; then                    # Same order value, we start
-                            $VMMGR_PATH/VMMgr_Launcher start $MEMBER
+                            $VMMGR_PATH/VMMgr_Launcher start ${MEMBER#*;}
                             PREC=${MEMBER%;*}
                         else
                             WAIT=$(Get_Start_Wait ${MEMBER#*;})
@@ -676,19 +676,19 @@ function Manage_Group() {
                                     sleep 5
                                 done
                                 if [ $ISOK -eq 0 ]; then
-                                    $VMMGR_PATH/VMMgr_Launcher start $MEMBER
+                                    $VMMGR_PATH/VMMgr_Launcher start ${MEMBER#*;}
                                     PREC=${MEMBER%;*}
                                 else
                                     break;
                                 fi
                             else
                                 sleep $WAIT
-                                $VMMGR_PATH/VMMgr_Launcher start $MEMBER
+                                $VMMGR_PATH/VMMgr_Launcher start ${MEMBER#*;}
                                 PREC=${MEMBER%;*}
                             fi
                         fi
                     else
-                        $VMMGR_PATH/VMMgr_Launcher start $MEMBER                  # First VM
+                        $VMMGR_PATH/VMMgr_Launcher start ${MEMBER#*;}                  # First VM
                         PREC=${MEMBER%;*}
                     fi
                 done
