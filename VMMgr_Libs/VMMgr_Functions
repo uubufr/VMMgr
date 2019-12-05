@@ -264,6 +264,14 @@ function Customize_Unit() {
     sed -i "s|%%PIDFILE%%|/run/VMMGR/$1|g" $UNIT
 }
 
+# Function: Customize_Target
+# Description: Customize Systemd target
+# Args:
+#   $1: Group Name
+function Customize_Target() {
+    sed -i "s|%%GROUP%%|$1|g" $VMMGR_DATA_PATH/UNITS/$2.target
+}
+
 # Function: Set_Remote_Viewer
 # Description: Create .vv file for remove viewer
 # Args:
