@@ -649,13 +649,15 @@ function Manage_Group() {
             if [ "$(Db_IsEnabled_Group $VMMGR_DB_PATH $2)" == "1" ]; then
                 sudo systemctl start $2.target
             else
-                MEMBERS=$(Db_Get_Group_Member $VMMGR_DB_PATH $2)                # Get Members
+                MEMBERS=$(Db_Get_Group_Member $VMMGR_DB_PATH $2)                # Get Group Members
                 ORDER=""; WAIT=""; PREC=""
+                echo $MEMBERS
                 for MEMBER in $MEMBERS; do                                      # Ordering
                     VMO=$(VM_Get_Order $MEMBER)
                     [ "$VMO" ] || VMO=1000
                     ORDER="$ORDER $VMO;$MEMBER"
                 done
+                echo "order vaut $ORDER"
                 for MEMBER in $ORDER; do
                     if [ "$PREC" ]; then
                         if [ "$PREC" == ${MEMBER%;*} ]; then                    # Same order value, we start
@@ -674,14 +676,14 @@ function Manage_Group() {
                                     sleep 5
                                 done
                                 if [ $ISOK -eq 0 ]; then
-                                    $VMMGR_PATH/VMMgr_Launch start $MEMBER
+                                    $VMMGR_PATH/VMMgr_Launcher start $MEMBER
                                     PREC=${MEMBER%;*}
                                 else
                                     break;
                                 fi
                             else
                                 sleep $WAIT
-                                $VMMGR_PATH/VMMgr_Launch start $MEMBER
+                                $VMMGR_PATH/VMMgr_Launcher start $MEMBER
                                 PREC=${MEMBER%;*}
                             fi
                         fi
