@@ -257,9 +257,8 @@ function Customize_Unit() {
         if [ "$(Db_IsEnabled_Group $VMMGR_DB_PATH $INGROUP)" == "1" ]; then
             sed -i "s/%%WANTED%%/$GROUPNAME.target/g" $UNIT
         fi
-    else
-        sed -i "s/%%WANTED%%/VMMgr_.target/g" $UNIT
     fi
+    sed -i "s/%%WANTED%%/VMMgr_.target/g" $UNIT
     AUDIO=$(grep "^QEMU_AUDIO_DRV=" $2 | cut -d= -f 2)
     sed -i "s/%%AUDIO%%/$AUDIO/g" $UNIT
 }
