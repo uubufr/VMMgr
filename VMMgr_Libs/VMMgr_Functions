@@ -743,6 +743,7 @@ function Manage_Group() {
             fi
             Db_Enable_Group $VMMGR_DB_PATH $2
             for MEMBER in $(Db_Get_Group_Member $VMMGR_DB_PATH $2); do
+                echo "enabling "$MEMBER
                 $VMMGR_PATH/VMMgr_Launcher enable $MEMBER
             done
         ;;
