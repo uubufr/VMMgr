@@ -690,6 +690,7 @@ function Manage_Group() {
                         PREC=${MEMBER%;*}
                     fi
                 done
+            fi
             ;;
         "stop")
             for MEMBER in $(Db_Get_Group_Member $VMMGR_DB_PATH $2); do
