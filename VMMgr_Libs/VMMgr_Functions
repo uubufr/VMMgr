@@ -731,7 +731,7 @@ function Manage_Group() {
                 sudo cp $VMMGR_DATA_PATH/UNITS/$2.target /etc/systemd/system/$2.target
                 sudo systemctl daemon-reload
                 sudo systemctl enable $2
-                [ -d /etc/systemd/system/$2.target.wants ] || mkdir /etc/systemd/system/$2.target.wants
+                [ -d /etc/systemd/system/$2.target.wants ] || sudo mkdir /etc/systemd/system/$2.target.wants
             fi
             Db_Enable_Group $VMMGR_DB_PATH $2
             for MEMBER in $(Db_Get_Group_Member $VMMGR_DB_PATH $2); do
