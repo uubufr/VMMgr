@@ -5,15 +5,13 @@ After=network.target remote-fs.target nss-lookup.target %%AFTER%%
 %%BEFORE%%
 
 [Install]
-WantedBy=VMMgr_.target
+WantedBy=%%WANTED%%
 
 [Service]
+Type=simple
+Environment="QEMU_AUDIO_DRV=%%AUDIO%%"
 User=qemu
 Group=qemu
-NoNewPrivileges=True
 WorkingDirectory=/var/lib/VMMGR/
-Type=simple
 ExecStart=%%VMMGRPATH%% start %%NAME%%
 ExecStop=%%VMMGRPATH%% stop %%NAME%%
-OOMPolicy=stop
-NoNewPrivileges=True
