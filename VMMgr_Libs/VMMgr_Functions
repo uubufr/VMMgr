@@ -587,7 +587,7 @@ function List_All_VM() {
                     if [ "$Enabled" == "1" ]; then
                         edb="enabled"
                     fi
-                    systemctl --quiet is-enabled VMMGR-$VM 2>/dev/null
+                    systemctl --quiet is-enabled $VM 2>/dev/null
                     if [ $? -eq 0 ]; then
                        esys="enabled"
                     fi
