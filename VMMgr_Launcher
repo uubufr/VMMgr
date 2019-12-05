@@ -185,12 +185,12 @@ case "$1" in
                 echo "VM $2 already enabled"
             else
                 sudo systemctl disable $2
-                sudo cp $VMMGR_DATA_PATH/UNITS/$2 /etc/systemd/system/$2
+                sudo cp $VMMGR_DATA_PATH/UNITS/$2.service /etc/systemd/system/$2.service
                 sudo systemctl daemon-reload
                 sudo systemctl enable $2
             fi
         else
-            sudo cp $VMMGR_DATA_PATH/UNITS/$2 /etc/systemd/system/$2
+            sudo cp $VMMGR_DATA_PATH/UNITS/$2.service /etc/systemd/system/$2.service
             sudo systemctl daemon-reload
             sudo systemctl enable $2
         fi
