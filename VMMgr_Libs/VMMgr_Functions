@@ -617,7 +617,7 @@ function List_All_VM() {
 #   $1: VM name
 function VM_Get_Order() {
     VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $1)
-    VMORDER=$(cat $VMMGR_DATA_PATH/VM_CONFIG/$VMCONF | grep "^ORDER=")
+    VMORDER=$(cat $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF | grep "^ORDER=")
     echo ${VMORDER#ORDER=}
 }
 # Args:
@@ -661,7 +661,7 @@ function Manage_Group() {
                 for MEMBER in $ORDER; do
                     if [ "$PREC" ]; then
                         if [ "$PREC" == ${MEMBER%;*} ]; then                    # Same order value, we start
-                            $VMMGR_PATH/VMMgr_Launch start $MEMBER
+                            $VMMGR_PATH/VMMgr_Launcher start $MEMBER
                             PREC=${MEMBER%;*}
                         else
                             WAIT=$(Get_Start_Wait ${MEMBER#*;})
