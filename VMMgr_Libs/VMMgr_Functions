@@ -254,9 +254,7 @@ function Customize_Unit() {
     sed -i "s|%%VMMGRPATH%%|$VMMGR_PATH/VMMgr_Launcher|g" $UNIT
     INGROUP=$(Db_Get_MemberOf $VMMGR_DB_PATH $1)
     if [ "$INGROUP" ]; then
-    echo "on est ingroup $INGROUP"
         if [ "$(Db_IsEnabled_Group $VMMGR_DB_PATH $INGROUP)" == "1" ]; then
-        echo "on est enabled $(Db_IsEnabled_Group $VMMGR_DB_PATH $INGROUP)"
             sed -i "s/%%WANTED%%/$GROUPNAME.target/g" $UNIT
         fi
     fi
@@ -718,19 +716,36 @@ function Manage_Group() {
             done
         ;;
         "enable")
+            TARGET=$(systemctl list-unit-files $2.target | grep 1)
+            cp $VMMGR_DATA_PATH/UNITS/group-template.target $VMMGR_DATA_PATH/UNITS/$2.targets
+            Customize_Target $2
+            if [ ! "$TARGET" ]; then
+                UNITPATH=$(systemctl status $2.service | grep "Loaded:" | cut -d\( -f2 ); UNITPATH="${UNITPATH%%.target*}.target"
+                if [ "$(sha1sum $VMMGR_DATA_PATH/UNITS/$2.target | awk '{print $1}')" == "$(sha1sum $UNITPATH | awk '{print $1}')" ]; then
+                    echo "VM $2 already enabled"
+                else
+                    sudo systemctl disable $2.target
+                    sudo cp $VMMGR_DATA_PATH/UNITS/$2.target /etc/systemd/system/$2.target
+                    sudo systemctl daemon-reload
+                    sudo systemctl enable $2.target
+                fi
+            else
+                sudo cp $VMMGR_DATA_PATH/UNITS/$2.target /etc/systemd/system/$2.target
+                sudo systemctl daemon-reload
+                sudo systemctl enable $2
+                [ -d /etc/systemd/system/$2.target.wants ] || mkdir /etc/systemd/system/$2.target.wants
+            fi
+            Db_Enable_Group $VMMGR_DB_PATH $2
             for MEMBER in $(Db_Get_Group_Member $VMMGR_DB_PATH $2); do
-                
-                #enable nécessite de créer un target, un target.want.d, regenérer les units systemd "install"
-                #puis daemond-reload, et enfin Db_Enable_VM pour chaque VM, puis Db_Enable_Group
-            
-                Db_Enable_VM $VMMGR_DB_PATH $2
-                Db_Enable_Group $VMMGR_DB_PATH $2
+                $VMMGR_PATH/VMMgr_Launcher enable $MEMBER
             done
         ;;
         "disable")
             for MEMBER in $(Db_Get_Group_Member $VMMGR_DB_PATH $2); do
-                Db_Disable_VM $VMMGR_DB_PATH $2
+                $VMMGR_PATH/VMMgr_Launcher disable $MEMBER
             done
+            sudo systemctl disable $2.target
+            Db_Disable_Group $VMMGR_DB_PATH $2
         ;;
     esac
 }
