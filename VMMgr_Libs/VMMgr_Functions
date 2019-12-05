@@ -651,13 +651,11 @@ function Manage_Group() {
             else
                 MEMBERS=$(Db_Get_Group_Member $VMMGR_DB_PATH $2)                # Get Group Members
                 ORDER=""; WAIT=""; PREC=""
-                echo $MEMBERS
                 for MEMBER in $MEMBERS; do                                      # Ordering
                     VMO=$(VM_Get_Order $MEMBER)
                     [ "$VMO" ] || VMO=1000
                     ORDER="$ORDER $VMO;$MEMBER"
                 done
-                echo "order vaut $ORDER"
                 for MEMBER in $ORDER; do
                     if [ "$PREC" ]; then
                         if [ "$PREC" == ${MEMBER%;*} ]; then                    # Same order value, we start
