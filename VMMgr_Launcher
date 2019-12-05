@@ -194,9 +194,11 @@ case "$1" in
             sudo systemctl daemon-reload
             sudo systemctl enable $2
         fi
+        Db_Enable_VM $VMMGR_DB_PATH $2
         ;;
     "disable")
-        systemctl disable $2
+        sudo systemctl disable $2
+        Db_Disable_VM $VMMGR_DB_PATH $2
         ;;
     "stop")
         if [ "$(systemctl is-active VMMGR-$2)" == "active" ]; then
