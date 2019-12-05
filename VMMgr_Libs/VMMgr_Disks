@@ -126,6 +126,8 @@ function Set_Disks() {
                 QIMG=$QT\_IMG
                 if [ "${!QIMG}" == "" ]; then QIMG="SSDCOW_IMG"; fi         ## Missing Var for qemu_create
                 qemu-img create ${!QIMG} "$CPATH/$DRIVENAME" $DSIZE 2>/dev/null 1>/dev/null
+                sudo chown qemu:qemu "$CPATH/$DRIVENAME"
+                sudo chmod 660 "$CPATH/$DRIVENAME"
                 DisksList="$DisksList|$CPATH/$DRIVENAME"
             fi
         done
@@ -280,6 +282,8 @@ function Set_SDisks() {
                 esac
                 IFS=-  read QN QS QV <<< $( echo ${DRIVENAME#Qemu-Scsi-Disk_})
                 qemu-img create -f qcow2 -o cluster_size=32k "$CPATH/$DRIVENAME" $DSIZE 2>/dev/null 1>/dev/null
+                sudo chown qemu:qemu "$CPATH/$DRIVENAME"
+                sudo chmod 660 "$CPATH/$DRIVENAME"
                 DisksList="$DisksList|$CPATH/$DRIVENAME"
             fi
         done
