@@ -508,7 +508,7 @@ function Install_VMMGR() {
     cp -r $(pwd)/{Configs,DATA,DB_BKP,QEMU_CONFIGS,R-SPICE,R-VNC,TAPSCRIPTS,Templates,UEFI,VM_CONFIGS,UNITS} /var/lib/VMMGR/ && chown -R qemu:qemu /var/lib/VMMGR && chmod -R 770 /var/lib/VMMGR
     
     # Main program
-    cp $(pwd)/VMMgr_Launcher /usr/local/bin/ && chown qemu:qemu /usr/local/bin/VMMgr_Launcher && chmod 0650 /usr/local/bin/VMMgr_Launcher
+    cp $(pwd)/VMMgr_Launcher /usr/local/bin/ && chown qemu:qemu /usr/local/bin/VMMgr_Launcher && chmod 0755 /usr/local/bin/VMMgr_Launcher
     
     # Libs
     cp -r $(pwd)/VMMgr_Libs/VMMgr_* /usr/local/lib/ && chown qemu:qemu /usr/local/lib/VMMgr_* && chmod 0650 /usr/local/lib/VMMgr_*
