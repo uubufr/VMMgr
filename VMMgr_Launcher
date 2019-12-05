@@ -180,7 +180,7 @@ case "$1" in
         Customize_Unit $2 $VMMGR_DATA_PATH/VM_CONFIGS/$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
         UNITEXIST=$(systemctl list-unit-files $2.service | grep 1)
         if [ "$UNITEXIST" ]; then
-            UNITPATH=$(systemctl status $2.service | grep "Loaded:" | cut -d\( -f2 ); UNITPATH="${UNITPATH%%.service}.service"
+            UNITPATH=$(systemctl status $2.service | grep "Loaded:" | cut -d\( -f2 ); UNITPATH="${UNITPATH%%.service*}.service"
             echo "unitpath: $UNITPATH"
             if [ "$(sha1sum $VMMGR_DATA_PATH/UNITS/$2.service | awk '{print $1}')" == "$(sha1sum $UNITPATH | awk '{print $1}')" ]; then
                 echo "VM $2 already enabled"
