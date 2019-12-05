@@ -237,7 +237,7 @@ function Custom_VM_Config() {
     sed -i "s/%%NAME%%/$1/g" $2
 }
 
-# Function: Custom_Unit
+# Function: Customize_Unit
 # Description: Customize Systemd Unit
 # Args:
 #   $1: VM Name
@@ -245,13 +245,19 @@ function Custom_VM_Config() {
 function Customize_Unit() {
     AFTER=""; BEFORE=""
     UNIT="$VMMGR_DATA_PATH/UNITS/$1.service"
-    cp $VMMGR_DATA_PATH/UNITS/systemd-simple.service $UNIT
+    cp $VMMGR_DATA_PATH/UNITS/systemd-template.service $UNIT
     sed -i "s/%%NAME%%/$1/g" $UNIT
     BEFORE=$(grep "^BEFORE=" $2 | cut -d= -f 2)
     AFTER=$(grep "^AFTER=" $2 | cut -d= -f 2)
     sed -i "s/%%AFTER%%/$AFTER/g" $UNIT
     sed -i "s/%%BEFORE%%/Before=$BEFORE/g" $UNIT
     sed -i "s|%%VMMGRPATH%%|$VMMGR_PATH/VMMgr_Launcher|g" $UNIT
+    INGROUP=$(Db_Get_MemberOf $VMMGR_DB_PATH $1)
+    if [ "$INGROUP" ]; then
+        if [ "$(Db_IsEnabled_Group $VMMGR_DB_PATH $INGROUP)" == "1" ]; then
+            sed -i "s|%%WANTED%%|$GROUPNAME|g" $UNIT
+        fi
+    fi
 }
 
 # Function: Set_Remote_Viewer
@@ -511,6 +517,13 @@ function Install_VMMGR() {
         chmod 770 /var/log/VMMgr
         chmod 660 /var/log/VMMgr
     fi
+    
+    if [ ! -r /etc/systemd/system/VMMgr_.target ]; then
+        cp $(pwd)/UNITS/VMMgr_.target /etc/systemd/system/
+    fi
+    if [ ! -d /etc/systemd/system/VMMgr_.target.wants ]; then
+        mkdir /etc/systemd/system/VMMgr_.target.wants
+    fi
     VMMGR_LOG "VMMGR" "INSTALL" "VMMgr is installed on your system."
 }
 
@@ -693,13 +706,19 @@ function Manage_Group() {
             fi
             ;;
         "stop")
+            # on doit gérer le target et systemd?
             for MEMBER in $(Db_Get_Group_Member $VMMGR_DB_PATH $2); do
                 $VMMGR_PATH/VMMgr_Launcher stop $MEMBER
             done
         ;;
         "enable")
             for MEMBER in $(Db_Get_Group_Member $VMMGR_DB_PATH $2); do
+                
+                #enable nécessite de créer un target, un target.want.d, regenérer les units systemd "install"
+                #puis daemond-reload, et enfin Db_Enable_VM pour chaque VM, puis Db_Enable_Group
+            
                 Db_Enable_VM $VMMGR_DB_PATH $2
+                Db_Enable_Group $VMMGR_DB_PATH $2
             done
         ;;
         "disable")

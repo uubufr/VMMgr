@@ -177,10 +177,19 @@ case "$1" in
             fi
         ;;
     "enable")
-        if [ "$(systemctl is-enabled VMMGR-$2)" == "enabled" ]; then
-            echo "VM $2 already enabled"
+        Customize_Unit $2 $VMMGR_DATA_PATH/VM_CONFIGS/$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
+        UNITEXIST=$(systemctl list-unit-files $2.service | grep 1)
+        if [ "$UNITEXIST" ]; then
+            UNITPATH=$(systemctl status $2.service | grep "Loaded:" | cut -d\( -f2 ); UNITPATH=${UNITPATH%)*}
+            if [ "$(sha1sum $VMMGR_DATA_PATH/UNITS/$2.service | awk '{print $1}')" == "$(sha1sum $$UNITPATH | awk '{print $1}')" ]; then
+                echo "VM $2 already enabled"
+            else
+                sudo systemctl disable $2
+                sudo cp $VMMGR_DATA_PATH/UNITS/$2 /etc/systemd/system/$2
+                sudo systemctl daemon-reload
+                sudo systemctl enable $2
+            fi
         else
-            Customize_Unit $2 $VMMGR_DATA_PATH/VM_CONFIGS/$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
             sudo cp $VMMGR_DATA_PATH/UNITS/$2 /etc/systemd/system/$2
             sudo systemctl daemon-reload
             sudo systemctl enable $2

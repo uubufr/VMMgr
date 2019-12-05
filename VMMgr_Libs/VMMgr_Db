@@ -422,3 +422,12 @@ function Db_Disable_Group() {
 function Db_IsEnabled_Group() {
     echo "select ENABLED from GROUPS WHERE NAME='$2';" | sqlite3 $1/VMMGR_.db
 }
+
+# Function: Db_Get_MemberOf
+# Description: Get Group of a vm
+# Args:
+#   $1: Db Path (parent dir)
+#   $2: VM name
+function Db_Get_MemberOf() {
+    echo "select MemberOf from VM WHERE NAME='$2';" | sqlite3 $1/VMMGR_.db
+}
