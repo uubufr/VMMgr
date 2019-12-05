@@ -1,7 +1,8 @@
 [Unit]
 Description=Virtual Machine: %%NAME%%
 Documentation=man:qemu(8)
-After=network.target remote-fs.target nss-lookup.target
+After=network.target remote-fs.target nss-lookup.target %%AFTER%%
+%%BEFORE%%
 
 [Install]
 WantedBy=multi-user.target

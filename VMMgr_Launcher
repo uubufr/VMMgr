@@ -142,20 +142,23 @@ case "$1" in
             fi
         ;;
     "start")
-            if [ ! -r "/var/run/VMMGR" ]; then
-                sudo mkdir /var/run/VMMGR 
-                sudo chown -R qemu:qemu /var/run/VMMGR
-                sudo chmod -R 770 /var/run/VMMGR
-            fi
             if [ ! "$2" ]; then
                 echo "Usage $0 start <vm name>"
+            elif [ "$3" == "regen" ]; then
+                if [ ! -r $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF ]; then
+                    echo "VM $2 not found"
+                else
+                    Start_VM_From_Config $2 $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
+                fi
+            elif [ -r /etc/systemd/system/$2 ]; then
+                systemctl start $2
             else
                 VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
                 if  [ "$VMCONF" == "" ]; then
                     echo "$2 not found in DB"
                 else
                     . $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
-                    if  [ -r "$VMMGR_DATA_PATH/QEMU_CONFIGS/$2" ] && [ ! "$3" == "regen" ] && [ "$USEQEMUCONFIG" != "no" ]; then
+                    if  [ -r "$VMMGR_DATA_PATH/QEMU_CONFIGS/$2" ] && [ "$USEQEMUCONFIG" != "no" ]; then
                         DISPLAY=$(grep "^# display " $VMMGR_DATA_PATH/QEMU_CONFIGS/$2 | awk '{print $3}' )
                         if [ "$DISPLAY" ]; then ADDED="-display $DISPLAY "; fi
                         SOUND=$(grep "^# soundhw " $VMMGR_DATA_PATH/QEMU_CONFIGS/$2 | awk '{print $3}' )
@@ -177,15 +180,14 @@ case "$1" in
         if [ "$(systemctl is-enabled VMMGR-$2)" == "enabled" ]; then
             echo "VM $2 already enabled"
         else
-            sudo cp $VMMGR_DATA_PATH/Configs/systemd-simple.service /etc/systemd/system/VMMGR-$2
-            sudo sed -i -e "s/%%NAME%%/$2/g" /etc/systemd/system/VMMGR-$2
-            sudo sed -i -e "s/%%VMMGRPATH%%/$VMMGR_PATH/VMMgr_Launcher/g" /etc/systemd/system/VMMGR-$2
+            Customize_Unit $2 $VMMGR_DATA_PATH/VM_CONFIGS/$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
+            sudo cp $VMMGR_DATA_PATH/UNITS/$2 /etc/systemd/system/$2
             sudo systemctl daemon-reload
-            sudo systemctl enable VMMGR-$NAME
+            sudo systemctl enable $2
         fi
         ;;
     "disable")
-        systemctl disable VMMGR-$2
+        systemctl disable $2
         ;;
     "stop")
         if [ "$(systemctl is-active VMMGR-$2)" == "active" ]; then
