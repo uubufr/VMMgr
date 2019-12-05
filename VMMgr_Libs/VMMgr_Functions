@@ -269,7 +269,7 @@ function Customize_Unit() {
 # Args:
 #   $1: Group Name
 function Customize_Target() {
-    sed -i "s|%%GROUP%%|$1|g" $VMMGR_DATA_PATH/UNITS/$2.target
+    sed -i "s|%%GROUP%%|$1|g" $VMMGR_DATA_PATH/UNITS/$1.target
 }
 
 # Function: Set_Remote_Viewer
