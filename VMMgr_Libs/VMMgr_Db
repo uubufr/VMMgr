@@ -386,7 +386,7 @@ function Db_Set_Group() {
         MEMEXIST="$MEMEXIST $2"
         echo "update GROUPS SET MEMBERS='$MEMEXIST' WHERE NAME='$3';" | sqlite3 $1/VMMGR_.db
     else
-        echo "insert into GROUPS (NAME, MEMBERS) values ( '$3', '$2' );" | sqlite3 $1/VMMGR_.db
+        echo "insert into GROUPS (NAME, ENABLED, MEMBERS) values ( '$3', '0', '$2' );" | sqlite3 $1/VMMGR_.db
     fi
 }
 
