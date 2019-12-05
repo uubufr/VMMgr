@@ -187,13 +187,12 @@ case "$1" in
                 sudo systemctl disable $2
                 sudo cp $VMMGR_DATA_PATH/UNITS/$2.service /etc/systemd/system/$2.service
                 sudo systemctl daemon-reload
-                sudo systemctl enable $2
             fi
         else
             sudo cp $VMMGR_DATA_PATH/UNITS/$2.service /etc/systemd/system/$2.service
             sudo systemctl daemon-reload
-            sudo systemctl enable $2
         fi
+        sudo systemctl enable $2
         Db_Enable_VM $VMMGR_DB_PATH $2
         ;;
     "disable")
