@@ -13,7 +13,7 @@
 #   Db_Filter_VMs: List vm form db
 #   Db_isEnabled_VM: Check if VM is enabled
 #   Db_Enabled_VM: Mark VM as Enabled
-#   Db_Disabled_VM: Mark VM as Disabled
+#   Db_Disable_VM: Mark VM as Disabled
 #   Db_Get_VM_Config: get VM config file
 #   Db_Set_IPPORT: Set IP and PORT for a service (spice, telnet or qmp)
 #   Db_Get_IPPORT: Get IP and PORT for a service (spice, telnet or qmp)
@@ -21,7 +21,17 @@
 #   Db_Set_MAC: Get mac address (without OUI PART) from db, if not exists, create new one
 #   Db_Get_Network: Check network info from ifname
 #   Db_Create_Network: Declare a new Network
-
+#   Db_Set_Network_IP: add a default IP to a network (bridge)
+#   Db_Get_SVC: Get all infomations about service
+#   Db_Set_SVC: Add service informations
+#   Db_Update_Net_NextIP: Update Last IP used in NETWORKS table
+#   Get_Db_UUID: Get uuid
+#   Db_Get_Groups: list all groups
+#   Db_Get_Group_Member: List all members of group
+#   Db_Set_Group: Add group
+#   Db_Enable_Group: Enable group
+#   Db_Disable_Group: Disable Group
+#   Db_IsEnabled_Group: Check if group is enabled
 
 ###### SELECT NAME CONFIG FROM VM ORDER BY NAME DESC, CONFIG ASC;
 #### on a pas encore de lien entre une déclaration de Réseau et l'IP:PORT (on a systématiquement le même réseau, ou on peut en créer autant qu'on veut?)
@@ -102,6 +112,7 @@ CREATE TABLE MAC(
 
 CREATE TABLE GROUPS(
     NAME TEXT NOT NULL,
+    ENABLED INTEGER,
     MEMBERS TEXT
 );
 EOF
@@ -351,7 +362,7 @@ function Db_Get_Groups() {
         echo "select NAME from GROUPS;" | sqlite3 $1/VMMGR_.db
 }
 
-# Function Db_Get_Group_Member
+# Function: Db_Get_Group_Member
 # Description: List all members of group
 # Args:
 #   $1: Db Path (parent dir)
@@ -377,4 +388,37 @@ function Db_Set_Group() {
     else
         echo "insert into GROUPS (NAME, MEMBERS) values ( '$3', '$2' );" | sqlite3 $1/VMMGR_.db
     fi
+}
+
+# Function: Db_Enable_Group
+# Description: Enable group
+# Args:
+#   $1: Db Path (parent dir)
+#   $2: Group name
+function Db_Enable_Group() {
+    RESULT=$(echo "select NAME from GROUPS WHERE NAME='$2';" | sqlite3 $1/VMMGR_.db)
+    if [ "$RESULT" ]; then
+        echo "update GROUPS SET ENABLED='1' WHERE NAME='$2';" | sqlite3 $1/VMMGR_.db
+    fi
+}
+
+# Function: Db_Disable_Group
+# Description: 
+# Args:
+#   $1: Db Path (parent dir)
+#   $2: Group name
+function Db_Disable_Group() {
+    RESULT=$(echo "select NAME from GROUPS WHERE NAME='$2';" | sqlite3 $1/VMMGR_.db)
+    if [ "$RESULT" ]; then
+        echo "update GROUPS SET ENABLED='0' WHERE NAME='$2';" | sqlite3 $1/VMMGR_.db
+    fi
+}
+
+# Function: Db_IsEnabled_Group
+# Description: Check if group is enabled
+# Args:
+#   $1: Db Path (parent dir)
+#   $2: Group name
+function Db_IsEnabled_Group() {
+    echo "select ENABLED from GROUPS WHERE NAME='$2';" | sqlite3 $1/VMMGR_.db
 }

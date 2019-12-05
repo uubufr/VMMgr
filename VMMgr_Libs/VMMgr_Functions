@@ -69,8 +69,8 @@ function Check_Requirements() {
         echo ""
     fi
     
-    echo "Sudoers: You must ensure the following rules ares set:"
-    echo "Cmnd_Alias VMMGRCMD= /usr/sbin/ip, /usr/sbin/brctl, /usr/bin/ovs-vsctl, /usr/bin/nmcli, /usr/sbin/setcap"
+    echo "Sudoers: You must set the following rules:"
+    echo "Cmnd_Alias VMMGRCMD= /usr/sbin/ip, /usr/sbin/brctl, /usr/bin/ovs-vsctl, /usr/bin/nmcli, /usr/sbin/setcap, /usr/bin/systemctl"
     echo "%qemu ALL=(root:root) NOPASSWD: VMMGRCMD"
     echo ""
     
@@ -103,6 +103,8 @@ function Check_Requirements() {
         echo "tuned profile hypervisor is not active!"
         echo ""
     fi
+    
+    echo "SPICE/VNC secure mode: make sure keys and certificates are readable by qemu user and/or group"
 }
 
 # Function: Check_System
@@ -146,6 +148,12 @@ function Check_System() {
     if [ $? -eq 0 ]; then
         sudo modprobe openvswitch
         [ -d /var/run/openvswitch ] || sudo mkdir /var/run/openvswitch
+    fi
+    
+    if [ ! -r "/var/run/VMMGR" ]; then
+        sudo mkdir /var/run/VMMGR 
+        sudo chown -R qemu:qemu /var/run/VMMGR
+        sudo chmod -R 770 /var/run/VMMGR
     fi
 }
 
@@ -227,6 +235,23 @@ function Check_Existing_VM() {
 #   $2: VM config path
 function Custom_VM_Config() {
     sed -i "s/%%NAME%%/$1/g" $2
+}
+
+# Function: Custom_Unit
+# Description: Customize Systemd Unit
+# Args:
+#   $1: VM Name
+#   $2: VM config path
+function Customize_Unit() {
+    AFTER=""; BEFORE=""
+    UNIT="$VMMGR_DATA_PATH/UNITS/$1.service"
+    cp $VMMGR_DATA_PATH/UNITS/systemd-simple.service $UNIT
+    sed -i "s/%%NAME%%/$1/g" $UNIT
+    BEFORE=$(grep "^BEFORE=" $2 | cut -d= -f 2)
+    AFTER=$(grep "^AFTER=" $2 | cut -d= -f 2)
+    sed -i "s/%%AFTER%%/$AFTER/g" $UNIT
+    sed -i "s/%%BEFORE%%/Before=$BEFORE/g" $UNIT
+    sed -i "s|%%VMMGRPATH%%|$VMMGR_PATH/VMMgr_Launcher|g" $UNIT
 }
 
 # Function: Set_Remote_Viewer
@@ -590,10 +615,10 @@ function List_All_VM() {
 
 # Args:
 #   $1: VM name
-function Db_Get_Order() {
+function VM_Get_Order() {
     VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $1)
-    VMORDER=$(cat $VMCONF | grep "^ORDER=")
-    echo ${VMORDER#GROUP=}
+    VMORDER=$(cat $VMMGR_DATA_PATH/VM_CONFIG/$VMCONF | grep "^ORDER=")
+    echo ${VMORDER#ORDER=}
 }
 # Args:
 #   $1: VM Name
@@ -616,51 +641,56 @@ function Manage_Group() {
                     Db_Get_Groups $VMMGR_DB_PATH
                 ;;
                 *)
-                        Db_Get_Group_Member $VMMGR_DB_PATH $2
+                    Db_Get_Group_Member $VMMGR_DB_PATH $2
                 ;;
             esac
         ;;
         "start")
-            MEMBERS=$(Db_Get_Group_Member $VMMGR_DB_PATH $2)                # Get Members
-            ORDER=""; WAIT=""; PREC=""
-            for MEMBER in $MEMBERS; do                                      # Ordering
-                ORDER="$ORDER $(Db_Get_Order $VMMGR_DB_PATH $2);$MEMBER"
-            done
-            for MEMBER in $ORDER; do
-                if [ "$PREC" ]; then
-                    if [ "$PREC" == ${MEMBER%;*} ]; then                    # Same order value, we start
-                        $VMMGR_PATH/VMMgr_Launch start $MEMBER
-                        PREC=${MEMBER%;*}
-                    else
-                        WAIT=$(Get_Start_Wait ${MEMBER#*;})
-                        if [ "${WAIT^^}" == "YES" ]; then
-                            ISOK="1"; COUNT=0
-                            until [ $ISOK -eq 0 ]; do
-                                systemctl -H "get 1rst IP" is-system-running 2>&1
-                                ISOK=$?
-                                COUNT=$(( COUNT + 1 ))
-                                echo $COUNT
-                                if [ $COUNT -gt 30 ]; then break; fi
-                                sleep 5
-                            done
-                            if [ $ISOK -eq 0 ]; then
-                                $VMMGR_PATH/VMMgr_Launch start $MEMBER
-                                PREC=${MEMBER%;*}
-                            else
-                                break;
-                            fi
-                        else
-                            sleep $WAIT
+            if [ "$(Db_IsEnabled_Group $VMMGR_DB_PATH $2)" == "1" ]; then
+                sudo systemctl start $2.target
+            else
+                MEMBERS=$(Db_Get_Group_Member $VMMGR_DB_PATH $2)                # Get Members
+                ORDER=""; WAIT=""; PREC=""
+                for MEMBER in $MEMBERS; do                                      # Ordering
+                    VMO=$(VM_Get_Order $MEMBER)
+                    [ "$VMO" ] || VMO=1000
+                    ORDER="$ORDER $VMO;$MEMBER"
+                done
+                for MEMBER in $ORDER; do
+                    if [ "$PREC" ]; then
+                        if [ "$PREC" == ${MEMBER%;*} ]; then                    # Same order value, we start
                             $VMMGR_PATH/VMMgr_Launch start $MEMBER
                             PREC=${MEMBER%;*}
+                        else
+                            WAIT=$(Get_Start_Wait ${MEMBER#*;})
+                            if [ "${WAIT^^}" == "YES" ]; then
+                                ISOK="1"; COUNT=0
+                                until [ $ISOK -eq 0 ]; do
+                                    systemctl -H "get 1rst IP" is-system-running 2>&1
+                                    ISOK=$?
+                                    COUNT=$(( COUNT + 1 ))
+                                    echo $COUNT
+                                    if [ $COUNT -gt 30 ]; then break; fi
+                                    sleep 5
+                                done
+                                if [ $ISOK -eq 0 ]; then
+                                    $VMMGR_PATH/VMMgr_Launch start $MEMBER
+                                    PREC=${MEMBER%;*}
+                                else
+                                    break;
+                                fi
+                            else
+                                sleep $WAIT
+                                $VMMGR_PATH/VMMgr_Launch start $MEMBER
+                                PREC=${MEMBER%;*}
+                            fi
                         fi
+                    else
+                        $VMMGR_PATH/VMMgr_Launch start $MEMBER                  # First VM
+                        PREC=${MEMBER%;*}
                     fi
-                else
-                    $VMMGR_PATH/VMMgr_Launch start $MEMBER                  # First VM
-                    PREC=${MEMBER%;*}
-                fi
-            done
-        ;;
+                done
+            ;;
         "stop")
             for MEMBER in $(Db_Get_Group_Member $VMMGR_DB_PATH $2); do
                 $VMMGR_PATH/VMMgr_Launch stop $MEMBER
