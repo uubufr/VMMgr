@@ -12,7 +12,7 @@
 #   Db_List_VMs: List all vm form db
 #   Db_Filter_VMs: List vm form db
 #   Db_isEnabled_VM: Check if VM is enabled
-#   Db_Enabled_VM: Mark VM as Enabled
+#   Db_Enable_VM: Mark VM as Enabled
 #   Db_Disable_VM: Mark VM as Disabled
 #   Db_Get_VM_Config: get VM config file
 #   Db_Set_IPPORT: Set IP and PORT for a service (spice, telnet or qmp)

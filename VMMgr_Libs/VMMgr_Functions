@@ -255,7 +255,7 @@ function Customize_Unit() {
     INGROUP=$(Db_Get_MemberOf $VMMGR_DB_PATH $1)
     if [ "$INGROUP" ]; then
         if [ "$(Db_IsEnabled_Group $VMMGR_DB_PATH $INGROUP)" == "1" ]; then
-            sed -i "s/%%WANTED%%/$GROUPNAME.target/g" $UNIT
+            sed -i "s/%%WANTED%%/$INGROUP.target/g" $UNIT
         fi
     fi
     sed -i "s/%%WANTED%%/VMMgr_.target/g" $UNIT
