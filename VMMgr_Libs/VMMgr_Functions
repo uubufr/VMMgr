@@ -724,10 +724,8 @@ function Manage_Group() {
                 if [ "$(sha1sum $VMMGR_DATA_PATH/UNITS/$2.target | awk '{print $1}')" == "$(sha1sum $UNITPATH | awk '{print $1}')" ]; then
                     echo "VM $2 already enabled"
                 else
-                    sudo systemctl disable $2.target
                     sudo cp $VMMGR_DATA_PATH/UNITS/$2.target /etc/systemd/system/$2.target
                     sudo systemctl daemon-reload
-                    sudo systemctl enable $2.target
                 fi
             else
                 sudo cp $VMMGR_DATA_PATH/UNITS/$2.target /etc/systemd/system/$2.target
