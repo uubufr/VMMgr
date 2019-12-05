@@ -261,8 +261,7 @@ function Customize_Unit() {
     sed -i "s/%%WANTED%%/VMMgr_.target/g" $UNIT
     AUDIO=$(grep "^QEMU_AUDIO_DRV=" $2 | cut -d= -f 2)
     sed -i "s/%%AUDIO%%/$AUDIO/g" $UNIT
-    PIDFILE="/run/VMMGR/$1"
-    sed -i "s/%%PIDFILE%%/$PIDFILE/g" $UNIT
+    sed -i "s|%%PIDFILE%%|/run/VMMGR/$1|g" $UNIT
 }
 
 # Function: Set_Remote_Viewer
