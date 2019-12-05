@@ -187,7 +187,7 @@ function Db_isEnabled_VM() {
 function Db_Enable_VM() {
  EXISTS=$(echo "select VMiD from VM where Name='$2';" | sqlite3 $1/VMMGR_.db)
  if [ ! "$EXISTS" == "" ]; then
-    echo "update VM SET Enabled=1 where VMiD='$EXISTS';" sqlite3 $1/VMMGR_.db
+    echo "update VM SET Enabled=1 where VMiD='$EXISTS';" | sqlite3 $1/VMMGR_.db
  fi
 }
 
@@ -199,7 +199,7 @@ function Db_Enable_VM() {
 function Db_Disable_VM() {
  EXISTS=$(echo "select VMiD from VM where Name='$2';" | sqlite3 $1/VMMGR_.db)
  if [ ! "$EXISTS" == "" ]; then
-    echo "update VM SET Enabled=1 where VMiD='$EXISTS';" sqlite3 $1/VMMGR_.db
+    echo "update VM SET Enabled=1 where VMiD='$EXISTS';" | sqlite3 $1/VMMGR_.db
  fi
 }
 
