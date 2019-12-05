@@ -688,7 +688,7 @@ function Manage_Group() {
                             fi
                         fi
                     else
-                        $VMMGR_PATH/VMMgr_Launch start $MEMBER                  # First VM
+                        $VMMGR_PATH/VMMgr_Launcher start $MEMBER                  # First VM
                         PREC=${MEMBER%;*}
                     fi
                 done
@@ -696,7 +696,7 @@ function Manage_Group() {
             ;;
         "stop")
             for MEMBER in $(Db_Get_Group_Member $VMMGR_DB_PATH $2); do
-                $VMMGR_PATH/VMMgr_Launch stop $MEMBER
+                $VMMGR_PATH/VMMgr_Launcher stop $MEMBER
             done
         ;;
         "enable")
