@@ -147,13 +147,13 @@ function Check_System() {
     modinfo openvswitch 2>/dev/null 1>/dev/null
     if [ $? -eq 0 ]; then
         sudo modprobe openvswitch
-        [ -d /var/run/openvswitch ] || sudo mkdir /var/run/openvswitch
+        [ -d /run/openvswitch ] || sudo mkdir /run/openvswitch
     fi
     
-    if [ ! -r "/var/run/VMMGR" ]; then
-        sudo mkdir /var/run/VMMGR 
-        sudo chown -R qemu:qemu /var/run/VMMGR
-        sudo chmod -R 770 /var/run/VMMGR
+    if [ ! -r "/run/VMMGR" ]; then
+        sudo mkdir /run/VMMGR 
+        sudo chown -R qemu:qemu /run/VMMGR
+        sudo chmod -R 770 /run/VMMGR
     fi
 }
 
@@ -308,7 +308,7 @@ function Set_Remote_Viewer() {
 function VMMGR_LOG() {
     VMNAME=$1
     VMPROC=""
-    if [ -r /var/run/VMMGR/VMMGR-$1 ]; then
+    if [ -r /run/VMMGR/VMMGR-$1 ]; then
         VMPROC=$(cat /proc/VMMGR/VMMGR-$1)
     fi
     VMMGRPROC=$$
@@ -428,10 +428,10 @@ function Start_VM_From_Config() {
     
     ### Ok! Now we can start VM ###
     if [ "$VMMGR_TEST" == "TEST" ]; then
-        echo "qemu-system-x86_64 -pidfile /var/run/VMMGR/$NAME -name $NAME $UUID $CORE $MEMORY $FIRMWARE ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS $SCSIDISKS -writeconfig $VMMGR_DATA_PATH/QEMU_CONFIGS/$NAME"
+        echo "qemu-system-x86_64 -pidfile /run/VMMGR/$NAME -name $NAME $UUID $CORE $MEMORY $FIRMWARE ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS $SCSIDISKS -writeconfig $VMMGR_DATA_PATH/QEMU_CONFIGS/$NAME"
     else
         WCONFIG="-writeconfig $VMMGR_DATA_PATH/QEMU_CONFIGS/$NAME"
-        qemu-system-x86_64 -pidfile /var/run/VMMGR/$NAME -name $NAME $UUID $CORE $MEMORY $FIRMWARE ${!QEMU_TEMPLATE} $NETARRAY ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $VIRTIODISKS $SCSIDISKS $WCONFIG
+        qemu-system-x86_64 -pidfile /run/VMMGR/$NAME -name $NAME $UUID $CORE $MEMORY $FIRMWARE ${!QEMU_TEMPLATE} $NETARRAY ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $VIRTIODISKS $SCSIDISKS $WCONFIG
         
         sleep 1
         
@@ -507,9 +507,9 @@ function Install_VMMGR() {
     # DB
     [ -r $(pwd)/VMMGR_.db ] && cp -r $(pwd)/VMMGR_.db /var/lib/VMMGR/DB/ && chown qemu:qemu /var/lib/VMMGR/DB/VMMGR_.db && chmod 0660 /var/lib/VMMGR/DB/VMMGR_.db
     
-    # /var/run/VMMGR
-    if [ ! -d /var/run/VMMGR ]; then
-        mkdir /var/run/VMMGR && chown -R qemu:qemu /var/run/VMMGR && chmod -R 770 /var/run/VMMGR
+    # /run/VMMGR
+    if [ ! -d /run/VMMGR ]; then
+        mkdir /run/VMMGR && chown -R qemu:qemu /run/VMMGR && chmod -R 770 /run/VMMGR
     fi
     
     # /var/log/VMMGR
@@ -564,9 +564,9 @@ function Uninstall_VMMGR() {
 # Args:
 #   $1: VM name
 function VM_Is_Running() {
-    if [ -r "/var/run/VMMGR/$1" ]; then
-        Result=$(ps -h -q $(cat /var/run/VMMGR/$1) -o pid)
-        if [ "${Result# }" == "$(cat /var/run/VMMGR/$1)" ]; then
+    if [ -r "/run/VMMGR/$1" ]; then
+        Result=$(ps -h -q $(cat /run/VMMGR/$1) -o pid)
+        if [ "${Result# }" == "$(cat /run/VMMGR/$1)" ]; then
             echo 1
         else
             echo 0
