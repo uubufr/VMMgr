@@ -10,6 +10,7 @@ WantedBy=%%WANTED%%
 [Service]
 Type=simple
 Environment="QEMU_AUDIO_DRV=%%AUDIO%%"
+PIDFile=%%PID
 User=qemu
 Group=qemu
 WorkingDirectory=/var/lib/VMMGR/
