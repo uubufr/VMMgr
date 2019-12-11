@@ -1,9 +1,9 @@
 #! /bin/bash
-#! /bin/bash
 #
 # script name: %%NAME%%
 # autor: Sylvain Girod ( uubu at gmx dot fr )
 # version: 0.05
+# Template: Linux-base
 # description: Template for Linux Base
 #               1 CPU
 #               1GB RAM

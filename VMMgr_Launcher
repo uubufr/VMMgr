@@ -245,7 +245,26 @@ case "$1" in
         ;;
     "ipmistatus")
         ;;
-    "define")
+    "db")
+        # bon là on gère les erreurs
+        # donc: on a plusieurs chose à faire:
+        # 1) la vm exist dans la db, mais on a pas la conf: on récupère le nom, la config, on récupère le nom du template, ou on demande un, on génère la conf
+            # db reconf <vmname>
+        # 2) la vm n'existe pas dans la db, mais on a une conf: on lit la config, on renseigne la db
+            # db todb <vmname>
+        # 3) export vm: on prend toutes les infos dans la vm, on export un sql
+            # db export <vmname>
+        # 4) import vm: on prend un sql, on importe toutes les infos dans la db
+            # db import <vmname>
+        # 5) list backup: on liste toutes les sauvegarde, classé par date, de la plus récente à la plus ancienne
+            # db backup list
+        # 6) restaure last backup: on revient à l'ancienne version de la db
+            # db restore last
+        # 7) restaure db: on restaure la version spécifique
+            # db restore <backup name>
+        # 8) purge backup: on doit récupérer la date des backup, tout ce qui est plus ancien que $DBMAXAGE on les vire, et on ne conserve que les $DBMAXBACKUP derniers backups
+            # db purge
+        VM_DB_Manage $2 $3
         ;;
     "connect")
         VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
