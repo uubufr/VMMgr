@@ -839,10 +839,10 @@ function VM_DB_Manage() {
             fi
         ;;
         "restore")
-            if [ "$3" == "last" ]; then
+            if [ "$2" == "last" ]; then
                 LATEST=$( ls $VMMGR_DATA_PATH/DB_BKP/*-DB.latest.bkp)
                 if [ -r "$LATEST" ]; then
-                    cp $LATEST $VMMGR_DATA_PATH/DB/VMMGR_.db
+                    cp $LATEST $VMMGR_DB_PATH/VMMGR_.db
                 else
                     echo "no latest backup found"
                 fi
