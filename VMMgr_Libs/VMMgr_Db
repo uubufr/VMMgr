@@ -427,3 +427,27 @@ function Db_IsEnabled_Group() {
 function Db_Get_MemberOf() {
     echo "select MemberOf from VM WHERE NAME='$2';" | sqlite3 $1/VMMGR_.db
 }
+
+function Db_Export_VM() {
+    RESULT=$(echo "select VMiD from VM WHERE NAME='$2';" | sqlite3 $1/VMMGR_.db)
+    if [ "$RESULT" ]; then
+        echo ".dump" | sqlite3 $1/VMMGR_.db | grep "INSERT" | grep "VALUES($RESULT" > $VMMGR_DATA_PATH/DB_BKP/VM_BACKUP-$2.sql
+        read $name $config $enabled $uuid $memberof <<<echo "select Name, Config, Enabled, UUID, MemberOf from VM where VMid=$RESULT" | sqlite3 $1/VMMGR_.db
+        echo "INSERT INTO VM ( Name, Config, Enabled, UUID, MemberOf) values ('$name', '$config','$enabled', '$uuid', '$memberof');" > $VMMGR_DATA_PATH/DB_BKP/VM_BACKUP-$2.sql
+        # de meme pour chaque table: on peut peut-être utiliser .dump pour les autres tables
+        # il faudra par contre remplacer chaque VMid par %%VMid%%
+        # une fois qu'on a tout exporté, l'import devra:
+            # lancer la première ligne
+            # récupérer le VMid
+            # Remplacer %%VMid
+            # lancer chaque ligne
+        # !!!!! attention, vérifier qu'une VM de même nom n'existe pas déjà à l'import
+        
+    fi
+}
+
+function Db_Import_VM() {
+
+# on doit supprimer le VMiD partout dans le fichier
+    .read $VMMGR_DATA_PATH/DB/BKP/VM_BACKUP-$2.sql
+}
