@@ -833,7 +833,7 @@ function VM_DB_Manage() {
             # db import <vmname>
         "backup")
             if [ "$2" == "list" ]; then
-                for BKPFILE in $(ls --hide=README.md -r /var/lib/VMMGR/DB_BKP/*.bkp); do
+                for BKPFILE in $(ls --hide=README.md -r $VMMGR_DATA_PATH/DB_BKP/*.bkp); do
                     echo $BKPFILE
                 done
             fi
