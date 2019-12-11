@@ -869,7 +869,7 @@ function VM_DB_Manage() {
                     fi
                 done
             fi
-            fi [ "$DBMAXBACKUP" ]; then
+            if [ "$DBMAXBACKUP" ]; then
                 BKPCOUNT=0
                 for BKPFILE in $(ls --hide=README.md -r $VMMGR_DATA_PATH/DB_BKP/*.bkp); do
                     BKPCOUNT=$(( $BKPCOUNT + 1 ))
