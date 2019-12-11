@@ -837,6 +837,7 @@ function VM_DB_Manage() {
                     echo $BKPFILE
                 done
             fi
+        ;;
         "restore")
             if [ "$3" == "last" ]; then
                 LATEST=$( ls $VMMGR_DATA_PATH/DB_BKP/*-DB.latest.bkp)
