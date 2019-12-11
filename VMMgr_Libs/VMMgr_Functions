@@ -804,7 +804,7 @@ function VM_Delete() {
 #   $1: operation
 #   $2: arg for $1
 function VM_DB_Manage() {
-    case $2 in
+    case $1 in
         "reconf") # $2 = <vm name>
             VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
             if [ ! "$VMCONF" ]; then
