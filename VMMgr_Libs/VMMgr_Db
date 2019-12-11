@@ -32,11 +32,7 @@
 #   Db_Enable_Group: Enable group
 #   Db_Disable_Group: Disable Group
 #   Db_IsEnabled_Group: Check if group is enabled
-
-###### SELECT NAME CONFIG FROM VM ORDER BY NAME DESC, CONFIG ASC;
-#### on a pas encore de lien entre une déclaration de Réseau et l'IP:PORT (on a systématiquement le même réseau, ou on peut en créer autant qu'on veut?)
-#### Avant d'assigner une IP, dig?
-
+#   Db_Get_MemberOf: Get Group of a vm
 
 # function: Set_Db
 # description: Check and initialize DB
