@@ -18,28 +18,8 @@
 # La Version 2.0 sera une version pleinement fonctionnelle
 #
 # STEP:
-# 0.06 on doit valider la fonction start: c'est à dire
-# 0.07 on doit valider une première VM fonctionnelle, on doit donc reparcourir toutes les options de base pour créer vrai VM.
-# 1. on doit valider que la vm existe dans la DB, pas d'initialisation de DB
-# 2. valider que la config existe, pas de création
-# 3. Créer les disques nécessaire, valider l'espace disque restant avant
-# 4. Démarrer la VM
-#
-# 0.07 On doit valider la fonction check: vérifier l'installation des paquets avec rpm. Si rpm n'existe pas, afficher simplement la liste des programmes à installer.
-#
-# 0.08 on doit valider la fonction de création manuelle de disques
-#
-# 0.09 fonction stop
-# 0.10 fontion delete
-# 0.11 fonction status/kill/reset
-# 0.12 funtion ipmi
-# 0.13 Spice/telnet/qmp
-# 0.14 vnc
-# 0.15 templates linux + Windows
-# 0.16 les units systemd (pour la vm, pour ipmi etc.)
-# 0.17 Gestion des groupes
+# 0.15-cdrom: add empty scsi cdrom
 
-# on charge les variables et paths nécessaire à l'exécution du script
 
 ### except install and uninstall, we never run as root:
 MYID=$(id -u)
@@ -145,14 +125,17 @@ case "$1" in
             if [ ! "$2" ]; then
                 echo "Usage $0 start <vm name>"
             elif [ "$3" == "regen" ]; then
+                VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
                 if [ ! -r $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF ]; then
                     echo "VM $2 not found"
                 else
+                echo "1"
                     Start_VM_From_Config $2 $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
                 fi
             elif [ -r /etc/systemd/system/$2 ]; then
                 systemctl start $2
             else
+            echo "2"
                 VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
                 if  [ "$VMCONF" == "" ]; then
                     echo "$2 not found in DB"
