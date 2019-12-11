@@ -447,9 +447,9 @@ function Start_VM_From_Config() {
         # Fix Duplicated ID compat_monitor0 #
         sed -i 's/compat_monitor0/compat_monitor1/g' $VMMGR_DATA_PATH/QEMU_CONFIGS/$NAME
         
-        # insert missing options, the following options are not included in the config:
+        # insert missing options, the following options are not included in qemu config:
         # pidfile, uuid, display, soundhw, daemonize, no-user-config, nodefaults
-        # we add uuid and display as comments
+        # we add uuid, soundhw and display as comments
         
         DISPLAY=${!QEMU_TEMPLATE}; DISPLAY=${DISPLAY##*-display}; DISPLAY=${DISPLAY%%-*}
         if [ "$DISPLAY" != "" ]; then ADDED="# display $DISPLAY\n"; fi
@@ -840,7 +840,7 @@ function VM_DB_Manage() {
         ;;
         "restore")
             if [ "$2" == "last" ]; then
-                LATEST=$( ls $VMMGR_DATA_PATH/DB_BKP/*-DB.latest.bkp)
+                LATEST=$( ls -1r $VMMGR_DATA_PATH/DB_BKP/*-DB.bkp | head -1)
                 if [ -r "$LATEST" ]; then
                     cp $LATEST $VMMGR_DB_PATH/VMMGR_.db
                 else
