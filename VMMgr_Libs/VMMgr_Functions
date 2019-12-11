@@ -754,3 +754,46 @@ function Manage_Group() {
         ;;
     esac
 }
+
+# Function: VM_Delete
+# Description: Delete a vm
+# Args:
+#   $1: VM Name
+#   $2: VM config file
+#   $3: =$3 from VMMgr_Launcher command
+function VM_Delete() {
+    for i in $(echo $3 | tr \- \  ); do
+        case $i in
+            "db")
+                Db_Delete_VM $VMMGR_DB_PATH $1
+            ;;
+            "conf")
+                rm $VMMGR_DATA_PATH/VM_CONFIGS/$2
+                rm $VMMGR_DATA_PATH/QEMU_CONFIGS/$1
+            ;;
+            "disks")
+                if [ ! -r $VMMGR_DATA_PATH/VM_CONFIGS/$2 ]; then
+                    echo "Missing Config, cannot find disks"
+                else
+                    . $VMMGR_DATA_PATH/VM_CONFIGS/$2
+                    if [ "$Virtio_Disk" ]; then
+                        export Virtio_Disk
+                        DisksList=$(Set_Disks $NAME 1)
+                        for Disk in $(echo $DisksList | tr \|  \  ); do
+                            rm $Disk
+                        done
+                        unset Virtio_Disk
+                    fi
+                    if [ "$Scsi_Disk" ]; then
+                        export Scsi_Disk
+                        DisksList=$(Set_SDisks $NAME)
+                        for Disk in $(echo $DisksList | tr \|  \  ); do
+                            rm $Disk
+                        done
+                        unset Scsi_Disk
+                    fi
+                fi
+            ;;
+        esac
+    done
+}

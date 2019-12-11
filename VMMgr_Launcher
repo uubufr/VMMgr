@@ -81,45 +81,35 @@ case "$1" in
             #   2) Declare VM in DB, copy template, and customize Vars
             if [ ! "$2" ] || [ ! "$3" ]; then
                 echo "Usage $0 <vm name> <template>"
-            else if [ ! -r $VMMGR_DATA_PATH/Templates/$3 ]; then
+            elif [ "$(echo $2 | grep "-")" ]; then
+                echo "Error, VM name contain '-' character, please use '_' or other char instead"
+            elif [ ! -r $VMMGR_DATA_PATH/Templates/$3 ]; then
                 echo "Error, template $VMMGR_DATA_PATH/Templates/$3 doesn't exists"
-                 else
-                    VMCONF=$(Check_Existing_VM $2)
-                    if [ "$VMCONF" == "" ]; then VMCONF="$2.conf"; fi
-                    if [ -r $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF ]; then 
-                        echo "Warning, config file $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF already exists"
-                    else
-                        cp $VMMGR_DATA_PATH/Templates/$3 $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
-                        Custom_VM_Config $2 $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
-                    fi
-                    GROUP=$(cat $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF | grep "^GROUP=" | cut -d\" -f2)
-                    VMID=$(Db_Create_VM $VMMGR_DB_PATH $2 $VMCONF $(cat /proc/sys/kernel/random/uuid) $GROUP)
-                    Db_Set_Group $VMMGR_DB_PATH $2 $GROUP
+            else
+                VMCONF=$(Check_Existing_VM $2)
+                if [ "$VMCONF" == "" ]; then VMCONF="$2.conf"; fi
+                if [ -r $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF ]; then 
+                    echo "Warning, config file $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF already exists"
+                else
+                    cp $VMMGR_DATA_PATH/Templates/$3 $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
+                    Custom_VM_Config $2 $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
                 fi
+                GROUP=$(cat $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF | grep "^GROUP=" | cut -d\" -f2)
+                VMID=$(Db_Create_VM $VMMGR_DB_PATH $2 $VMCONF $(cat /proc/sys/kernel/random/uuid) $GROUP)
+                Db_Set_Group $VMMGR_DB_PATH $2 $GROUP
             fi
         ;;
     "delete")
-            # Args:
-            #   $2: Vm Name
-            #   $3: 'config' <optional>
-            # Steps:
-            #   1) Check if VM exists in DB
-            #   2) Delete from DB
-            #   3) Check $3 to know optional delete: config-file and/or disks
-            # TODO: systemd files, besoin de disable avant????
-            if [ ! "$2" ]; then
-                echo "Usage $0 delete <vm name> [config|disks|conf-disks]"
+        if [ ! "$2" ]; then
+            echo "Usage $0 delete <vm name> [disks[-conf[-db]]]"
+        else
+            VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
+            if [ "$VMCONF" == "" ]; then
+                echo "VM $2 not found in DB $VMCONF"
             else
-                VMCONF=$(Check_Existing_VM $2)
-                if [ "$VMCONF" == "" ]; then
-                    echo "VM $2 not found in DB"
-                else
-                    Db_Delete_VM $VMMGR_DB_PATH $2
-                    if [ -r $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF ] && [ "$3" == "config" ]; then
-                        rm $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
-                    fi
-                fi
+                VM_Delete $2 $VMCONF $3
             fi
+        fi
         ;;
     "start")
             if [ ! "$2" ]; then
@@ -342,7 +332,7 @@ case "$1" in
         wintools: download Windows drivers and tools in your iso path (actually: $VMMGR_ISO_PATH)
         enable: Install unit systemd and enable
         disable: Disable unit systemd
-        delete: <db|conf|disks|all> delete VM
+        delete: [disks[-conf[-db]]] delete VM
         group: <list|start|stop|enable|disable> group management
         list <all|running|stopped|enabled|disabled> list vms
         ipmistart: start vm using ipmi

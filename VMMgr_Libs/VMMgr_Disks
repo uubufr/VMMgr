@@ -39,6 +39,7 @@ function Set_Pci_Bridge() {
 # Description: Get disk list, check if they already exists and if not, create it
 # Args:
 #   $1: Vm Name
+#   $2: "1" = only list, not create
 function Set_Disks() {
     . $VMMGR_DATA_PATH/DATA/VMMgr_VirtioDisk
     DisksList=""
@@ -125,9 +126,11 @@ function Set_Disks() {
                 IFS=-  read QN QS QV QT <<< $( echo ${DRIVENAME#Qemu-Virtio-Disk_})
                 QIMG=$QT\_IMG
                 if [ "${!QIMG}" == "" ]; then QIMG="SSDCOW_IMG"; fi         ## Missing Var for qemu_create
-                qemu-img create ${!QIMG} "$CPATH/$DRIVENAME" $DSIZE 2>/dev/null 1>/dev/null
-                sudo chown qemu:qemu "$CPATH/$DRIVENAME"
-                sudo chmod 660 "$CPATH/$DRIVENAME"
+                if [ "$2" != "1" ]; then
+                    qemu-img create ${!QIMG} "$CPATH/$DRIVENAME" $DSIZE 2>/dev/null 1>/dev/null
+                    sudo chown qemu:qemu "$CPATH/$DRIVENAME"
+                    sudo chmod 660 "$CPATH/$DRIVENAME"
+                fi
                 DisksList="$DisksList|$CPATH/$DRIVENAME"
             fi
         done
@@ -196,8 +199,7 @@ function Set_Virtio_Disks() {
 # Description: Get disk list, check if they already exists and if not, create it
 # Args:
 #   $1: VM Name
-#   $2: nb of disks
-#   $3: PATH
+#   $2: "1" = only list, not create
 # Note: Set_Disks and Set_SDisks should be merged
 function Set_SDisks() {
     DisksList=""
@@ -281,9 +283,11 @@ function Set_SDisks() {
                         ;;
                 esac
                 IFS=-  read QN QS QV <<< $( echo ${DRIVENAME#Qemu-Scsi-Disk_})
-                qemu-img create -f qcow2 -o cluster_size=32k "$CPATH/$DRIVENAME" $DSIZE 2>/dev/null 1>/dev/null
-                sudo chown qemu:qemu "$CPATH/$DRIVENAME"
-                sudo chmod 660 "$CPATH/$DRIVENAME"
+                if [ "$2" != "1" ]; then
+                    qemu-img create -f qcow2 -o cluster_size=32k "$CPATH/$DRIVENAME" $DSIZE 2>/dev/null 1>/dev/null
+                    sudo chown qemu:qemu "$CPATH/$DRIVENAME"
+                    sudo chmod 660 "$CPATH/$DRIVENAME"
+                fi
                 DisksList="$DisksList|$CPATH/$DRIVENAME"
             fi
         done
