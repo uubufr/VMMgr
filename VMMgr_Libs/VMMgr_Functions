@@ -820,9 +820,23 @@ function VM_DB_Manage() {
             fi
         ;;
         "todb")
+            #1. on a un fichier de conf, on le lit dans VM_CONFIG
+            if [ -r $VMMGR_DATA_PATH/VM_CONFIGS/$2 ]; then
+                VMCONF=$VMMGR_DATA_PATH/VM_CONFIGS/$2
+                VMTPL=$(cat $VMCONF | grep "^# Template Name: "); VMTPL=${VMTPL#\#Template Name: }
+                VMNAME=$(cat $VMCONF | grep "^NAME=" cut -d\" -f2);
+                VMGRP=$(cat $VMCONF | grep "^GROUP=" | cut -d\" -f2)
+                EXIST=$(Db_Get_VM_Config $VMMGR_DB_PATH $VMNAME)
+                if [ "$EXIST" ]; then
+                    echo "Error, VM already exists in db"
+                else
+                    VMID=$(Db_Create_VM $VMMGR_DB_PATH $VMNAME $(basename VMCONF) $(cat /proc/sys/kernel/random/uuid) $VMGRP
+                    Db_Set_Group $VMMGR_DB_PATH $VMNAME $VMGRP
+                fi
+            else
+                echo "error $VMMGR_DATA_PATH/VM_CONFIGS/$2 not found"
+            fi
         ;;
-        # 2) la vm n'existe pas dans la db, mais on a une conf: on lit la config, on renseigne la db
-            # db todb <vmname>
         "export")
             Db_Export_VM $VMMGR_DB_PATH $2
         ;;
