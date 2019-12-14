@@ -823,24 +823,27 @@ function VM_DB_Manage() {
             if [ -r $VMMGR_DATA_PATH/VM_CONFIGS/$2 ]; then
                 VMCONF="$VMMGR_DATA_PATH/VM_CONFIGS/$2"
                 VMTPL=$(cat $VMCONF | grep "^# Template Name: "); VMTPL=${VMTPL#\# Template Name: }
-                VMNAME=$(cat $VMCONF | grep "^NAME=" cut -d\" -f2);
+                VMNAME=$(cat $VMCONF | grep "^NAME=" | cut -d\" -f2);
                 VMGRP=$(cat $VMCONF | grep "^GROUP=" | cut -d\" -f2)
                 EXIST=$(Db_Get_VM_Config $VMMGR_DB_PATH $VMNAME)
                 if [ "$EXIST" ]; then
                     echo "Error, VM already exists in db"
                 else
-                    VMID=$(Db_Create_VM $VMMGR_DB_PATH $VMNAME $(basename VMCONF) $(cat /proc/sys/kernel/random/uuid) $VMGRP)
+                    VMID=$(Db_Create_VM $VMMGR_DB_PATH $VMNAME $(basename $VMCONF) $(cat /proc/sys/kernel/random/uuid) $VMGRP)
                     Db_Set_Group $VMMGR_DB_PATH $VMNAME $VMGRP
                 fi
             else
                 echo "error $VMMGR_DATA_PATH/VM_CONFIGS/$2 not found"
             fi
+            echo "VMCONF redefined into DB, please restart VM with 'regen' option to finish restore operation"
         ;;
         "export")
             Db_Export_VM $VMMGR_DB_PATH $2
+            echo "Warn: Import will never check if services IP:PORT are unique, you will have to check it manually"
         ;;
         "import")
             Db_Import_VM $VMMGR_DB_PATH $2
+            echo "Warn: Import don't check if services IP:PORT are unique, you must check it manually"
         ;;
         "backup")
             if [ "$2" == "list" ]; then
