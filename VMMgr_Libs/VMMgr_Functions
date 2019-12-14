@@ -820,9 +820,8 @@ function VM_DB_Manage() {
             fi
         ;;
         "todb")
-            #1. on a un fichier de conf, on le lit dans VM_CONFIG
             if [ -r $VMMGR_DATA_PATH/VM_CONFIGS/$2 ]; then
-                VMCONF=$VMMGR_DATA_PATH/VM_CONFIGS/$2
+                VMCONF="$VMMGR_DATA_PATH/VM_CONFIGS/$2"
                 VMTPL=$(cat $VMCONF | grep "^# Template Name: "); VMTPL=${VMTPL#\#Template Name: }
                 VMNAME=$(cat $VMCONF | grep "^NAME=" cut -d\" -f2);
                 VMGRP=$(cat $VMCONF | grep "^GROUP=" | cut -d\" -f2)
@@ -830,7 +829,7 @@ function VM_DB_Manage() {
                 if [ "$EXIST" ]; then
                     echo "Error, VM already exists in db"
                 else
-                    VMID=$(Db_Create_VM $VMMGR_DB_PATH $VMNAME $(basename VMCONF) $(cat /proc/sys/kernel/random/uuid) $VMGRP
+                    VMID=$(Db_Create_VM $VMMGR_DB_PATH $VMNAME $(basename VMCONF) $(cat /proc/sys/kernel/random/uuid) $VMGRP)
                     Db_Set_Group $VMMGR_DB_PATH $VMNAME $VMGRP
                 fi
             else
