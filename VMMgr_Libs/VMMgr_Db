@@ -444,8 +444,9 @@ function Db_Export_VM() {
             echo "$TABLE|$DATA" >> $BKPFILE
         done
         DATA=$(echo "SELECT SUBMAC, NETID FROM MAC WHERE VMiD='$RESULT';" | sqlite3 $1/VMMGR_.db)
-        if [ "$DATA" ]; then 
-        echo "MAC|$DATA" >> $BKPFILE
+        if [ "$DATA" ]; then
+            echo "MAC|$DATA" >> $BKPFILE
+        fi
     else
         echo "VM $2 not found in database"
     fi
