@@ -136,7 +136,7 @@ function Set_New_Port() {
         for PORT in $(seq $3 $4); do
             EXISTS=$(Db_Search_PORT $VMMGR_DB_PATH $2 $PORT)
             if [ "$EXISTS" == "" ]; then
-                EXISTS="undefined|"$(( PORT + 1 ))
+                EXISTS="undefined|"$PORT
                 break;
             fi
         done
