@@ -428,6 +428,11 @@ function Db_Get_MemberOf() {
     echo "select MemberOf from VM WHERE NAME='$2';" | sqlite3 $1/VMMGR_.db
 }
 
+# Function: Db_Export_VM
+# Description: Export VM
+# Args:
+#   $1: Db Path (parent dir)
+#   $2: VM name
 function Db_Export_VM() {
     BKPFILE="$VMMGR_DATA_PATH/VM_BKP/$2-$(date '+%Y-%m-%d_%H-%M-%S').bkp"
     RESULT=$(echo "select VMiD from VM WHERE NAME='$2';" | sqlite3 $1/VMMGR_.db)
