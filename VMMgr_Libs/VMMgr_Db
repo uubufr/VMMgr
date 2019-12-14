@@ -473,7 +473,7 @@ function Db_Import_VM() {
             for TABLE in $(echo "SPICE TELNET QMP VNC"); do
                 IFS=\| read -r TBL IP PORT IPVER NETWORK TYPE <<< $(cat "$2" | grep "^$TABLE|")
                 if [ "$TBL" ]; then
-                    echo "INSERT INTO $TABLE ( VMid, IP, PORT, IPVER, NETWORK, TYPE) values ('$RESULT', '$IP','$PORT', '$IPVER', '$NETWORK, '$TYPE');" | sqlite3 $1/VMMGR_.db
+                    echo "INSERT INTO $TABLE ( VMid, IP, PORT, IPVER, NETWORK, TYPE) values ('$RESULT', '$IP', '$PORT', '$IPVER', '$NETWORK', '$TYPE');" | sqlite3 $1/VMMGR_.db
                 fi
             done
             MACS=$(cat "$2" | grep "^MAC|")
