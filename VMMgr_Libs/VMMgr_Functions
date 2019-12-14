@@ -822,7 +822,7 @@ function VM_DB_Manage() {
         "todb")
             if [ -r $VMMGR_DATA_PATH/VM_CONFIGS/$2 ]; then
                 VMCONF="$VMMGR_DATA_PATH/VM_CONFIGS/$2"
-                VMTPL=$(cat $VMCONF | grep "^# Template Name: "); VMTPL=${VMTPL#\#Template Name: }
+                VMTPL=$(cat $VMCONF | grep "^# Template Name: "); VMTPL=${VMTPL#\# Template Name: }
                 VMNAME=$(cat $VMCONF | grep "^NAME=" cut -d\" -f2);
                 VMGRP=$(cat $VMCONF | grep "^GROUP=" | cut -d\" -f2)
                 EXIST=$(Db_Get_VM_Config $VMMGR_DB_PATH $VMNAME)

@@ -440,7 +440,7 @@ function Db_Export_VM() {
     if [ "$RESULT" ]; then
         echo "VM|"$(echo "SELECT Name, Config, Enabled, UUID, MemberOf FROM VM where VMiD='$RESULT';" | sqlite3 $1/VMMGR_.db) > $BKPFILE
         for TABLE in $(echo "SPICE TELNET QMP VNC"); do
-            DATA=$(echo "SELECT VMid, IP, PORT, IPVER, NETWORK, TYPE FROM $TABLE where VMiD='$RESULT';" | sqlite3 $1/VMMGR_.db)
+            DATA=$(echo "SELECT IP, PORT, IPVER, NETWORK, TYPE FROM $TABLE where VMiD='$RESULT';" | sqlite3 $1/VMMGR_.db)
             if [ "$DATA" ]; then
                 echo "$TABLE|$DATA" >> $BKPFILE
             fi
