@@ -334,6 +334,7 @@ case "$1" in
         delete: [disks[-conf[-db]]] delete VM
         group: <list|start|stop|enable|disable> group management
         list <all|running|stopped|enabled|disabled> list vms
+        db <reconf|todb|import|export|list|purge>
         ipmistart: start vm using ipmi
         ipmistop: stop vm using ipmi
         ipmistatus: get status via ipmi
