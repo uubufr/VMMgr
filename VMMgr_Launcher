@@ -119,13 +119,11 @@ case "$1" in
                 if [ ! -r $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF ]; then
                     echo "VM $2 not found"
                 else
-                echo "1"
                     Start_VM_From_Config $2 $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
                 fi
             elif [ -r /etc/systemd/system/$2 ]; then
                 systemctl start $2
             else
-            echo "2"
                 VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
                 if  [ "$VMCONF" == "" ]; then
                     echo "$2 not found in DB"
