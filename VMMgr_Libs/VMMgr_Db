@@ -441,7 +441,8 @@ function Db_Export_VM() {
         for TABLE in $(echo "SPICE TELNET QMP VNC"); do
             DATA=$(echo "SELECT VMid, IP, PORT, IPVER, NETWORK, TYPE FROM $TABLE where VMiD='$RESULT';" | sqlite3 $1/VMMGR_.db)
             if [ "$DATA" ]; then
-            echo "$TABLE|$DATA" >> $BKPFILE
+                echo "$TABLE|$DATA" >> $BKPFILE
+            fi
         done
         DATA=$(echo "SELECT SUBMAC, NETID FROM MAC WHERE VMiD='$RESULT';" | sqlite3 $1/VMMGR_.db)
         if [ "$DATA" ]; then
