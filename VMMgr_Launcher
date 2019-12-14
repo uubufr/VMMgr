@@ -354,3 +354,6 @@ if [ "$1" != "install" ]; then
         cp $VMMGR_DB_PATH/VMMGR_.db $VMMGR_DATA_PATH/DB_BKP/$(date '+%Y-%m-%d_%H-%M-%S')-DB.latest.bkp;
     fi
 fi
+
+### Recheck Perms ###
+chown -R qemu:qemu /var/lib/VMMGR && chmod -R 770 /var/lib/VMMGR
