@@ -357,4 +357,4 @@ if [ "$1" != "install" ]; then
 fi
 
 ### Recheck Perms ###
-sudo chown -R qemu:qemu /var/lib/VMMGR && chmod -R 770 /var/lib/VMMGR
+sudo chown -R qemu:qemu /var/lib/VMMGR && sudo chmod -R 770 /var/lib/VMMGR
