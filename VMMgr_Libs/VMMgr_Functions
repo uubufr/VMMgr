@@ -243,15 +243,17 @@ function Custom_VM_Config() {
 #   $1: VM Name
 #   $2: VM config path
 function Customize_Unit() {
-    AFTER=""; BEFORE=""
+    AFTER=""; BEFORE="", CONFLICT=""
     UNIT="$VMMGR_DATA_PATH/UNITS/$1.service"
     cp $VMMGR_DATA_PATH/UNITS/systemd-template.service $UNIT
     sed -i "s/%%NAME%%/$1/g" $UNIT
     BEFORE=$(grep "^BEFORE=" $2 | cut -d= -f 2)
     AFTER=$(grep "^AFTER=" $2 | cut -d= -f 2)
-    sed -i "s/%%AFTER%%/$AFTER/g" $UNIT
+    CONFLICT=$(grep "^CONFLICT=" $2 | -d= -f 2)
+    sed -i "s/%%AFTER%%/After=$AFTER/g" $UNIT
     sed -i "s/%%BEFORE%%/Before=$BEFORE/g" $UNIT
     sed -i "s|%%VMMGRPATH%%|$VMMGR_PATH/VMMgr_Launcher|g" $UNIT
+    sed -i "s|%%CONFLICT%%|Conflict=$CONFLICT/g" $UNIT
     INGROUP=$(Db_Get_MemberOf $VMMGR_DB_PATH $1)
     if [ "$INGROUP" ]; then
         if [ "$(Db_IsEnabled_Group $VMMGR_DB_PATH $INGROUP)" == "1" ]; then
@@ -649,8 +651,8 @@ function VM_Get_Order() {
 #   $1: VM Name
 function Get_Start_Wait() {
     VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $1)
-    VMCOND=$(cat $VMCONF | grep "^STARTWAIT=")
-    echo ${VMCOND#GROUP=}
+    VMCOND=$(cat $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF | grep "^STARTWAIT=")
+    echo ${VMCOND#STARTWAIT=}
 }
 
 # Function: Manage_Group
@@ -681,6 +683,8 @@ function Manage_Group() {
                     [ "$VMO" ] || VMO=1000
                     ORDER="$ORDER $VMO;$MEMBER"
                 done
+                ORDER=$(echo $ORDER | tr " " "\n" | sort | tr "\n" " " )
+                echo $ORDER
                 for MEMBER in $ORDER; do
                     if [ "$PREC" ]; then
                         if [ "$PREC" == ${MEMBER%;*} ]; then                    # Same order value, we start
@@ -819,7 +823,7 @@ function VM_DB_Manage() {
                 fi
             fi
         ;;
-        "todb")
+        "todb") # $2 = <config name>
             if [ -r $VMMGR_DATA_PATH/VM_CONFIGS/$2 ]; then
                 VMCONF="$VMMGR_DATA_PATH/VM_CONFIGS/$2"
                 VMTPL=$(cat $VMCONF | grep "^# Template Name: "); VMTPL=${VMTPL#\# Template Name: }
@@ -837,22 +841,22 @@ function VM_DB_Manage() {
             fi
             echo "VMCONF redefined into DB, please restart VM with 'regen' option to finish restore operation"
         ;;
-        "export")
+        "export") # $2 = <vm name>
             Db_Export_VM $VMMGR_DB_PATH $2
             echo "Warn: Import will never check if services IP:PORT are unique, you will have to check it manually"
         ;;
-        "import")
+        "import") # $2 = <full vm backup path>
             Db_Import_VM $VMMGR_DB_PATH $2
             echo "Warn: Import don't check if services IP:PORT are unique, you must check it manually"
         ;;
-        "backup")
+        "backup") # $2 = "list"
             if [ "$2" == "list" ]; then
                 for BKPFILE in $(ls --hide=README.md -r $VMMGR_DATA_PATH/DB_BKP/*.bkp); do
                     basename $BKPFILE
                 done
             fi
         ;;
-        "restore")
+        "restore") # $2 = 'last' or backup name (relative to $VMMGR_DATA_PATH/DB_BKP/
             if [ "$2" == "last" ]; then
                 LATEST=$( ls -1r $VMMGR_DATA_PATH/DB_BKP/*-DB.bkp | head -1)
                 if [ -r "$LATEST" ]; then
@@ -869,7 +873,7 @@ function VM_DB_Manage() {
                 fi
             fi
         ;;
-        "purge")
+        "purge") # no $2 args
             if [ "$DBMAXAGE" ]; then
                 for BKPFILE in $(ls --hide=README.md -r $VMMGR_DATA_PATH/DB_BKP/*DB.bkp); do
                 BKPNAME=$(basename $BKPFILE)
