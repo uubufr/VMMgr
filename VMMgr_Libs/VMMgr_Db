@@ -439,9 +439,9 @@ function Db_Export_VM() {
     if [ "$RESULT" ]; then
         echo "SELECT Name, Config, Enabled, UUID, MemberOf FROM VM where VMiD='$RESULT';" | sqlite3 $1/VMMGR_.db > $BKPFILE
         for TABLE in $(echo "SPICE TELNET QMP VNC"); do
-            echo "SELECT VMid, IP, PORT, IPVER, NETWORK, TYPE FROM $TABLE where VMiD='$RESULT';" | sqlite3 $1/VMMGR_.db > $BKPFILE
+            echo "SELECT VMid, IP, PORT, IPVER, NETWORK, TYPE FROM $TABLE where VMiD='$RESULT';" | sqlite3 $1/VMMGR_.db >> $BKPFILE
         done
-        echo "SELECT SUBMAC, NETID FROM MAC WHERE VMiD='$RESULT';" | sqlite3 $1/VMMGR_.db > $BKPFILE
+        echo "SELECT SUBMAC, NETID FROM MAC WHERE VMiD='$RESULT';" | sqlite3 $1/VMMGR_.db >> $BKPFILE
     else
         echo "VM $2 not found in database"
     fi
