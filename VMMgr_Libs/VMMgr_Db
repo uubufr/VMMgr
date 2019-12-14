@@ -459,7 +459,7 @@ function Db_Export_VM() {
 #   $1: Db Path (parent dir)
 #   $2: VM export file
 function Db_Import_VM() {
-    IFS=\| read -r VM NAME CONF ENABLED UUID GROUP <<< $(cat "$2" | grep "#^VM|")
+    IFS=\| read -r VM NAME CONF ENABLED UUID GROUP <<< $(cat "$2" | grep "^VM|")
     RESULT=$(echo "select VMiD from VM WHERE NAME='$NAME';" | sqlite3 $1/VMMGR_.db)
     if [ "$RESULT" ]; then
         echo "Error, VM with name $NAME already exists"
@@ -470,12 +470,12 @@ function Db_Import_VM() {
             echo "Error importing VM $VMANE"
         else
             for TABLE in $(echo "SPICE TELNET QMP VNC"); do
-                IFS=\| read -r TBL IP PORT IPVER NETWORK TYPE <<< $(cat "$2" | grep "^#$TABLE|")
+                IFS=\| read -r TBL IP PORT IPVER NETWORK TYPE <<< $(cat "$2" | grep "^$TABLE|")
                 if [ "$TBL" ]; then
                     echo "INSERT INTO $TABLE ( VMid, IP, PORT, IPVER, NETWORK, TYPE) values ('$RESULT', '$IP','$PORT', '$IPVER', '$NETWORK, '$TYPE');" | sqlite3 $1/VMMGR_.db
                 fi
             done
-            MACS=$(cat "$2" | grep "^#MAC|")
+            MACS=$(cat "$2" | grep "^MAC|")
             if [ "$MACS" ]; then
                 for MAC in $MACS; do
                     IFS=\| read -r TBL SUBMAC NETID <<< $(echo $MAC)
