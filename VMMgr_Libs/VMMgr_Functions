@@ -684,6 +684,7 @@ function Manage_Group() {
             esac
         ;;
         "start")
+            VMMGR_LOG "VMMGR" "GROUP" "Starting group $2"
             if [ "$(Db_IsEnabled_Group $VMMGR_DB_PATH $2)" == "1" ]; then
                 sudo systemctl start $2.target
             else

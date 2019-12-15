@@ -357,6 +357,7 @@ if [ "$1" != "install" ]; then
     fi
     if [ ! -r "$LATEST" ]; then
         cp $VMMGR_DB_PATH/VMMGR_.db $VMMGR_DATA_PATH/DB_BKP/$(date '+%Y-%m-%d_%H-%M-%S')-DB.latest.bkp;
+        VMMGR_LOG "VMMGR" "DB" "changed, new DB Backup."
     fi
 fi
 
