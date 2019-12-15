@@ -33,6 +33,8 @@
 #   Db_Disable_Group: Disable Group
 #   Db_IsEnabled_Group: Check if group is enabled
 #   Db_Get_MemberOf: Get Group of a vm
+#   Db_Export_VM: Export VM
+#   Db_Import_VM: Import VM
 
 # function: Set_Db
 # description: Check and initialize DB

@@ -19,7 +19,8 @@ CPU=CPUMAX
 SMPTPL=SMPMAX
 
 USEQEMUCONFIG="no"
-PERMANENTISO="https://dl.fedoraproject.org/pub/fedora/linux/releases/31/Workstation/x86_64/iso/Fedora-Workstation-Live-x86_64-31-1.9.iso"
+#PERMANENTISO="https://cdimage.debian.org/debian-cd/current-live/amd64/iso-hybrid/debian-live-10.2.0-amd64-kde.iso"
+PERMANENTISO="https://download.fedoraproject.org/pub/fedora/linux/releases/31/Spins/x86_64/iso/Fedora-KDE-Live-x86_64-31-1.9.iso"
 
 New_Network VM-Bridge "4|10.98.98.0|24" "10.98.98.10|10.98.98.100" 10.98.98.1
 SPICEIPVER=4
