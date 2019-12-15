@@ -1,42 +1,32 @@
 #! /bin/bash
 #
 # script name: %%NAME%%
+# Template Name: Live
 # autor: Sylvain Girod ( uubu at gmx dot fr )
 # version: 0.05
-# description: Template for Linux Base
-#               1 CPU
-#               1GB RAM
-#               1HD 8G - Virtio-Disk
-#               1 iface - Virtio-Net
-#               Telnet and Spice
-# ToDo: IPVER=4, VNC=off, qmp=off
+# description: Template for Live system
 GROUP=""
 NAME="%%NAME%%"         # Unique Name
+
+CPU=CPUHOST
+SMPTPL=SMPMAX
 MEM="2"                 # Initial Mem Size, in GB
 MAXMEM="2"              # OPTIONAL: Max Allowed mem (defaut: $MEM * 2)
-BIOSTYPE="SECURE"
-CPU=CPUMAX
-SMPTPL=SMPMAX
+BIOSTYPE="BIOS"
+
 
 USEQEMUCONFIG="no"
 #PERMANENTISO="https://cdimage.debian.org/debian-cd/current-live/amd64/iso-hybrid/debian-live-10.2.0-amd64-kde.iso"
 PERMANENTISO="https://download.fedoraproject.org/pub/fedora/linux/releases/31/Spins/x86_64/iso/Fedora-KDE-Live-x86_64-31-1.9.iso"
 
 New_Network VM-Bridge "4|10.98.98.0|24" "10.98.98.10|10.98.98.100" 10.98.98.1
-SPICEIPVER=4
-SPICEMODE=plaintext
-SPICE=on
-SPICEIP=VM-Bridge
-SPICETYPE=bridge
-SPICETPL=SPICECLEAR
-
-TELNETIPVER=4
 TELNET=on
 TELNETIP=VM-Bridge
 TELNETTYPE=bridge
 
-VNC=off
-QMP=off
+VNC=on
+VNCIP=VM-Bridge
+VNCTYPE=bridge
 
 NETWORKDEVICE="VM-Bridge|1"
 
