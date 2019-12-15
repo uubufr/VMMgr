@@ -351,13 +351,13 @@ function Set_Service_Listen() {
          ip -$2 -br address show | grep $1 2>/dev/null 1>/dev/null
         if [ $? -eq 0 ]; then                                                       # IP exists on a netdev, returning
             if [ "$6" == "new" ]; then
-                DBSVC=$(Db_Get_SVC $VMMGR_DB_PATH $1 $2)
+                DBSVC=$(Db_Get_SVC $VMMGR_DB_PATH $4 $5)
                 if [ "$DBSVC" != "" ]; then
                     IFS=\| read -r VMID IP PORT IPVER NETWORK TYPE <<< $(echo "$DBSVC")
                     VMMGR_LOG $4 "$5" "port=$PORT"
                 else
                     PORT=$(Set_Port_Listen $4 $5)                                   # Generate new port
-                    VMMGR_LOG $4 "2CREATE" "New port for $5: $PORT"
+                    VMMGR_LOG $4 "CREATE" "New port for $5: $PORT"
                 fi
             else
                 PORT=$6
@@ -365,7 +365,7 @@ function Set_Service_Listen() {
             echo "$1|$PORT"
         fi
     else                                                                            # Not an IP, assuming iface name and using DB
-        DBSVC=$(Db_Get_SVC $VMMGR_DB_PATH $1 $2)
+        DBSVC=$(Db_Get_SVC $VMMGR_DB_PATH $4 $5)
         if [ "$DBSVC" != "" ]; then
             IFS=\| read -r VMID IP IPPORT IPVER NETWORK TYPE <<< $(echo "$DBSVC")
         fi
@@ -433,18 +433,20 @@ function Set_Service_Listen() {
                     fi
                 fi
                 if [ "$6" == "new" ]; then
-                    DBSVC=$(Db_Get_SVC $VMMGR_DB_PATH $1 $2)
+                    DBSVC=$(Db_Get_SVC $VMMGR_DB_PATH $4 $5)
                     if [ "$DBSVC" != "" ]; then
                         IFS=\| read -r VMID IP PORT IPVER NETWORK TYPE <<< $(echo "$DBSVC")
                         VMMGR_LOG $4 "$5" "port=$PORT"
                     else
                         PORT=$(Set_Port_Listen $4 $5)                                   # Generate new port
-                        VMMGR_LOG $4 "1CREATE" "New port for $5: $PORT"
+                        VMMGR_LOG $4 "CREATE" "New port for $5: $PORT"
                     fi
                 else
                     PORT=$6
                 fi
-                Db_Set_SVC $VMMGR_DB_PATH $4 $5 $IP $PORT $2 $1 $3            # Adding to DB
+                if [ "$DBSVC" == "" ]; then
+                    Db_Set_SVC $VMMGR_DB_PATH $4 $5 $IP $PORT $2 $1 $3            # Adding to DB
+                fi
                 echo "$IP|$PORT"
             fi
         fi
