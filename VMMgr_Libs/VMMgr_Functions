@@ -319,7 +319,7 @@ function Set_Remote_Viewer() {
 function VMMGR_LOG() {
     VMNAME=$1
     VMPROC=""
-    if [ -r /run/VMMGR/VMMGR-$1 ]; then
+    if [ -f /run/VMMGR/$1 ]; then
         VMPROC=$(sudo cat /run/VMMGR/$1)
     fi
     VMMGRPROC=$$
