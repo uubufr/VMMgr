@@ -357,11 +357,11 @@ function Start_VM_From_Config() {
     . $VMMGR_DATA_PATH/DATA/VMMgr_Spice
     . $2
     if [ "$SPICE" == "on" ]; then
-        VMMGR_LOG "$1" "SETTING" "Spice remote access"
         IPPORT=$(Set_Service_Listen $SPICEIP $SPICEIPVER $SPICETYPE $NAME spice $SPICEPORT)
         SPICEIP=${IPPORT%|*}; SPICEPORT=${IPPORT#*|}
         . $VMMGR_DATA_PATH/DATA/VMMgr_Spice
         Set_Remote_Viewer spice $SPICETPL $NAME $IPPORT $SPICEPWD
+        VMMGR_LOG "$1" "SETTING" "Spice remote access: ${!SPICETPL}"
     else
         SPICETPL=TPLNULL
     fi
@@ -391,22 +391,21 @@ function Start_VM_From_Config() {
     
     ### QMP MONITOR ###
     if [ "$QMP" == "on" ]; then
-        VMMGR_LOG "$1" "SETTING" "QMP monitor"
         IPPORT=$(Set_Service_Listen $QMPIP $QMPIPVER $QMPTYPE $NAME qmp $QMPPORT)
         QMPTPL="-chardev socket,id=qmp01,host=$(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}'),port=${IPPORT#*|},server,nowait -mon chardev=qmp01,mode=control,pretty=on"
+        VMMGR_LOG "$1" "SETTING" "QMP monitor: $QMPTPL"
     else
         QMPTPL=""
     fi
 
     ### Virtio NETWORK ###
-    VMMGR_LOG "$1" "SETTING" "Networks interfaces"
     . $VMMGR_DATA_PATH/DATA/VMMgr_VirtioNet
-    
     declare -i NUMDEV=0
     for NET in $(echo $NETWORKDEVICE); do
         NETARRAY="$NETARRAY $(Set_NetDev $NAME ${NET%|*} ${NET#*|} "$NETDEV" "$DEVICE" $NUMDEV)"
         NUMDEV=$(( $NUMDEV + ${NET#*|} ))
     done
+    VMMGR_LOG "$1" "SETTING" "Networks interfaces: $NETARRAY"
     
     ### Virtio Disks ###
     if [ "$Virtio_Disk" ]; then
@@ -436,7 +435,6 @@ function Start_VM_From_Config() {
     SETUPSECUREBOOT=0
     if [ "$BIOSTYPE" == "BIOS" ]; then
         FIRMWARE=$BIOS
-        echo "BIOS=$FIRMWARE"
     elif [ "$BIOSTYPE" == "UEFI" ]; then
        FIRMWARE=$(Set_UEFI $NAME)
     elif [ "$BIOSTYPE" == "SECURE" ]; then
@@ -979,6 +977,6 @@ function set_DNS() {
         fi
     fi
     if [ "${NSUPDATE^^}" == "YES" ]; then
-        echo "not implemented, pleas update manually: $3 $1"
+        echo "not implemented, please update manually: $3 $1"
     fi
 }
