@@ -193,7 +193,7 @@ case "$1" in
         fi
         ;;
     "group")
-            Manage_Group $2 $3
+            Manage_Group $2 $3 $4
         ;;
     "status")
          VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
