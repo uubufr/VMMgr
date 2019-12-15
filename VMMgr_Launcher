@@ -157,6 +157,7 @@ case "$1" in
             else
                 sudo systemctl disable $2
                 sudo cp $VMMGR_DATA_PATH/UNITS/$2.service /etc/systemd/system/$2.service
+                sudo chmod 744 /etc/systemd/system/$2.service
                 sudo systemctl daemon-reload
             fi
         else

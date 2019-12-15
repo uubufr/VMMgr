@@ -249,11 +249,11 @@ function Customize_Unit() {
     sed -i "s/%%NAME%%/$1/g" $UNIT
     BEFORE=$(grep "^BEFORE=" $2 | cut -d= -f 2)
     AFTER=$(grep "^AFTER=" $2 | cut -d= -f 2)
-    CONFLICT=$(grep "^CONFLICT=" $2 | -d= -f 2)
-    sed -i "s/%%AFTER%%/After=$AFTER/g" $UNIT
+    CONFLICT=$(grep "^CONFLICT=" $2 | cut -d= -f 2)
+    sed -i "s/%%AFTER%%/$AFTER/g" $UNIT
     sed -i "s/%%BEFORE%%/Before=$BEFORE/g" $UNIT
     sed -i "s|%%VMMGRPATH%%|$VMMGR_PATH/VMMgr_Launcher|g" $UNIT
-    sed -i "s|%%CONFLICT%%|Conflict=$CONFLICT/g" $UNIT
+    sed -i "s/%%CONFLICT%%/Conflict=$CONFLICT/g" $UNIT
     INGROUP=$(Db_Get_MemberOf $VMMGR_DB_PATH $1)
     if [ "$INGROUP" ]; then
         if [ "$(Db_IsEnabled_Group $VMMGR_DB_PATH $INGROUP)" == "1" ]; then
@@ -575,9 +575,9 @@ function Uninstall_VMMGR() {
 # Args:
 #   $1: VM name
 function VM_Is_Running() {
-    if [ -r "/run/VMMGR/$1" ]; then
-        Result=$(ps -h -q $(cat /run/VMMGR/$1) -o pid)
-        if [ "${Result# }" == "$(cat /run/VMMGR/$1)" ]; then
+    if [ -f "/run/VMMGR/$1" ]; then
+        Result=$(ps -h -q $(sudo cat /run/VMMGR/$1) -o pid)
+        if [ "${Result# }" == "$(sudo cat /run/VMMGR/$1)" ]; then
             echo 1
         else
             echo 0
@@ -605,8 +605,7 @@ function List_All_VM() {
                     if [ $? -eq 0 ]; then
                        esys="enabled"
                     fi
-                    Running=$(VM_Is_Running $VM)
-                    if [ "$Running" == 1 ]; then
+                    if [ "$(VM_Is_Running $VM)" == 1 ]; then
                       isrun="running"
                     fi
                     echo "$VM: $edb(DB), $esys(systemd): $isrun"
