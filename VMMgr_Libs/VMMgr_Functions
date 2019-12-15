@@ -325,7 +325,7 @@ function VMMGR_LOG() {
     VMMGRPROC=$$
     CDATE=$(date '+%A %d-%m-%Y %T')
     
-    if [ "$VMNAME" == "VMMGR" ] || [ ! "$VMPROC" ]; then
+    if [ "$VMNAME" == "VMMGR" ] || [ "$VMPROC" == "" ]; then
         echo "$CDATE VMMgr: [$2] pid=$VMMGRPROC msg=$3" >> /var/log/VMMgr/VMMgr.log
     else
         [ -w /var/log/VMMgr/$VMNAME-log ] ||  touch /var/log/VMMgr/$VMNAME-log
