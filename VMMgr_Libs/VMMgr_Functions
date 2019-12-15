@@ -320,7 +320,7 @@ function VMMGR_LOG() {
     VMNAME=$1
     VMPROC=""
     if [ -r /run/VMMGR/VMMGR-$1 ]; then
-        VMPROC=$(cat /run/VMMGR/$1)
+        VMPROC=$(sudo cat /run/VMMGR/$1)
     fi
     VMMGRPROC=$$
     CDATE=$(date '+%A %d-%m-%Y %T')
