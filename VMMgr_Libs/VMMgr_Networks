@@ -353,14 +353,10 @@ function Set_Service_Listen() {
             if [ "$6" == "new" ]; then
                 DBSVC=$(Db_Get_SVC $VMMGR_DB_PATH $1 $2)
                 if [ "$DBSVC" != "" ]; then
-                    IFS=\| read -r VMID IP IPPORT IPVER NETWORK TYPE <<< $(echo "$DBSVC")
-                    if [ "$IPPORT" ]; then
-                        PORT=$IPPORT
-                    else
-                        PORT=$(Set_Port_Listen $4 $5)
-                    fi
+                    IFS=\| read -r VMID IP PORT IPVER NETWORK TYPE <<< $(echo "$DBSVC")
                 else
                     PORT=$(Set_Port_Listen $4 $5)                                   # Generate new port
+                    VMMGR_LOG $4 "CREATE" "New port for $5: $PORT"
                 fi
             else
                 PORT=$6
