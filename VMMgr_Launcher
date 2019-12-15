@@ -136,8 +136,8 @@ case "$1" in
                         if [ "$SOUND" ]; then ADDED="$ADDED -soundhw $SOUND "; fi
                         CPU=$(grep "^# cpu " $VMMGR_DATA_PATH/QEMU_CONFIGS/$2 | awk '{print $3}' )
                         if [ "$CPU" ]; then ADDED="$ADDED -cpu $CPU "; fi
-                        VMMGR_LOG "VMMGR" "START" "Starting $1 using qemu-config"
-                        VMMGR_LOG "$1" "START" "Starting $1 using qemu config"
+                        VMMGR_LOG "VMMGR" "START" "Starting $2 using qemu-config"
+                        VMMGR_LOG "$1" "START" "Starting $2 using qemu config"
                         qemu-system-x86_64 -daemonize -pidfile /run/VMMGR/$NAME --uuid $(Get_Db_UUID $VMMGR_DB_PATH $2) $ADDED -no-user-config -nodefaults -readconfig $VMMGR_DATA_PATH/QEMU_CONFIGS/$2
                     else
                          if [ ! -r $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF ]; then
