@@ -577,7 +577,7 @@ function Uninstall_VMMGR() {
 function VM_Is_Running() {
     if [ -f "/run/VMMGR/$1" ]; then
         Result=$(ps -h -q $(sudo cat /run/VMMGR/$1) -o pid)
-        if [ "${Result# }" == "$(sudo cat /run/VMMGR/$1)" ]; then
+        if [ "${Result##* }" == "$(sudo cat /run/VMMGR/$1)" ]; then
             echo 1
         else
             echo 0
