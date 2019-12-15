@@ -15,9 +15,11 @@ NAME="%%NAME%%"         # Unique Name
 MEM="2"                 # Initial Mem Size, in GB
 MAXMEM="2"              # OPTIONAL: Max Allowed mem (defaut: $MEM * 2)
 BIOSTYPE="SECURE"
+CPU=CPUMAX
+SMPTPL=SMPMAX
 
 USEQEMUCONFIG="no"
-PERMANENTISO="Fedora-Workstation-Live-x86_64-31-1.9.iso"
+PERMANENTISO="https://dl.fedoraproject.org/pub/fedora/linux/releases/31/Workstation/x86_64/iso/Fedora-Workstation-Live-x86_64-31-1.9.iso"
 
 New_Network VM-Bridge "4|10.98.98.0|24" "10.98.98.10|10.98.98.100" 10.98.98.1
 SPICEIPVER=4

@@ -287,6 +287,9 @@ case "$1" in
                         elif [ -f "$VMMGR_ISO_PATH/$3" ]; then
                             ISO="$VMMGR_ISO_PATH/$3"
                         fi
+                        if [ "${3#http}" != $3 ]; then
+                            ISO=$3
+                        fi
                     ;;
                 esac
                 . $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
