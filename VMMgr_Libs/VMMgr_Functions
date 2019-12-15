@@ -368,16 +368,15 @@ function Start_VM_From_Config() {
     
     ### TELNET MONITOR ###
     if [ "$TELNET" == "on" ]; then
-        VMMGR_LOG "$1" "SETTING" "telnet monitor"
         IPPORT=$(Set_Service_Listen $TELNETIP $TELNETIPVER $TELNETTYPE $NAME telnet $TELNETPORT)
         TELNETTPL="-monitor telnet:$(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}'):${IPPORT#*|},server,nowait"
+        VMMGR_LOG "$1" "SETTING" "telnet monitor: $TELNETTPL"
     else
         TELNETTPL=""
     fi
 
     ### VNC ###
     if [ "$VNC" == "on" ]; then
-        VMMGR_LOG "$1" "SETTING" "VNC remote access"
         . $VMMGR_DATA_PATH/DATA/VMMgr_VNC
         . $2
         IPPORT=$(Set_Service_Listen $VNCIP $VNCIPVER $VNCTYPE $NAME vnc $VNCPORT)
@@ -385,6 +384,7 @@ function Start_VM_From_Config() {
         . $VMMGR_DATA_PATH/DATA/VMMgr_VNC
         echo "Remote Viewer with x509 do not work, please use another vnc viewer like Remina"
         Set_Remote_Viewer vnc $VNCTPL $NAME $IPPORT $VNCPWD
+        VMMGR_LOG "$1" "SETTING" "VNC remote access: ${!VNCTPL}"
     else
         VNCTPL=TPLNULL
     fi
@@ -434,7 +434,6 @@ function Start_VM_From_Config() {
     
     ### BIOS/UEFI
     SETUPSECUREBOOT=0
-    VMMGR_LOG "$1" "SETTING" "BIOS"
     if [ "$BIOSTYPE" == "BIOS" ]; then
         FIRMWARE=$BIOS
         echo "BIOS=$FIRMWARE"
@@ -444,9 +443,10 @@ function Start_VM_From_Config() {
         [ ! -d $VMMGR_DATA_PATH/UEFI/$NAME/ ] && SETUPSECUREBOOT="1"
         FIRMWARE=$(Set_UEFI $NAME on)
     fi
+    VMMGR_LOG "$1" "SETTING" "BIOS: $FIRMWARE"
     
-    VMMGR_LOG "$1" "SETTING" "new uuid"
     UUID="-uuid "$(Get_Db_UUID $VMMGR_DB_PATH $NAME)
+    VMMGR_LOG "$1" "SETTING" "new $UUID"
     
     ### Ok! Now we can start VM ###
     if [ "$VMMGR_TEST" == "TEST" ]; then
