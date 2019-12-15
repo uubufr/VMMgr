@@ -490,6 +490,12 @@ function Start_VM_From_Config() {
         if [ "$INSERTDVD" ]; then
              $VMMGR_PATH/VMMgr_Launcher load $NAME $INSERTDVD reset
              sed -i -e 's/\(^INSTALLISO=.*$\)/#\1/' $2
+        else
+            INSERTDVD=$(cat $2 | grep '^PERMANENTISO' | cut -d= -f2 | tr -d \" )
+            if [ "$INSERTDVD" ]; then
+                $VMMGR_PATH/VMMgr_Launcher load $NAME $INSERTDVD reset
+                sed -i -e 's/\(^INSTALLISO=.*$\)/#\1/' $2
+            fi
         fi
     fi
 }
@@ -654,6 +660,12 @@ function Get_Start_Wait() {
     echo ${VMCOND#STARTWAIT=}
 }
 
+function Get_Stop_Wait() {
+    VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $1)
+    VMCOND=$(cat $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF | grep "^STOPWAIT=")
+    echo ${VMCOND#STOPWAIT=}
+}
+
 # Function: Manage_Group
 # Description: Dispatcher for group management
 # Args:
@@ -694,7 +706,7 @@ function Manage_Group() {
                             if [ "${WAIT^^}" == "YES" ]; then
                                 ISOK="1"; COUNT=0
                                 until [ $ISOK -eq 0 ]; do
-                                    systemctl -H "get 1rst IP" is-system-running 2>&1
+                                    systemctl -H "${MEMBER#*;}" is-system-running 2>&1
                                     ISOK=$?
                                     COUNT=$(( COUNT + 1 ))
                                     echo $COUNT
@@ -721,9 +733,24 @@ function Manage_Group() {
             fi
             ;;
         "stop")
-            # on doit gérer le target et systemd?
+            COUNT=0; PREC=""
             for MEMBER in $(Db_Get_Group_Member $VMMGR_DB_PATH $2); do
-                $VMMGR_PATH/VMMgr_Launcher stop $MEMBER
+                if [ "$(Get_Stop_Wait $MEMBER)" == "1" ]; then
+                    COUNT=0
+                    if [ "$PREC" ]; then
+                        while [ "$(VM_Is_Running $PREC)" == "1" ]; do
+                            COUNT=$(( $COUNT + 1 ))
+                            if [ $COUNT -gt 120 ]; then break; fi
+                            sleep 1
+                        done
+                    fi
+                fi
+                if [ $COUNT -le 120 ]; then
+                    $VMMGR_PATH/VMMgr_Launcher stop $MEMBER
+                    PREC=$MEMBER
+                else
+                    echo "An error occur, $PREC don't stopped after 120s, cannot stop $MEMBER"
+                fi
             done
         ;;
         "enable")
