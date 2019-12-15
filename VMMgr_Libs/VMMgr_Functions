@@ -253,7 +253,7 @@ function Customize_Unit() {
     sed -i "s/%%AFTER%%/$AFTER/g" $UNIT
     sed -i "s/%%BEFORE%%/Before=$BEFORE/g" $UNIT
     sed -i "s|%%VMMGRPATH%%|$VMMGR_PATH/VMMgr_Launcher|g" $UNIT
-    sed -i "s/%%CONFLICT%%/Conflict=$CONFLICT/g" $UNIT
+    sed -i "s/%%CONFLICT%%/Conflicts=$CONFLICT/g" $UNIT
     INGROUP=$(Db_Get_MemberOf $VMMGR_DB_PATH $1)
     if [ "$INGROUP" ]; then
         if [ "$(Db_IsEnabled_Group $VMMGR_DB_PATH $INGROUP)" == "1" ]; then
