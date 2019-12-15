@@ -357,7 +357,7 @@ function Set_Service_Listen() {
                     VMMGR_LOG $4 "$5" "port=$PORT"
                 else
                     PORT=$(Set_Port_Listen $4 $5)                                   # Generate new port
-                    VMMGR_LOG $4 "CREATE" "New port for $5: $PORT"
+                    VMMGR_LOG $4 "2CREATE" "New port for $5: $PORT"
                 fi
             else
                 PORT=$6
@@ -439,7 +439,7 @@ function Set_Service_Listen() {
                         VMMGR_LOG $4 "$5" "port=$PORT"
                     else
                         PORT=$(Set_Port_Listen $4 $5)                                   # Generate new port
-                        VMMGR_LOG $4 "CREATE" "New port for $5: $PORT"
+                        VMMGR_LOG $4 "1CREATE" "New port for $5: $PORT"
                     fi
                 else
                     PORT=$6
