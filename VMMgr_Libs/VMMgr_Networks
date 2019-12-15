@@ -323,6 +323,7 @@ function New_Network() {
         ip -br address show type bridge $1 | grep $4 2>/dev/null 1>/dev/null
         if [ $? -ne 0 ]; then
             Set_Iface_Net $4 $DBPFX $1
+            set_DNS $1 "add" $4
         fi
     fi
 }
