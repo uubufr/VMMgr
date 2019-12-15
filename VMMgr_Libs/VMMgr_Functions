@@ -659,6 +659,8 @@ function List_All_VM() {
     esac
 }
 
+# Function VM_Get_Order
+# Description: get ORDER var from vmconfig
 # Args:
 #   $1: VM name
 function VM_Get_Order() {
@@ -666,6 +668,9 @@ function VM_Get_Order() {
     VMORDER=$(cat $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF | grep "^ORDER=")
     echo ${VMORDER#ORDER=}
 }
+
+# Function Get_Start_Wait
+# Description: get STARTWAIT var from vmconfig
 # Args:
 #   $1: VM Name
 function Get_Start_Wait() {
@@ -674,6 +679,10 @@ function Get_Start_Wait() {
     echo ${VMCOND#STARTWAIT=}
 }
 
+# Function Get_Stop_Wait
+# Description: get STOPWAIT var from vmconfig
+# Args:
+#   $1: VM Name
 function Get_Stop_Wait() {
     VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $1)
     VMCOND=$(cat $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF | grep "^STOPWAIT=")
@@ -939,4 +948,35 @@ function VM_DB_Manage() {
             fi
         ;;
     esac
+}
+
+# Function set_DNS()
+# Description: register vm name with IP
+# Args:
+#   $1: Name: can be vm name, a bridge name, or any arbitrary name
+#   $2: action (add|remove)
+#   $3: IP
+function set_DNS() {
+    # 1) on a 2 variables:
+    #   DNSUPDATE : il faut qu'on fasse un dns update. on va pas l'implémenter pour le moment
+    #   HOSTS: on doit créer une entrée dans /etc/hosts. Prévoir que la fonction delete devra l'enlever.
+    # on doit savoir quoi inscrire: quel service? on va avoir un problème si on doit enregistrer telnet et spice avec 2 ip différentes. donc on doit penser à ça
+    if [ "${HOSTS^^}" == "YES" ]; then
+        ENTRY="$3 $2"
+        if [ "$(egrep "^$ENTRY$" /etc/hosts)" ]; then
+            EXIST=1
+        else
+            EXIST=0
+        fi
+        
+        if [ "$2" == "add" ] && [ $EXIST -eq 0 ]; then
+            sudo echo $ENTRY >> /etc/hosts
+        fi
+        if [ "$2" == "remove" ] && [ $EXIST -eq 1 ]; then
+            sed -i -e "s/^$ENTRY$//" /etc/hosts
+        fi
+    fi
+    if [ "${NSUPDATE^^}" == "YES" ]; then
+        echo "not implemented, pleas update manually: $3 $2"
+    fi
 }
