@@ -324,8 +324,6 @@ function VMMGR_LOG() {
     fi
     VMMGRPROC=$$
     CDATE=$(date '+%A %d-%m-%Y %T')
-    echo $VMNAME
-    echo $VMPROC
     if [ "$VMNAME" == "VMMGR" ] || [ "$VMPROC" == "" ]; then
         echo "$CDATE VMMgr: [$2] pid=$VMMGRPROC msg=$3" >> /var/log/VMMgr/VMMgr.log
     else
@@ -342,8 +340,8 @@ function VMMGR_LOG() {
 #   $2: VM config path
 function Start_VM_From_Config() {
     echo "starting $1"
-    VMMGR_LOG "VMMGR" "START" "Starting $1"
-    VMMGR_LOG "$1" "START" "Starting $1"
+    VMMGR_LOG "VMMGR" "START" "Starting $1, generating config "
+    VMMGR_LOG "$1" "START" "Starting $1, generating config"
     if [ -r /etc/VMMGR/VMMgr_.conf ]; then
         . /etc/VMMGR/VMMgr_.conf
     elif [ -r $(dirname $0)/VMMgr_.conf ]; then
@@ -359,6 +357,7 @@ function Start_VM_From_Config() {
     . $VMMGR_DATA_PATH/DATA/VMMgr_Spice
     . $2
     if [ "$SPICE" == "on" ]; then
+        VMMGR_LOG "$1" "SETTING" "Spice remote access"
         IPPORT=$(Set_Service_Listen $SPICEIP $SPICEIPVER $SPICETYPE $NAME spice $SPICEPORT)
         SPICEIP=${IPPORT%|*}; SPICEPORT=${IPPORT#*|}
         . $VMMGR_DATA_PATH/DATA/VMMgr_Spice
@@ -369,6 +368,7 @@ function Start_VM_From_Config() {
     
     ### TELNET MONITOR ###
     if [ "$TELNET" == "on" ]; then
+        VMMGR_LOG "$1" "SETTING" "telnet monitor"
         IPPORT=$(Set_Service_Listen $TELNETIP $TELNETIPVER $TELNETTYPE $NAME telnet $TELNETPORT)
         TELNETTPL="-monitor telnet:$(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}'):${IPPORT#*|},server,nowait"
     else
@@ -377,6 +377,7 @@ function Start_VM_From_Config() {
 
     ### VNC ###
     if [ "$VNC" == "on" ]; then
+        VMMGR_LOG "$1" "SETTING" "VNC remote access"
         . $VMMGR_DATA_PATH/DATA/VMMgr_VNC
         . $2
         IPPORT=$(Set_Service_Listen $VNCIP $VNCIPVER $VNCTYPE $NAME vnc $VNCPORT)
@@ -390,6 +391,7 @@ function Start_VM_From_Config() {
     
     ### QMP MONITOR ###
     if [ "$QMP" == "on" ]; then
+        VMMGR_LOG "$1" "SETTING" "QMP monitor"
         IPPORT=$(Set_Service_Listen $QMPIP $QMPIPVER $QMPTYPE $NAME qmp $QMPPORT)
         QMPTPL="-chardev socket,id=qmp01,host=$(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}'),port=${IPPORT#*|},server,nowait -mon chardev=qmp01,mode=control,pretty=on"
     else
@@ -397,6 +399,7 @@ function Start_VM_From_Config() {
     fi
 
     ### Virtio NETWORK ###
+    VMMGR_LOG "$1" "SETTING" "Networks interfaces"
     . $VMMGR_DATA_PATH/DATA/VMMgr_VirtioNet
     
     declare -i NUMDEV=0
@@ -407,6 +410,7 @@ function Start_VM_From_Config() {
     
     ### Virtio Disks ###
     if [ "$Virtio_Disk" ]; then
+        VMMGR_LOG "$1" "SETTING" "Virtio disks"
         export Virtio_Disk
         DisksList=$(Set_Disks $NAME)
         VIRTIODISKS=$(Set_Virtio_Disks $NAME $IOTHREADS $DisksList)
@@ -415,6 +419,7 @@ function Start_VM_From_Config() {
     
     ### SCSI Disks ###
     if [ "$Scsi_Disk" ]; then
+        VMMGR_LOG "$1" "SETTING" "SCSI Disks"
         export Scsi_Disk
         DisksList=$(Set_SDisks $NAME)
         SCSIDISKS=$(Set_Scsi_Disks $NAME $DisksList)
@@ -422,12 +427,14 @@ function Start_VM_From_Config() {
     fi
     
     ### CPU/SMP/NUMA/MACHINE ###
+    VMMGR_LOG "$1" "SETTING" "CPU/SMP/NUMA/MACHINE"
     . $VMMGR_DATA_PATH/DATA/VMMgr_CPU
     CORE="-machine ${!MACHINETPL} ${!SMPTPL} -cpu ${!CPU}"
     MEMORY=$(Check_MEM $MEM $MAXMEM $SLOT)
     
     ### BIOS/UEFI
     SETUPSECUREBOOT=0
+    VMMGR_LOG "$1" "SETTING" "BIOS"
     if [ "$BIOSTYPE" == "BIOS" ]; then
         FIRMWARE=$BIOS
         echo "BIOS=$FIRMWARE"
@@ -438,6 +445,7 @@ function Start_VM_From_Config() {
         FIRMWARE=$(Set_UEFI $NAME on)
     fi
     
+    VMMGR_LOG "$1" "SETTING" "new uuid"
     UUID="-uuid "$(Get_Db_UUID $VMMGR_DB_PATH $NAME)
     
     ### Ok! Now we can start VM ###
@@ -445,11 +453,13 @@ function Start_VM_From_Config() {
         echo "qemu-system-x86_64 -pidfile /run/VMMGR/$NAME -name $NAME $UUID $CORE $MEMORY $FIRMWARE ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS $SCSIDISKS -writeconfig $VMMGR_DATA_PATH/QEMU_CONFIGS/$NAME"
     else
         WCONFIG="-writeconfig $VMMGR_DATA_PATH/QEMU_CONFIGS/$NAME"
+        VMMGR_LOG "$1" "SETTING" "all done, starting"
         qemu-system-x86_64 -pidfile /run/VMMGR/$NAME -name $NAME $UUID $CORE $MEMORY $FIRMWARE ${!QEMU_TEMPLATE} $NETARRAY ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $VIRTIODISKS $SCSIDISKS $WCONFIG
         
         sleep 1
         
         # Fix Duplicated ID compat_monitor0 #
+        VMMGR_LOG "$1" "SETTING" "Update qemu config file"
         sed -i 's/compat_monitor0/compat_monitor1/g' $VMMGR_DATA_PATH/QEMU_CONFIGS/$NAME
         
         # insert missing options, the following options are not included in qemu config:
@@ -489,6 +499,7 @@ function Start_VM_From_Config() {
         fi
         
         ### Load Install DVD and reset
+        VMMGR_LOG "$1" "SETTING" "loading iso"
         INSERTDVD=$(cat $2 | grep '^INSTALLISO' | cut -d= -f2 | tr -d \" )
         if [ "$INSERTDVD" ]; then
              $VMMGR_PATH/VMMgr_Launcher load $NAME $INSERTDVD reset
