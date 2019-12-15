@@ -720,7 +720,6 @@ function Manage_Group() {
                     ORDER="$ORDER $VMO;$MEMBER"
                 done
                 ORDER=$(echo $ORDER | tr " " "\n" | sort | tr "\n" " " )
-                echo $ORDER
                 for MEMBER in $ORDER; do
                     if [ "$PREC" ]; then
                         if [ "$PREC" == ${MEMBER%;*} ]; then                    # Same order value, we start
