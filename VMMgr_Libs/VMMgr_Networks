@@ -351,7 +351,17 @@ function Set_Service_Listen() {
          ip -$2 -br address show | grep $1 2>/dev/null 1>/dev/null
         if [ $? -eq 0 ]; then                                                       # IP exists on a netdev, returning
             if [ "$6" == "new" ]; then
-                PORT=$(Set_Port_Listen $4 $5)                                          # Generate new port
+                DBSVC=$(Db_Get_SVC $VMMGR_DB_PATH $1 $2)
+                if [ "$DBSVC" != "" ]; then
+                    IFS=\| read -r VMID IP IPPORT IPVER NETWORK TYPE <<< $(echo "$DBSVC")
+                    if [ "$IPPORT" ]; then
+                        PORT=$IPPORT
+                    else
+                        PORT=$(Set_Port_Listen $4 $5)
+                    fi
+                else
+                    PORT=$(Set_Port_Listen $4 $5)                                   # Generate new port
+                fi
             else
                 PORT=$6
             fi
@@ -379,7 +389,7 @@ function Set_Service_Listen() {
                         ip -$2 -br a s type tun | grep $IP 2>/dev/null 1>/dev/null
                         if [ $? -eq 0 ]; then                                       # tun exists with IP, returning
                             echo "$IP|$IPPORT"
-                        else                                                        # tu exists but missing IP, setting, returning
+                        else                                                        # tun exists but missing IP, setting, returning
                             Set_Iface_Net $IP $DBPFX $1
                             Enslave_Tap "$4-$5" $NETWORK $BRIDGETOOL
                             echo "$IP|$IPPORT"
