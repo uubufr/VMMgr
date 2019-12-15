@@ -433,6 +433,7 @@ function Set_Service_Listen() {
                     fi
                 fi
                 if [ "$6" == "new" ]; then
+                    DBSVC=$(Db_Get_SVC $VMMGR_DB_PATH $1 $2)
                     if [ "$DBSVC" != "" ]; then
                         IFS=\| read -r VMID IP PORT IPVER NETWORK TYPE <<< $(echo "$DBSVC")
                         VMMGR_LOG $4 "$5" "port=$PORT"
