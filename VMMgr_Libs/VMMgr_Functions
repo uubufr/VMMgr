@@ -694,6 +694,7 @@ function Get_Stop_Wait() {
 # Args:
 #   $1: action
 #   $2: group name
+#   $3: optional "order": used to force start <group> order
 function Manage_Group() {
     case $1 in
         "list")
@@ -708,7 +709,7 @@ function Manage_Group() {
         ;;
         "start")
             VMMGR_LOG "VMMGR" "GROUP" "Starting group $2"
-            if [ "$(Db_IsEnabled_Group $VMMGR_DB_PATH $2)" == "1" ]; then
+            if [ "$(Db_IsEnabled_Group $VMMGR_DB_PATH $2)" == "1" ] && [ "$3" != "order" ]; then
                 sudo systemctl start $2.target
             else
                 MEMBERS=$(Db_Get_Group_Member $VMMGR_DB_PATH $2)                # Get Group Members
