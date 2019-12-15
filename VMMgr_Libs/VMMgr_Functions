@@ -962,7 +962,7 @@ function set_DNS() {
     #   HOSTS: on doit créer une entrée dans /etc/hosts. Prévoir que la fonction delete devra l'enlever.
     # on doit savoir quoi inscrire: quel service? on va avoir un problème si on doit enregistrer telnet et spice avec 2 ip différentes. donc on doit penser à ça
     if [ "${HOSTS^^}" == "YES" ]; then
-        ENTRY="$3 $2"
+        ENTRY="$3 $1"
         if [ "$(egrep "^$ENTRY$" /etc/hosts)" ]; then
             EXIST=1
         else
@@ -977,6 +977,6 @@ function set_DNS() {
         fi
     fi
     if [ "${NSUPDATE^^}" == "YES" ]; then
-        echo "not implemented, pleas update manually: $3 $2"
+        echo "not implemented, pleas update manually: $3 $1"
     fi
 }
