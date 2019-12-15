@@ -433,6 +433,7 @@ function Set_Service_Listen() {
                 fi
                 if [ "$6" == "new" ]; then
                     PORT=$(Set_Port_Listen $4 $5)                                  # Generate new port
+                    VMMGR_LOG $4 "CREATE" "New port for $5: $PORT"
                 else
                     PORT=$6
                 fi
