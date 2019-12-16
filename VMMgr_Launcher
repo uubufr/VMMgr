@@ -3,22 +3,7 @@
 # script name: VMMgr_Launcher
 # autor: Sylvain Girod ( uubu at gmx dot fr )
 # version: 0.04
-# description: VMMgr_Launcher allow start/stop/create/destroy Virtual Machines
-#
-# ToDo: on doit vérifier si un bridge n'a plus de slave, on le delete.
-# Quid d'iptables
-# Gestion des migrations?
-# delete doit avoir l'option --data pour delete les disques
-# Table pour gérer les disques et les déplacer?
-# fonction connect pour lancer spice,qmp et telnet.
-#
-# Versionning:
-# Les version 0.xx sont pour les branches d'ajoute de fonctionnalité post 2.0
-# Les version 1.xx sont les releases dont on a ajouté une fonctionnalité validée
-# La Version 2.0 sera une version pleinement fonctionnelle
-#
-# STEP:
-# 0.15-cdrom: add empty scsi cdrom
+# description: VMMgr_Launcher main entry for VM management
 
 
 ### except install and uninstall, we never run as root:
@@ -86,20 +71,24 @@ case "$1" in
             elif [ ! -r $VMMGR_DATA_PATH/Templates/$3 ]; then
                 echo "Error, template $VMMGR_DATA_PATH/Templates/$3 doesn't exists"
             else
+                VMMGR_LOG "VMMGR" "CREATE" "Creating vm with name: $2 from template $3"
                 VMCONF=$(Check_Existing_VM $2)
                 if [ "$VMCONF" == "" ]; then VMCONF="$2.conf"; fi
                 if [ -r $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF ]; then 
                     echo "Warning, config file $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF already exists"
+                    VMMGR_LOG "VMMGR" "CREATE" "Error, config for $2 already exists"
                 else
                     cp $VMMGR_DATA_PATH/Templates/$3 $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
                     Custom_VM_Config $2 $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
                 fi
                 GROUP=$(cat $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF | grep "^GROUP=" | cut -d\" -f2)
+                VMMGR_LOG "VMMGR" "CREATE" "Setting group: $GROUP for new vm: $2"
                 VMID=$(Db_Create_VM $VMMGR_DB_PATH $2 $VMCONF $(cat /proc/sys/kernel/random/uuid) $GROUP)
                 Db_Set_Group $VMMGR_DB_PATH $2 $GROUP
             fi
         ;;
     "delete")
+        VMMGR_LOG "$2" "DELETE" "Deleting vm $2"
         if [ ! "$2" ]; then
             echo "Usage $0 delete <vm name> [disks[-conf[-db]]]"
         else
@@ -137,8 +126,8 @@ case "$1" in
                         CPU=$(grep "^# cpu " $VMMGR_DATA_PATH/QEMU_CONFIGS/$2 | awk '{print $3}' )
                         if [ "$CPU" ]; then ADDED="$ADDED -cpu $CPU "; fi
                         VMMGR_LOG "VMMGR" "START" "Starting $2 using qemu-config"
-                        VMMGR_LOG "$1" "START" "Starting $2 using qemu config"
                         qemu-system-x86_64 -daemonize -pidfile /run/VMMGR/$NAME --uuid $(Get_Db_UUID $VMMGR_DB_PATH $2) $ADDED -no-user-config -nodefaults -readconfig $VMMGR_DATA_PATH/QEMU_CONFIGS/$2
+                        VMMGR_LOG "$2" "START" "Starting $2 using qemu config"
                     else
                          if [ ! -r $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF ]; then
                             echo "VM $2 not found"
@@ -150,6 +139,7 @@ case "$1" in
             fi
         ;;
     "enable")
+        VMMGR_LOG "$2" "ENABLE" "Enabling $2.service"
         Customize_Unit $2 $VMMGR_DATA_PATH/VM_CONFIGS/$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
         UNITEXIST=$(systemctl list-unit-files $2.service | grep 1)
         if [ "$UNITEXIST" ]; then
@@ -170,12 +160,14 @@ case "$1" in
         Db_Enable_VM $VMMGR_DB_PATH $2
         ;;
     "disable")
+        VMMGR_LOG "$2" "DISABLE" "disabling $2.service"
         sudo systemctl disable $2
         Db_Disable_VM $VMMGR_DB_PATH $2
         ;;
     "stop")
-        if [ "$(systemctl is-active VMMGR-$2)" == "active" ]; then
-            systemctl stop VMMGR-$2
+        VMMGR_LOG "$2" "STOP" "Stopping vm $2"
+        if [ "$(systemctl is-active $2)" == "active" ]; then
+            systemctl stop $2
         else
             VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
             if [ "$VMCONF" == "" ]; then
@@ -211,6 +203,7 @@ case "$1" in
         fi
         ;;
     "kill")
+        VMMGR_LOG "$2" "KILL" "killing VM $2"
         VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
         if [ "$VMCONF" == "" ]; then
             echo "$2 not found in DB"
@@ -226,6 +219,7 @@ case "$1" in
         fi
         ;;
     "reset")
+        VMMGR_LOG "$2" "RESET" "VM Hard Reset"
         VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
         if [ "$VMCONF" == "" ]; then
             echo "$2 not found in DB"
@@ -274,6 +268,7 @@ case "$1" in
         fi
         ;;
     "load")
+        VMMGR_LOG $2 "DVD change" "Trying to load $3 into DVD drive"
         VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
         if [ "$VMCONF" == "" ]; then
             echo "$2 not found in DB"
@@ -315,6 +310,7 @@ case "$1" in
         List_All_VM $2
         ;;
      "wintools")
+        VMMGR_LOG "VMMGR" "WINTOOLS" "Downloading wintools..."
         ### Virtio Win
         wget https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso --directory-prefix=$VMMGR_ISO_PATH/
         ### QEMU Guest Agent
@@ -341,9 +337,6 @@ case "$1" in
         group: <list|start|stop|enable|disable> group management
         list <all|running|stopped|enabled|disabled> list vms
         db <reconf|todb|import|export|list|purge>
-        ipmistart: start vm using ipmi
-        ipmistop: stop vm using ipmi
-        ipmistatus: get status via ipmi
         "
         ;;
 esac
