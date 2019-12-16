@@ -7,17 +7,27 @@
 #
 # Functions:
 # Check_Softwares: try to check if all required software are installed
+# Check_Requirements: Helper for hypervisor configuration
 # Check_System: Check system requirements
 # Check_MEM: calculate and/or check MEM and MAXMEM
 # Set_UEFI: Create UEFI firmware
 # Set_IPMI: Create IPMI device, using OpenIPMI-lanserv 
 # Custom_VM_Config: Customize VM Configuration
+# Customize_Unit: Customize Systemd Unit
+# Customize_Target: Customize Systemd target
 # Set_Remote_Viewer: Create .vv file for remove viewer
 # Start_VM_From_Config: Start VM using VM Config file
 # Install_VMMGR: Install VMMGR on the system
 # Uninstall_VMMGR: Remove VMMGR from the system
 # VM_Is_Running: check if vm is running
 # List_All_VM: Get the list of VMs
+# VM_Get_Order: get ORDER var from vmconfig
+# Get_Start_Wait: get STARTWAIT var from vmconfig
+# Get_Stop_Wait: get STOPWAIT var from vmconfig
+# Manage_Group: Dispatcher for group management
+# VM_Delete: Delete a vm
+# VM_DB_Manage: Many DB management tasks
+# set_DNS: register vm name with IP
 
 # Function Check_Softwares
 # Description: try to check if all packaged are installed or not
@@ -190,6 +200,7 @@ function Check_MEM() {
 #   $1: VM Name
 #   $2: (bool) Secure boot
 function Set_UEFI() {
+    VMMGR_LOG "$1" "SETTING" "Prepare UEFI for $1"
     SECURE=""
     [ "$2" == "on" ] && SECURE=".secboot"
         
@@ -234,6 +245,7 @@ function Check_Existing_VM() {
 #   $1: VM name
 #   $2: VM config path
 function Custom_VM_Config() {
+    VMMGR_LOG "$1" "SETTING" "Customize vm config for $1"
     sed -i "s/%%NAME%%/$1/g" $2
 }
 
@@ -243,6 +255,7 @@ function Custom_VM_Config() {
 #   $1: VM Name
 #   $2: VM config path
 function Customize_Unit() {
+    VMMGR_LOG "$1" "SETTING" "Customize Unit file for $1"
     AFTER=""; BEFORE="", CONFLICT=""
     UNIT="$VMMGR_DATA_PATH/UNITS/$1.service"
     cp $VMMGR_DATA_PATH/UNITS/systemd-template.service $UNIT
@@ -284,6 +297,7 @@ function Customize_Target() {
 #   $5: SPICE Password
 function Set_Remote_Viewer() {
     CFGPATH=$VMMGR_DATA_PATH/R-${1^^}/$3
+    VMMGR_LOG "$3" "REMOTE" "Generating $3 remote viewer file for $1"
     cp $VMMGR_DATA_PATH/R-${1^^}/$2 $CFGPATH
     sed -i "s/%%NAME%%/$3/g" $CFGPATH
     sed -i "s/%%PWD%%/$5/g" $CFGPATH
@@ -314,8 +328,6 @@ function Set_Remote_Viewer() {
 #   $1: VM name
 #   $2: Action
 #   $3: Message
-# TODO:
-#      Utiliser journald
 function VMMGR_LOG() {
     VMNAME=$1
     VMPROC=""
@@ -325,10 +337,10 @@ function VMMGR_LOG() {
     VMMGRPROC=$$
     CDATE=$(date '+%A %d-%m-%Y %T')
     if [ "$VMNAME" == "VMMGR" ] || [ "$VMPROC" == "" ]; then
-        echo "$CDATE VMMgr: [$2] pid=$VMMGRPROC msg=$3" >> /var/log/VMMgr/VMMgr.log
+        echo "$CDATE VMMgr: [$2] pid=$VMMGRPROC euid=$(id -u) msg=$3" >> /var/log/VMMgr/VMMgr.log
     else
         [ -w /var/log/VMMgr/$VMNAME-log ] ||  touch /var/log/VMMgr/$VMNAME-log
-        echo "$CDATE VMMgr: [$2] pid=$VMPROC msg=$3" >> /var/log/VMMgr/$VMNAME-log
+        echo "$CDATE VMMgr: [$2] pid=$VMPROC euid=$(id -u) msg=$3" >> /var/log/VMMgr/$VMNAME-log
     fi
 }
 
@@ -341,7 +353,7 @@ function VMMGR_LOG() {
 function Start_VM_From_Config() {
     echo "starting $1"
     VMMGR_LOG "VMMGR" "START" "Starting $1, generating config "
-    VMMGR_LOG "$1" "START" "Starting $1, generating config"
+    VMMGR_LOG "$1" "START" "Starting $1, generating config:"
     if [ -r /etc/VMMGR/VMMgr_.conf ]; then
         . /etc/VMMGR/VMMgr_.conf
     elif [ -r $(dirname $0)/VMMgr_.conf ]; then
@@ -361,7 +373,7 @@ function Start_VM_From_Config() {
         SPICEIP=${IPPORT%|*}; SPICEPORT=${IPPORT#*|}
         . $VMMGR_DATA_PATH/DATA/VMMgr_Spice
         Set_Remote_Viewer spice $SPICETPL $NAME $IPPORT $SPICEPWD
-        VMMGR_LOG "$1" "SETTING" "Spice remote access: ${!SPICETPL}"
+        VMMGR_LOG "$1" "SETTING" "$1: Spice remote access: ${!SPICETPL}"
     else
         SPICETPL=TPLNULL
     fi
@@ -370,7 +382,7 @@ function Start_VM_From_Config() {
     if [ "$TELNET" == "on" ]; then
         IPPORT=$(Set_Service_Listen $TELNETIP $TELNETIPVER $TELNETTYPE $NAME telnet $TELNETPORT)
         TELNETTPL="-monitor telnet:$(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}'):${IPPORT#*|},server,nowait"
-        VMMGR_LOG "$1" "SETTING" "telnet monitor: $TELNETTPL"
+        VMMGR_LOG "$1" "SETTING" "$1: telnet monitor: $TELNETTPL"
     else
         TELNETTPL=""
     fi
@@ -384,7 +396,7 @@ function Start_VM_From_Config() {
         . $VMMGR_DATA_PATH/DATA/VMMgr_VNC
         echo "Remote Viewer with x509 do not work, please use another vnc viewer like Remina"
         Set_Remote_Viewer vnc $VNCTPL $NAME $IPPORT $VNCPWD
-        VMMGR_LOG "$1" "SETTING" "VNC remote access: ${!VNCTPL}"
+        VMMGR_LOG "$1" "SETTING" "$1: VNC remote access: ${!VNCTPL}"
     else
         VNCTPL=TPLNULL
     fi
@@ -393,7 +405,7 @@ function Start_VM_From_Config() {
     if [ "$QMP" == "on" ]; then
         IPPORT=$(Set_Service_Listen $QMPIP $QMPIPVER $QMPTYPE $NAME qmp $QMPPORT)
         QMPTPL="-chardev socket,id=qmp01,host=$(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}'),port=${IPPORT#*|},server,nowait -mon chardev=qmp01,mode=control,pretty=on"
-        VMMGR_LOG "$1" "SETTING" "QMP monitor: $QMPTPL"
+        VMMGR_LOG "$1" "SETTING" "$1: QMP monitor: $QMPTPL"
     else
         QMPTPL=""
     fi
@@ -405,7 +417,7 @@ function Start_VM_From_Config() {
         NETARRAY="$NETARRAY $(Set_NetDev $NAME ${NET%|*} ${NET#*|} "$NETDEV" "$DEVICE" $NUMDEV)"
         NUMDEV=$(( $NUMDEV + ${NET#*|} ))
     done
-    VMMGR_LOG "$1" "SETTING" "Networks interfaces: $NETARRAY"
+    VMMGR_LOG "$1" "SETTING" "$1: Networks interfaces: $NETARRAY"
     
     ### Virtio Disks ###
     if [ "$Virtio_Disk" ]; then
@@ -414,22 +426,24 @@ function Start_VM_From_Config() {
         DisksList=$(Set_Disks $NAME)
         VIRTIODISKS=$(Set_Virtio_Disks $NAME $IOTHREADS $DisksList)
         unset Virtio_Disk
+        VMMGR_LOG "$1" "SETTING" "$1: Virtio disks: $VIRTIODISKS"
     fi
     
     ### SCSI Disks ###
     if [ "$Scsi_Disk" ]; then
-        VMMGR_LOG "$1" "SETTING" "SCSI Disks"
         export Scsi_Disk
         DisksList=$(Set_SDisks $NAME)
         SCSIDISKS=$(Set_Scsi_Disks $NAME $DisksList)
         unset Scsi_Disk
+        VMMGR_LOG "$1" "SETTING" "$1: SCSI Disks: $SCSIDISKS"
     fi
     
     ### CPU/SMP/NUMA/MACHINE ###
-    VMMGR_LOG "$1" "SETTING" "CPU/SMP/NUMA/MACHINE"
     . $VMMGR_DATA_PATH/DATA/VMMgr_CPU
     CORE="-machine ${!MACHINETPL} ${!SMPTPL} -cpu ${!CPU}"
     MEMORY=$(Check_MEM $MEM $MAXMEM $SLOT)
+    VMMGR_LOG "$1" "SETTING" "$1: CPU: $CORE"
+    VMMGR_LOG "$1" "SETTING" "$1: MEMORY: $MEMORY"
     
     ### BIOS/UEFI
     SETUPSECUREBOOT=0
@@ -441,27 +455,27 @@ function Start_VM_From_Config() {
         [ ! -d $VMMGR_DATA_PATH/UEFI/$NAME/ ] && SETUPSECUREBOOT="1"
         FIRMWARE=$(Set_UEFI $NAME on)
     fi
-    VMMGR_LOG "$1" "SETTING" "BIOS: $FIRMWARE"
+    VMMGR_LOG "$1" "SETTING" "$1: BIOS: $FIRMWARE"
     
     UUID="-uuid "$(Get_Db_UUID $VMMGR_DB_PATH $NAME)
-    VMMGR_LOG "$1" "SETTING" "new $UUID"
+    VMMGR_LOG "$1" "SETTING" "$1: new $UUID"
     
     ### Ok! Now we can start VM ###
     if [ "$VMMGR_TEST" == "TEST" ]; then
         echo "qemu-system-x86_64 -pidfile /run/VMMGR/$NAME -name $NAME $UUID $CORE $MEMORY $FIRMWARE ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS $SCSIDISKS -writeconfig $VMMGR_DATA_PATH/QEMU_CONFIGS/$NAME"
     else
         WCONFIG="-writeconfig $VMMGR_DATA_PATH/QEMU_CONFIGS/$NAME"
-        VMMGR_LOG "$1" "SETTING" "all done, starting"
+        VMMGR_LOG "$1" "SETTING" "$1: all done, starting!"
         qemu-system-x86_64 -pidfile /run/VMMGR/$NAME -name $NAME $UUID $CORE $MEMORY $FIRMWARE ${!QEMU_TEMPLATE} $NETARRAY ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $VIRTIODISKS $SCSIDISKS $WCONFIG
         
         sleep 1
         
         # Fix Duplicated ID compat_monitor0 #
-        VMMGR_LOG "$1" "SETTING" "Update qemu config file"
+        VMMGR_LOG "$1" "SETTING" "Update qemu config file: $VMMGR_DATA_PATH/QEMU_CONFIGS/$NAME"
         sed -i 's/compat_monitor0/compat_monitor1/g' $VMMGR_DATA_PATH/QEMU_CONFIGS/$NAME
         
         # insert missing options, the following options are not included in qemu config:
-        # pidfile, uuid, display, soundhw, daemonize, no-user-config, nodefaults
+        # pidfile, uuid, display, soundhw, daemonize, no-user-config, nodefaults, display
         # we add uuid, soundhw and display as comments
         
         DISPLAY=${!QEMU_TEMPLATE}; DISPLAY=${DISPLAY##*-display}; DISPLAY=${DISPLAY%%-*}
@@ -471,17 +485,19 @@ function Start_VM_From_Config() {
         if [ "${!CPU}" != "" ]; then ADDED="$ADDED# cpu ${!CPU}\n"; fi
         sed -i -e "s/^\(\# qemu config file\)$/\1\n$ADDED/" $VMMGR_DATA_PATH/QEMU_CONFIGS/$NAME
 
-        
-        ### VNC PASSWORD ###
-        if [ "$VNC" == "on" ]; then
-            if [ "$TELNET" == "on" ]; then
-                TIP=${TELNETTPL##*monitor telnet:}
-                TIP=${TIP%%,server,nowait}
-                { echo "set_password vnc $VNCPWD"; sleep 1; } | telnet ${TIP%:*} ${TIP##*:}
-            elif [ "$QMP" == "on" ]; then
-                TIP=${QMPTPL##*chardev socket,id=qmp01,host=}
-                TIP=${TIP%%,server,nowait*}
-                { echo '{ "execute": "qmp_capabilities" } { "execute": "set_password vnc $VNCPWD" }'; sleep 1; } | telnet ${TIP%%,*} ${TIP##*port=}
+        if [ "$VNCPWD" != "" ]; then
+            VMMGR_LOG "$1" "PASSWD" "Setting VNC password"
+            ### VNC PASSWORD ###
+            if [ "$VNC" == "on" ]; then
+                if [ "$TELNET" == "on" ]; then
+                    TIP=${TELNETTPL##*monitor telnet:}
+                    TIP=${TIP%%,server,nowait}
+                    { echo "set_password vnc $VNCPWD"; sleep 1; } | telnet ${TIP%:*} ${TIP##*:}
+                elif [ "$QMP" == "on" ]; then
+                    TIP=${QMPTPL##*chardev socket,id=qmp01,host=}
+                    TIP=${TIP%%,server,nowait*}
+                    { echo '{ "execute": "qmp_capabilities" } { "execute": "set_password vnc $VNCPWD" }'; sleep 1; } | telnet ${TIP%%,*} ${TIP##*port=}
+                fi
             fi
         fi
         
@@ -497,8 +513,8 @@ function Start_VM_From_Config() {
         fi
         
         ### Load Install DVD and reset
-        VMMGR_LOG "$1" "SETTING" "loading iso"
         INSERTDVD=$(cat $2 | grep '^INSTALLISO' | cut -d= -f2 | tr -d \" )
+        VMMGR_LOG "$1" "SETTING" "loading iso: $INSERTDVD"
         if [ "$INSERTDVD" ]; then
              $VMMGR_PATH/VMMgr_Launcher load $NAME $INSERTDVD reset
              sed -i -e 's/\(^INSTALLISO=.*$\)/#\1/' $2
@@ -721,6 +737,7 @@ function Manage_Group() {
                 for MEMBER in $ORDER; do
                     if [ "$PREC" ]; then
                         if [ "$PREC" == ${MEMBER%;*} ]; then                    # Same order value, we start
+                            VMMGR_LOG "VMMGR" "GROUP" "Starting member of $2: ${MEMBER#*;} with ORDER ${MEMBER%;*}"
                             $VMMGR_PATH/VMMgr_Launcher start ${MEMBER#*;}
                             PREC=${MEMBER%;*}
                         else
@@ -736,6 +753,7 @@ function Manage_Group() {
                                     sleep 5
                                 done
                                 if [ $ISOK -eq 0 ]; then
+                                    VMMGR_LOG "VMMGR" "GROUP" "Starting member of $2: ${MEMBER#*;} with ORDER ${MEMBER%;*}"
                                     $VMMGR_PATH/VMMgr_Launcher start ${MEMBER#*;}
                                     PREC=${MEMBER%;*}
                                 else
@@ -743,11 +761,13 @@ function Manage_Group() {
                                 fi
                             else
                                 sleep $WAIT
+                                VMMGR_LOG "VMMGR" "GROUP" "Starting member of $2: ${MEMBER#*;} with ORDER ${MEMBER%;*}"
                                 $VMMGR_PATH/VMMgr_Launcher start ${MEMBER#*;}
                                 PREC=${MEMBER%;*}
                             fi
                         fi
                     else
+                        VMMGR_LOG "VMMGR" "GROUP" "Starting member of $2: ${MEMBER#*;} with ORDER ${MEMBER%;*}"
                         $VMMGR_PATH/VMMgr_Launcher start ${MEMBER#*;}                  # First VM
                         PREC=${MEMBER%;*}
                     fi
@@ -755,6 +775,7 @@ function Manage_Group() {
             fi
             ;;
         "stop")
+            VMMGR_LOG "VMMGR" "GROUP" "Stoping group $2"
             COUNT=0; PREC=""
             for MEMBER in $(Db_Get_Group_Member $VMMGR_DB_PATH $2); do
                 if [ "$(Get_Stop_Wait $MEMBER)" == "1" ]; then
@@ -768,6 +789,7 @@ function Manage_Group() {
                     fi
                 fi
                 if [ $COUNT -le 120 ]; then
+                    VMMGR_LOG "VMMGR" "GROUP" "Stopping member of $2: $MEMBER"
                     $VMMGR_PATH/VMMgr_Launcher stop $MEMBER
                     PREC=$MEMBER
                 else
@@ -776,7 +798,9 @@ function Manage_Group() {
             done
         ;;
         "enable")
+            VMMGR_LOG "VMMGR" "GROUP" "Enabling group $2"
             TARGET=$(systemctl list-unit-files $2.target | grep 1)
+            VMMGR_LOG "VMMGR" "GROUP" "Generating target unit for $2"
             cp $VMMGR_DATA_PATH/UNITS/group-template.target $VMMGR_DATA_PATH/UNITS/$2.target
             Customize_Target $2
             if [ ! "$TARGET" ]; then
@@ -784,23 +808,30 @@ function Manage_Group() {
                 if [ "$(sha1sum $VMMGR_DATA_PATH/UNITS/$2.target | awk '{print $1}')" == "$(sha1sum $UNITPATH | awk '{print $1}')" ]; then
                     echo "VM $2 already enabled"
                 else
+                    VMMGR_LOG "VMMGR" "GROUP" "Installing target unit for $2"
                     sudo cp $VMMGR_DATA_PATH/UNITS/$2.target /etc/systemd/system/$2.target
                     sudo systemctl daemon-reload
                 fi
             else
+                VMMGR_LOG "VMMGR" "GROUP" "Installing target unit for $2"
                 sudo cp $VMMGR_DATA_PATH/UNITS/$2.target /etc/systemd/system/$2.target
                 sudo systemctl daemon-reload
                 [ -d /etc/systemd/system/$2.target.wants ] || sudo mkdir /etc/systemd/system/$2.target.wants
             fi
+            VMMGR_LOG "VMMGR" "GROUP" "Mark $2 as enabled in DB"
             Db_Enable_Group $VMMGR_DB_PATH $2
             for MEMBER in $(Db_Get_Group_Member $VMMGR_DB_PATH $2); do
+                VMMGR_LOG "VMMGR" "GROUP" "Enabling memberof $2: $MEMBER"
                 $VMMGR_PATH/VMMgr_Launcher enable $MEMBER
             done
         ;;
         "disable")
+            VMMGR_LOG "VMMGR" "GROUP" "Disabling group $2"
             for MEMBER in $(Db_Get_Group_Member $VMMGR_DB_PATH $2); do
+                VMMGR_LOG "VMMGR" "GROUP" "Disabling member of $2: $MEMBER"
                 $VMMGR_PATH/VMMgr_Launcher disable $MEMBER
             done
+            VMMGR_LOG "VMMGR" "GROUP" "Mark $2 as disabled in DB"
             sudo systemctl disable $2.target
             Db_Disable_Group $VMMGR_DB_PATH $2
         ;;
@@ -817,13 +848,16 @@ function VM_Delete() {
     for i in $(echo $3 | tr \- \  ); do
         case $i in
             "db")
+                VMMGR_LOG "$2" "DELETE" "Deleting $1 in database"
                 Db_Delete_VM $VMMGR_DB_PATH $1
             ;;
             "conf")
+                VMMGR_LOG "$2" "DELETE" "Deleting $1 config files"
                 rm $VMMGR_DATA_PATH/VM_CONFIGS/$2
                 rm $VMMGR_DATA_PATH/QEMU_CONFIGS/$1
             ;;
             "disks")
+                VMMGR_LOG "$2" "DELETE" "Deleting vm $1 disks"
                 if [ ! -r $VMMGR_DATA_PATH/VM_CONFIGS/$2 ]; then
                     echo "Missing Config, cannot find disks"
                 else
@@ -858,6 +892,7 @@ function VM_Delete() {
 function VM_DB_Manage() {
     case $1 in
         "reconf") # $2 = <vm name>
+            VMMGR_LOG "VMMGR" "RECONF" "Regenerate config for $2"
             VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
             if [ ! "$VMCONF" ]; then
                 echo "VM $2 not found in db"
@@ -872,6 +907,7 @@ function VM_DB_Manage() {
             fi
         ;;
         "todb") # $2 = <config name>
+            VMMGR_LOG "VMMGR" "TODB" "Recreate VM in DB for $2"
             if [ -r $VMMGR_DATA_PATH/VM_CONFIGS/$2 ]; then
                 VMCONF="$VMMGR_DATA_PATH/VM_CONFIGS/$2"
                 VMTPL=$(cat $VMCONF | grep "^# Template Name: "); VMTPL=${VMTPL#\# Template Name: }
@@ -890,10 +926,13 @@ function VM_DB_Manage() {
             echo "VMCONF redefined into DB, please restart VM with 'regen' option to finish restore operation"
         ;;
         "export") # $2 = <vm name>
+            VMMGR_LOG "VMMGR" "EXPORT" "Exporting DB for VM $2"
+            VMMGR_LOG "$2" "DELETE" "Deleting vm $2 in database"
             Db_Export_VM $VMMGR_DB_PATH $2
             echo "Warn: Import will never check if services IP:PORT are unique, you will have to check it manually"
         ;;
         "import") # $2 = <full vm backup path>
+            VMMGR_LOG "VMMGR" "EXPORT" "Importing VM into db from $2"
             Db_Import_VM $VMMGR_DB_PATH $2
             echo "Warn: Import don't check if services IP:PORT are unique, you must check it manually"
         ;;
@@ -905,6 +944,7 @@ function VM_DB_Manage() {
             fi
         ;;
         "restore") # $2 = 'last' or backup name (relative to $VMMGR_DATA_PATH/DB_BKP/
+            VMMGR_LOG "VMMGR" "DB" "Restoring DB from backup $2"
             if [ "$2" == "last" ]; then
                 LATEST=$( ls -1r $VMMGR_DATA_PATH/DB_BKP/*-DB.bkp | head -1)
                 if [ -r "$LATEST" ]; then
@@ -922,6 +962,7 @@ function VM_DB_Manage() {
             fi
         ;;
         "purge") # no $2 args
+            VMMGR_LOG "VMMGR" "DB" "Purge DB BACKUPS"
             if [ "$DBMAXAGE" ]; then
                 for BKPFILE in $(ls --hide=README.md -r $VMMGR_DATA_PATH/DB_BKP/*DB.bkp); do
                 BKPNAME=$(basename $BKPFILE)
