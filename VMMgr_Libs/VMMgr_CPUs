@@ -2,7 +2,7 @@
 #
 # script name: VMMgr_CPUs
 # autor: Sylvain Girod ( uubu at gmx dot fr )
-# version: 0.04
+# version: 0.02
 # description: CPU/SMP/NUMA/MACHINE functions
 #
 # Functions:
@@ -14,8 +14,6 @@
 # Map_SMP_1CPU: map the first physical CPU
 # Set_Custom_SMP: Generate custom -smp config
 # Set_NUMA_NODE: Generate Numa defs
-
-
 
 # Function: Get_Nb_Sockets
 # Description: Get Number of Physical CPU

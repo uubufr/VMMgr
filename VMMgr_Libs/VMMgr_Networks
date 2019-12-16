@@ -13,6 +13,7 @@
 # Create_Bridge: create bridge dispatcher
 # Set_MAC: Calculate MAC Address
 # Set_New_Port: Get Port or generate new one
+# Set_Port_Listen: get port for service
 # Get_Next_IPv4: Generate new IP from a pool
 # Get_Next_IPv6: Generate new IP from a pool
 # Set_New_IP: Get IP or generate new one
@@ -20,6 +21,9 @@
 # Enslave_Tap: enslave Tap to a bridge
 # Set_Iface_Net: Set IP/Prefix to net device
 # New_Network: create bridge or tap device
+# New_Tap: Create a new tuntap device
+# Set_Service_Listen: Set IP and Port for Spice
+# Set_NetDev: Create tap interfaces
 
 # Function Get_Bridge_Tool
 # Description: Try to detect best bridge tool available
@@ -328,6 +332,10 @@ function New_Network() {
     fi
 }
 
+# Function: Create_Tap
+# Description: Create Tap iface
+# Args:
+#   $1: tap name
 function New_Tap() {
     sudo ip tuntap add mode tap $1
 }

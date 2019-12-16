@@ -7,9 +7,11 @@
 #
 # Functions:
 # Set_Disk_Threads: Create threads objects
-# Set_Virtio_Disks: Take the list of disks, then génerate -object and -device
-# Set_Disks: Get disk list, check if they already exists and if not, create it
 # Set_Pci_Bridge: Create Pci_Bridge for Virtio Disks
+# Set_Disks: Get disk list, check if they already exists and if not, create it
+# Set_Virtio_Disks: Take the list of disks, then génerate -object and -device
+# Set_SDisks: Get disk list, check if they already exists and if not, create it
+# Set_Scsi_Disks: Déclare iothreads, pci-bridges, and drives
 
 # Function: Set_Disk_Threads
 # Description: Create threads objects
