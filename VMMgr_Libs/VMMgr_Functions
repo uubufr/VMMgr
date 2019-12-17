@@ -341,7 +341,7 @@ function Set_Remmina() {
     CFGPATH=$REMMINA_PATH/$2-$1.remmina
     if [ $REMMINA_PATH ] && [ -d $REMMINA_PATH ] && [ -r $CFGPATH ]; then
         VMMGR_LOG "$3" "REMOTE" "Generating $3 Remmina file for $1"
-        cp $VMMGR_DATA_PATH/R-Templates/$2 $REMMINA_PATH
+        cp $VMMGR_DATA_PATH/R-Templates/$2.remmina $CFGPATH
         sed -i "s/%%NAME%%/$3/g" $CFGPATH
         sed -i "s/%%PWD%%/$5/g" $CFGPATH
         sed -i "s/%%PORT%%/${4#*|}/g" $CFGPATH
