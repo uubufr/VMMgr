@@ -325,7 +325,7 @@ function Set_Remote_Viewer() {
         echo "No template for create remote-viewer file for $1"
     fi
     if [ ! -r $REMMINA_PATH/$2-$1.remmina ]; then
-        
+        Set_Remmina $1 $2 $3 $4 $5
     fi
 }
 
