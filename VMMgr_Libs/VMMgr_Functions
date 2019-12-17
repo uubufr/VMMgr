@@ -324,7 +324,7 @@ function Set_Remote_Viewer() {
     else
         echo "No template for create remote-viewer file for $1"
     fi
-    if [ ! -r $REMMINA_PATH/$2-$1.remmina ]; then
+    if [ ! -r $REMMINA_PATH/$3-$1.remmina ]; then
         Set_Remmina $1 $2 $3 $4 $5
     fi
 }
@@ -338,8 +338,8 @@ function Set_Remote_Viewer() {
 #   $4: $IPPORT
 #   $5: Password
 function Set_Remmina() {
-    CFGPATH=$REMMINA_PATH/$2-$1.remmina
-    if [ $REMMINA_PATH ] && [ -d $REMMINA_PATH ] && [ -r $CFGPATH ]; then
+    CFGPATH=$REMMINA_PATH/$3-$1.remmina
+    if [ $REMMINA_PATH ] && [ -d $REMMINA_PATH ]; then
         VMMGR_LOG "$3" "REMOTE" "Generating $3 Remmina file for $1"
         cp $VMMGR_DATA_PATH/R-Templates/$2.remmina $CFGPATH
         sed -i "s/%%NAME%%/$3/g" $CFGPATH
