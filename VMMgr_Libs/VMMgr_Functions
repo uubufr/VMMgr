@@ -293,33 +293,72 @@ function Customize_Target() {
 #   $1: Type (spice,vnc)
 #   $2: TEMPLATENAME
 #   $3: VM Name
-#   $4: Spice_IP_PORT ($IPPORT)
-#   $5: SPICE Password
+#   $4: $IPPORT
+#   $5: Password
 function Set_Remote_Viewer() {
     CFGPATH=$VMMGR_DATA_PATH/R-${1^^}/$3
-    VMMGR_LOG "$3" "REMOTE" "Generating $3 remote viewer file for $1"
-    cp $VMMGR_DATA_PATH/R-${1^^}/$2 $CFGPATH
-    sed -i "s/%%NAME%%/$3/g" $CFGPATH
-    sed -i "s/%%PWD%%/$5/g" $CFGPATH
+    if [ -r $VMMGR_DATA_PATH/R-Templates/$2 ]; then
+        VMMGR_LOG "$3" "REMOTE" "Generating $3 remote viewer file for $1"
+        cp $VMMGR_DATA_PATH/R-Templates/$2 $CFGPATH
+        sed -i "s/%%NAME%%/$3/g" $CFGPATH
+        sed -i "s/%%PWD%%/$5/g" $CFGPATH
     
-    CERTNAME=$(cat $CFGPATH | grep host-subject); CERTNAME=${CERTNAME#*CN=}; CERTNAME=${CERTNAME%%,*}
+        CERTNAME=$(cat $CFGPATH | grep host-subject); CERTNAME=${CERTNAME#*CN=}; CERTNAME=${CERTNAME%%,*}
     
-    NAMEDHOST=$(cat /etc/hosts | grep ${4%|*} | awk '{print $2}' | head -1);
-    if [ "$NAMEDHOST" = "" ]; then
-        NAMEDHOST=$(dig -x ${4%|*} | grep -v ";" | grep -v "^$" | head -1)
-        NAMEDHOST=${NAMEDHOST##*PTR }
+        NAMEDHOST=$(cat /etc/hosts | grep ${4%|*} | awk '{print $2}' | head -1);
         if [ "$NAMEDHOST" = "" ]; then
-            echo "Warning: no Hostname found matching IP: ${4%|*}"
+            NAMEDHOST=$(dig -x ${4%|*} | grep -v ";" | grep -v "^$" | grep "PTR" | head -1)
+            NAMEDHOST=${NAMEDHOST##*PTR }
+            if [ "$NAMEDHOST" = "" ]; then
+                echo "Warning: no Hostname found matching IP: ${4%|*}"
+            fi
         fi
-    fi
-    if [ "$CERTNAME" == "$NAMEDHOST" ]; then
-        sed -i "s/%%HOSTNAME%%/$CERTNAME/g" $CFGPATH
-    elif [ "$NAMEDHOST" != "" ]; then
-        sed -i "s/%%HOSTNAME%%/$NAMEDHOST/g" $CFGPATH
+        if [ "$CERTNAME" == "$NAMEDHOST" ]; then
+            sed -i "s/%%HOSTNAME%%/$CERTNAME/g" $CFGPATH
+        elif [ "$NAMEDHOST" != "" ]; then
+            sed -i "s/%%HOSTNAME%%/$NAMEDHOST/g" $CFGPATH
+        else
+            sed -i "s/%%HOSTNAME%%/${4%|*}/g" $CFGPATH
+        fi
+        sed -i "s/%%PORT%%/${4#*|}/g" $CFGPATH
     else
-        sed -i "s/%%HOSTNAME%%/${4%|*}/g" $CFGPATH
+        echo "No template for create remote-viewer file for $1"
     fi
-    sed -i "s/%%PORT%%/${4#*|}/g" $CFGPATH
+    if [ ! -r $REMMINA_PATH/$2-$1.remmina ]; then
+        
+    fi
+}
+
+# Function: Set_Remmina
+# Description: create Remmina file
+# Args:
+#   $1: Type (spice,vnc)
+#   $2: TEMPLATENAME
+#   $3: VM Name
+#   $4: $IPPORT
+#   $5: Password
+function Set_Remmina() {
+    $CFGPATH=$REMMINA_PATH/$2-$1.remmina
+    if [ $REMMINA_PATH ] && [ -d $REMMINA_PATH ] && [ -r $CFGPATH ]; then
+        VMMGR_LOG "$3" "REMOTE" "Generating $3 Remmina file for $1"
+        cp $VMMGR_DATA_PATH/R-Templates/$2 $REMMINA_PATH
+        sed -i "s/%%NAME%%/$3/g" $CFGPATH
+        sed -i "s/%%PWD%%/$5/g" $CFGPATH
+        sed -i "s/%%PORT%%/${4#*|}/g" $CFGPATH
+        NAMEDHOST=$(cat /etc/hosts | grep ${4%|*} | awk '{print $2}' | head -1);
+        if [ "$NAMEDHOST" = "" ]; then
+            NAMEDHOST=$(dig -x ${4%|*} | grep -v ";" | grep -v "^$" | grep "PTR" | head -1)
+            NAMEDHOST=${NAMEDHOST##*PTR }
+            if [ "$NAMEDHOST" = "" ]; then
+                echo "Warning: no Hostname found matching IP: ${4%|*}"
+            fi
+        fi
+        if [ "$NAMEDHOST" ]; then
+            sed -i "s/%%HOSTNAME%%/$NAMEDHOST/g" $CFGPATH
+        fi
+        GROUP=$(Db_Get_MemberOf $VMMGR_DB_PATH $3)
+        sed -i "s/%%GROUP%%/$GROUP/g" $CFGPATH
+    fi
 }
 
 # Function VMMGR_LOG
