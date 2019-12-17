@@ -338,7 +338,7 @@ function Set_Remote_Viewer() {
 #   $4: $IPPORT
 #   $5: Password
 function Set_Remmina() {
-    $CFGPATH=$REMMINA_PATH/$2-$1.remmina
+    CFGPATH=$REMMINA_PATH/$2-$1.remmina
     if [ $REMMINA_PATH ] && [ -d $REMMINA_PATH ] && [ -r $CFGPATH ]; then
         VMMGR_LOG "$3" "REMOTE" "Generating $3 Remmina file for $1"
         cp $VMMGR_DATA_PATH/R-Templates/$2 $REMMINA_PATH
