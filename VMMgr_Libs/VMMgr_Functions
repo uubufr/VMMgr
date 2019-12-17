@@ -16,6 +16,7 @@
 # Customize_Unit: Customize Systemd Unit
 # Customize_Target: Customize Systemd target
 # Set_Remote_Viewer: Create .vv file for remove viewer
+# Set_Remmina: create Remmina file
 # Start_VM_From_Config: Start VM using VM Config file
 # Install_VMMGR: Install VMMGR on the system
 # Uninstall_VMMGR: Remove VMMGR from the system
