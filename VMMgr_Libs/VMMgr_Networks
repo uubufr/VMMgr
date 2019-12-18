@@ -308,6 +308,7 @@ function Create_New_Network() {
 #   $3: <MINIP>|<MAXIP>
 #   $4: (optional) if $3 is set only: default IP for this bridge
 function New_Network() {
+    VMMGR_LOG "VMMGR" "NETWORK" "New Network -> $1"
     IFS=\| read -r IPVER IPNETWORK IPPREFIX <<< $(echo "$2")
     DBNET=$(Db_Get_Network $VMMGR_DB_PATH $1)
     if [ "$DBNET" == "" ]; then
