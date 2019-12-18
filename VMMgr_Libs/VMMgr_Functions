@@ -422,12 +422,12 @@ function VMMGR_LOG() {
     CDATE=$(date '+%A %d-%m-%Y %T')
     if [ "$VMNAME" == "VMMGR" ] || [ "$VMPROC" == "" ]; then
         echo "$CDATE VMMgr: [$2] pid=$VMMGRPROC euid=$(id -u) msg=$3" >> /var/log/VMMgr/VMMgr.log
+        sudo chmod 660 /var/log/VMMgr/VMMgr.log
     else
         [ -w /var/log/VMMgr/$VMNAME-log ] ||  touch /var/log/VMMgr/$VMNAME-log
         echo "$CDATE VMMgr: [$2] pid=$VMPROC euid=$(id -u) msg=$3" >> /var/log/VMMgr/$VMNAME-log
+        sudo chmod 660 /var/log/VMMgr/$VMNAME-log
     fi
-    sudo chmod 660 /var/log/VMMgr/VMMgr.log
-    sudo chmod 660 /var/log/VMMgr/$VMNAME-log
 }
 
 # Function: Start_VM_From_Config
@@ -1096,7 +1096,7 @@ function set_DNS() {
         
         if [ "$2" == "add" ] && [ $EXIST -eq 0 ]; then
             VMMGR_LOG "VMMGR" "DNS" "Adding to /etc/hosts: $3 $1"
-            sudo echo $ENTRY | tee -a /etc/hosts
+            echo $ENTRY | sudo tee -a /etc/hosts
         fi
         if [ "$2" == "remove" ] && [ $EXIST -eq 1 ]; then
             VMMGR_LOG "VMMGR" "DNS" "Removing from /etc/hosts: $3 $1"
