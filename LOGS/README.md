@@ -1,4 +1,5 @@
 # VMMgr
  
 **Directory**: LOGS
-**Description**: Default LOGS dir
+
+**Description**: Default LOGS dir.
