@@ -685,7 +685,7 @@ function Uninstall_VMMGR() {
     
     rm /usr/local/bin/VMMgr_Launcher
     rm /usr/local/lib/VMMgr_{CPUs,Db,Disks,Functions,Networks}
-    VMMGR_LOG "VMMGR" "UNINSTALL" "VMMgr is installed on your system except:"
+    VMMGR_LOG "VMMGR" "UNINSTALL" "VMMgr is removed on your system except:"
     VMMGR_LOG "VMMGR" "UNINSTALL" "/etc/VMMGR directory will not be deleted"
     VMMGR_LOG "VMMGR" "UNINSTALL" "/var/lib/VMMGR, VM configs and templates will not be deleted"
 }
