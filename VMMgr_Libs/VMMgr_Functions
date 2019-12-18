@@ -100,7 +100,7 @@ function Check_Requirements() {
             echo "You must install the following packages: $PACKAGES"
             echo ""
         fi
-        PACKAGES=$(Check_Softwares "NetworkManager|openvswitch|virglrenderer|dpdk" 0)
+        PACKAGES=$(Check_Softwares "NetworkManager|openvswitch|virglrenderer|dpdk|tuned" 0)
         if [ "$PACKAGES" ]; then
             echo "You can install the following optionals packages: $PACKAGES"
             echo ""
@@ -166,7 +166,7 @@ function Check_Requirements() {
 #   3: Set cap_net_admin on qemu-system_x86_64
 function Check_System() {
     SUDOOK=$(Check_Sudo)
-    if [ "$SUDOOK" == "1" ]; then
+    if [ "$SUDOOK" == "0" ]; then
         if [ "$(modinfo vhost-net -F intree)" != "Y" ]; then
             sudo modprobe vhost vhost-net
         fi
