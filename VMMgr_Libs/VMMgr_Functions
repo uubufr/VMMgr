@@ -407,7 +407,7 @@ function Set_Remmina() {
 }
 
 # Function VMMGR_LOG
-# Description: log in /var/log/VMMGR/VMMgr.log
+# Description: log in $VMMGR_LOG_PATH/VMMgr.log
 # Args:
 #   $1: VM name
 #   $2: Action
@@ -421,12 +421,12 @@ function VMMGR_LOG() {
     VMMGRPROC=$$
     CDATE=$(date '+%A %d-%m-%Y %T')
     if [ "$VMNAME" == "VMMGR" ] || [ "$VMPROC" == "" ]; then
-        echo "$CDATE VMMgr: [$2] pid=$VMMGRPROC euid=$(id -u) msg=$3" >> /var/log/VMMgr/VMMgr.log
-        sudo chmod 660 /var/log/VMMgr/VMMgr.log
+        echo "$CDATE VMMgr: [$2] pid=$VMMGRPROC euid=$(id -u) msg=$3" >>    $VMMGR_LOG_PATH/VMMgr.log
+        sudo chmod 660 $VMMGR_LOG_PATH/VMMgr.log
     else
-        [ -w /var/log/VMMgr/$VMNAME-log ] ||  touch /var/log/VMMgr/$VMNAME-log
-        echo "$CDATE VMMgr: [$2] pid=$VMPROC euid=$(id -u) msg=$3" >> /var/log/VMMgr/$VMNAME-log
-        sudo chmod 660 /var/log/VMMgr/$VMNAME-log
+        [ -w $VMMGR_LOG_PATH/$VMNAME-log ] ||  touch $VMMGR_LOG_PATH/$VMNAME-log
+        echo "$CDATE VMMgr: [$2] pid=$VMPROC euid=$(id -u) msg=$3" >> $VMMGR_LOG_PATH/$VMNAME-log
+        sudo chmod 660 $VMMGR_LOG_PATH/$VMNAME-log
     fi
 }
 
@@ -571,7 +571,7 @@ function Start_VM_From_Config() {
         if [ "${!CPU}" != "" ]; then ADDED="$ADDED# cpu ${!CPU}\n"; fi
         sed -i -e "s/^\(\# qemu config file\)$/\1\n$ADDED/" $VMMGR_DATA_PATH/QEMU_CONFIGS/$NAME
 
-        if [ "$VNCPWD" != "" ]; then
+        if [ "$VNCPWD" != "" ] && [ "$(echo  ${!VNCTPL} | grep "password")" != "" ] ; then
             VMMGR_LOG "$1" "PASSWD" "Setting VNC password"
             ### VNC PASSWORD ###
             if [ "$VNC" == "on" ]; then
