@@ -44,7 +44,7 @@ SCSIDVD="-device virtio-scsi-pci,id=scsi0 -drive if=none,id=SDVD,readonly=on -de
 
 
 ### First Graphical Card
-QXL="-device qxl-vga,id=qxl-video0,ram_size=67108864,vram_size=67108864"
+QXL="-device qxl-vga,id=qxl-video0,qxl.heads=$SPICESCREENS,vgamem_mb=$(( $SPICESCREENS * 16 )),ram_size=67108864,vram_size=67108864"
 
 
 ### for 3D display
