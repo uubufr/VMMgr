@@ -6,7 +6,9 @@
 # description: VNC Vars and Templates
 #
 VNCSASL="sasl,acl"
-VNCSECRETS="-object secret,id=vncmaster,format=base64,file=/etc/pki/services/vnc/vnc-master.secret -object secret,id=vncsecret,format=base64,keyid=vncmaster,format=base64,file=/etc/pki/services/vnc/vnc-data,iv=$(</etc/pki/services/vnc/vnc-iv.secret) -object tls-creds-x509,id=vnctls,dir=/etc/pki/services/vnc,endpoint=server,priority=NONE:+SECURE128:-VERS-ALL:+VERS-TLS1.2,verify-peer=on,passwordid=vncsecret"
+if [ -r "/etc/pki/services/vnc/vnc-iv.secret" ]; then
+    VNCSECRETS="-object secret,id=vncmaster,format=base64,file=/etc/pki/services/vnc/vnc-master.secret -object secret,id=vncsecret,format=base64,keyid=vncmaster,format=base64,file=/etc/pki/services/vnc/vnc-data,iv=$(</etc/pki/services/vnc/vnc-iv.secret) -object tls-creds-x509,id=vnctls,dir=/etc/pki/services/vnc,endpoint=server,priority=NONE:+SECURE128:-VERS-ALL:+VERS-TLS1.2,verify-peer=on,passwordid=vncsecret"
+fi
 VNCSHARE="share=force-shared"
 VNCEXCLUSIVE="share=allow-exclusive"
 VNCPASSWD="password"
