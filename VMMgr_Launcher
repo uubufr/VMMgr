@@ -341,7 +341,7 @@ case "$1" in
 esac
 
 ### Auto Backup DB ###
-if [ "$1" != "install" ]; then
+if [ "$1" != "install" ] || [ "$1" != "check" ]; then
     LATEST=""
     if [ -r $VMMGR_DATA_PATH/DB_BKP/*-DB.latest.bkp ]; then
         LATEST=$( ls $VMMGR_DATA_PATH/DB_BKP/*-DB.latest.bkp)
