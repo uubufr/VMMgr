@@ -153,7 +153,6 @@ function Check_Requirements() {
         fi
     
         echo "SPICE/VNC secure mode: make sure keys and certificates are readable by qemu user and/or group"
-        Check_System
     fi
 }
 
@@ -415,8 +414,11 @@ function Set_Remmina() {
 function VMMGR_LOG() {
     VMNAME=$1
     VMPROC=""
-    if [ -f /run/VMMGR/$1 ]; then
-        VMPROC=$(sudo cat /run/VMMGR/$1)
+    PIDDIR=/run/VMMGR
+    [ -d $PIDDIR ] && PIDDIR=/run
+    
+    if [ -f $PIDDIR/$1 ]; then
+        VMPROC=$(sudo cat $PIDDIR/$1)
     fi
     VMMGRPROC=$$
     CDATE=$(date '+%A %d-%m-%Y %T')
@@ -547,12 +549,14 @@ function Start_VM_From_Config() {
     VMMGR_LOG "$1" "SETTING" "$1: new $UUID"
     
     ### Ok! Now we can start VM ###
+    PIDDIR=/run/VMMGR
+    [ -d $PIDDIR ] && PIDDIR=/run
     if [ "$VMMGR_TEST" == "TEST" ]; then
-        echo "qemu-system-x86_64 -pidfile /run/VMMGR/$NAME -name $NAME $UUID $CORE $MEMORY $FIRMWARE ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS $SCSIDISKS -writeconfig $VMMGR_DATA_PATH/QEMU_CONFIGS/$NAME"
+        echo "qemu-system-x86_64 -pidfile $PIDDIR/$NAME -name $NAME $UUID $CORE $MEMORY $FIRMWARE ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS $SCSIDISKS -writeconfig $VMMGR_DATA_PATH/QEMU_CONFIGS/$NAME"
     else
         WCONFIG="-writeconfig $VMMGR_DATA_PATH/QEMU_CONFIGS/$NAME"
         VMMGR_LOG "$1" "SETTING" "$1: all done, starting!"
-        qemu-system-x86_64 -pidfile /run/VMMGR/$NAME -name $NAME $UUID $CORE $MEMORY $FIRMWARE ${!QEMU_TEMPLATE} $NETARRAY ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $VIRTIODISKS $SCSIDISKS $WCONFIG
+        qemu-system-x86_64 -pidfile $PIDDIR/$NAME -name $NAME $UUID $CORE $MEMORY $FIRMWARE ${!QEMU_TEMPLATE} $NETARRAY ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $VIRTIODISKS $SCSIDISKS $WCONFIG
         
         sleep 1
         
@@ -695,9 +699,11 @@ function Uninstall_VMMGR() {
 # Args:
 #   $1: VM name
 function VM_Is_Running() {
-    if [ -f "/run/VMMGR/$1" ]; then
-        Result=$(ps -h -q $(sudo cat /run/VMMGR/$1) -o pid)
-        if [ "${Result##* }" == "$(sudo cat /run/VMMGR/$1)" ]; then
+    PIDDIR=/run/VMMGR
+    [ -d $PIDDIR ] && PIDDIR=/run
+    if [ -f "$PIDDIR/$1" ]; then
+        Result=$(ps -h -q $(sudo cat $PIDDIR/$1) -o pid)
+        if [ "${Result##* }" == "$(sudo cat $PIDDIR/$1)" ]; then
             echo 1
         else
             echo 0

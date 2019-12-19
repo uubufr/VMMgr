@@ -69,7 +69,7 @@ function Map_SMP_1CPU() {
     NBSOCKETS=$(Get_Nb_Sockets | sort | uniq | wc -l)
     SOCKETCORES=$(Get_Core_Number 0 | sort | uniq | wc -l)
     CORETHREADS=$(Get_Core_Threads 0)
-    if [ "$CORETHREADS" == "${CORETHREADS##*,}" ] && [ "$CORETHREADS" == "${CORETHREADS##*-}"] ; then
+    if [ "$CORETHREADS" == "${CORETHREADS##*,}" ] && [ "$CORETHREADS" == "${CORETHREADS##*-}" ] ; then
         HYPERTHREAD=1
     else
         HYPERTHREAD=2
