@@ -1,3 +1,7 @@
-###VM_BKP
+# VM_BKP
 
-This is where VM db export are placed.
+**Directory**: VM_BKP
+
+**Description**: This dir contain DB exports for VM when you use **VMMgr_Launcher db export "myvm"
+
+**PATH**: $VMMGR_DATA_PATH/VM_BKP
