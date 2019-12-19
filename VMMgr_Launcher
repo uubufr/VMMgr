@@ -359,4 +359,4 @@ if [ "$1" != "install" ]; then
 fi
 
 ### Recheck Perms ###
-sudo chown -R qemu:qemu $VMMGR_DATA_PATH && sudo chmod -R 770 $
+sudo chown -R qemu:qemu $VMMGR_DATA_PATH && sudo chmod -R 770 $VMMGR_DATA_PATH
