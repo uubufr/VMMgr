@@ -1,3 +1,8 @@
 # UEFI
 
-Containt a folder per VM containing vars and log files for UEFI
+**Directory**: UEFI
+
+**Description**: This dir contain data for uefi machines: ovmf log and vars files
+
+**PATH**: $VMMGR_DATA_PATH/UEFI
+
