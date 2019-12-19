@@ -1,12 +1,12 @@
 # DATA
-
-
-Contains Variables for generate qemu configurations
  
 **Directory**: DATA
 
 **Description**: Various Var for generate config:
 
+**PATH**: $VMMGR_DATA_PATH/DATA
+
+***
  
 **VMMGR_CPU**: All vars for -cpu and -smp options
 
