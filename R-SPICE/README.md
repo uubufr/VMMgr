@@ -1,8 +1,11 @@
 # R-SPICE
+ 
+**Directory**: R-SPICE
 
-This directory contain:
-Templates for generating remote-viewer config files for SPICE
-Generated remote-viewer config files
+**Description**: All remote-viewer files for your vm configured with spice are generated in this dir
 
-More info at: https://github.com/uubufr/VMMgr/wiki/3.1-SPICE-and-VNC
+**PATH**: $VMMGR_DATA_PATH/R-SPICE
 
+***
+
+**Note**: More info for Spice remote acces at https://github.com/uubufr/VMMgr/wiki/3.1-SPICE-and-VNC
