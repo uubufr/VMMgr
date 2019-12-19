@@ -342,11 +342,14 @@ esac
 
 ### Auto Backup DB ###
 if [ "$1" != "install" ]; then
-    LATEST=$( ls $VMMGR_DATA_PATH/DB_BKP/*-DB.latest.bkp)
-    if [ -r "$LATEST" ]; then
-        if [ "$(sha1sum $LATEST | awk '{print $1}')" != "$(sha1sum $VMMGR_DB_PATH/VMMGR_.db | awk '{print $1}')" ]; then
-            TARGET=$(basename $LATEST)
-            mv $LATEST $VMMGR_DATA_PATH/DB_BKP/${TARGET%%.latest.bkp}.bkp
+    LATEST=""
+    if [ -r $VMMGR_DATA_PATH/DB_BKP/*-DB.latest.bkp ]; then
+        LATEST=$( ls $VMMGR_DATA_PATH/DB_BKP/*-DB.latest.bkp)
+        if [ -r "$LATEST" ]; then
+            if [ "$(sha1sum $LATEST | awk '{print $1}')" != "$(sha1sum $VMMGR_DB_PATH/VMMGR_.db | awk '{print $1}')" ]; then
+                TARGET=$(basename $LATEST)
+                mv $LATEST $VMMGR_DATA_PATH/DB_BKP/${TARGET%%.latest.bkp}.bkp
+            fi
         fi
     fi
     if [ ! -r "$LATEST" ]; then
@@ -356,4 +359,4 @@ if [ "$1" != "install" ]; then
 fi
 
 ### Recheck Perms ###
-sudo chown -R qemu:qemu /var/lib/VMMGR && sudo chmod -R 770 /var/lib/VMMGR
+sudo chown -R qemu:qemu $VMMGR_DATA_PATH && sudo chmod -R 770 $
