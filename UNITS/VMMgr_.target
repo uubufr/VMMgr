@@ -1,3 +1,0 @@
-[Unit]
-Description=VMMGR VM management
-Requires=multi-users.target
