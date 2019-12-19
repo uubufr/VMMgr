@@ -1,3 +1,0 @@
-[Unit]
-Description=VMMGR %%GROUP%% mgmt
-RequiredBy=VMMgr_.target
