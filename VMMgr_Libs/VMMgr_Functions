@@ -1056,9 +1056,7 @@ function VM_DB_Manage() {
                     BKPDATE=$(date -d $BKPDATE +%s)
                     CURDATE=$(date --date "$DBMAXAGE days ago" +%s)
                     if [ $BKPDATE -lt $CURDATE ]; then
-                        echo "on doit delete $BKPFILE"
-                    else
-                        echo "on conserve $BKPFILE"
+                        rm $BKPFILE
                     fi
                 done
             fi
