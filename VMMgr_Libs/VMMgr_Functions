@@ -550,7 +550,7 @@ function Start_VM_From_Config() {
     
     ### Ok! Now we can start VM ###
     PIDDIR=/run/VMMGR
-    [ -d $PIDDIR ] && PIDDIR=/run
+    [ -d $PIDDIR ] || PIDDIR=/run
     if [ "$VMMGR_TEST" == "TEST" ]; then
         echo "qemu-system-x86_64 -pidfile $PIDDIR/$NAME -name $NAME $UUID $CORE $MEMORY $FIRMWARE ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS $SCSIDISKS -writeconfig $VMMGR_DATA_PATH/QEMU_CONFIGS/$NAME"
     else
