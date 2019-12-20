@@ -1,0 +1,22 @@
+#! /bin/bash
+#
+# script name: %%NAME%%
+# Template Name: NetworkInit
+# autor: Sylvain Girod ( uubu at gmx dot fr )
+# version: 0.05
+# description: Template used for create defaults network, this vm will never start, but networks will
+
+GROUP="Init"
+NAME="%%NAME%%"
+MEM="0"
+USEQEMUCONFIG="no"
+SPICE=off
+TELNET=off
+VNC=off
+QMP=off
+
+
+# Network: localhost
+New_Network localhost "4|127.0.0.0|8" "127.0.0.2|127.0.0.3" 127.0.0.1
+# Define your networks here:
+New_Network VM-Bridge "4|10.98.98.0|24" "10.98.98.10|10.98.98.100" 10.98.98.1

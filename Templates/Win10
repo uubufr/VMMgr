@@ -1,0 +1,41 @@
+#! /bin/bash
+#
+# script name: %%NAME%%
+# autor: Sylvain Girod ( uubu at gmx dot fr )
+# version: 0.05
+# Template: Win10
+# description: Template for Windows 10
+GROUP="windows10"
+NAME="%%NAME%%"         # Unique Name
+MEM="4"                 # Initial Mem Size, in GB
+MAXMEM="4"              # OPTIONAL: Max Allowed mem (defaut: $MEM * 2)
+CPU=CPUHOST
+SMPTPL=SMP1HT
+
+QEMU_TEMPLATE=WINDOWSBASE
+
+BIOSTYPE="SECURE"
+
+INSTALLISO="fr_windows_10_x64.iso"
+#INSTALLISO="en_windows_server_2016_x64_dvd_9327751.iso"
+
+### Disks ###
+DISKPATH=/mnt/$NAME/
+Virtio_Disk[0]="1 40G $DISKPATH"
+
+
+New_Network VM-Bridge "4|10.98.98.0|24" "10.98.98.10|10.98.98.100" 10.98.98.1
+NETWORKDEVICE="VM-Bridge|1"
+
+SPICE=on
+SPICEMODE=plaintext
+SPICEIP=VM-Bridge
+SPICETPL=SPICECLEAR
+QEMU_AUDIO_DRV=spice
+SPICE_DEBUG_ALLOW_MC=0
+
+TELNET=on
+TELNETIP=VM-Bridge
+
+VNC=off
+QMP=off
