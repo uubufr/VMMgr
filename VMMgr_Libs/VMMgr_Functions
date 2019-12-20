@@ -415,7 +415,7 @@ function VMMGR_LOG() {
     VMNAME=$1
     VMPROC=""
     PIDDIR=/run/VMMGR
-    [ -d $PIDDIR ] && PIDDIR=/run
+    [ -d $PIDDIR ] && PIDDIR=$VMMGR_DATA_PATH
     
     if [ -f $PIDDIR/$1 ]; then
         VMPROC=$(sudo cat $PIDDIR/$1)
@@ -550,7 +550,7 @@ function Start_VM_From_Config() {
     
     ### Ok! Now we can start VM ###
     PIDDIR=/run/VMMGR
-    [ -d $PIDDIR ] || PIDDIR=/run
+    [ -d $PIDDIR ] || PIDDIR=$VMMGR_DATA_PATH
     if [ "$VMMGR_TEST" == "TEST" ]; then
         echo "qemu-system-x86_64 -pidfile $PIDDIR/$NAME -name $NAME $UUID $CORE $MEMORY $FIRMWARE ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS $SCSIDISKS -writeconfig $VMMGR_DATA_PATH/QEMU_CONFIGS/$NAME"
     else
@@ -700,7 +700,7 @@ function Uninstall_VMMGR() {
 #   $1: VM name
 function VM_Is_Running() {
     PIDDIR=/run/VMMGR
-    [ -d $PIDDIR ] && PIDDIR=/run
+    [ -d $PIDDIR ] && PIDDIR=$VMMGR_DATA_PATH
     if [ -f "$PIDDIR/$1" ]; then
         Result=$(ps -h -q $(sudo cat $PIDDIR/$1) -o pid)
         if [ "${Result##* }" == "$(sudo cat $PIDDIR/$1)" ]; then
