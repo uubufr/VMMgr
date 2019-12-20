@@ -17,6 +17,7 @@ if [ "$MYID" == "0" ]; then
                 RUNERROR=1
         fi
 else
+        [ -r $VMMGR_DB_PATH/VMMGR_.db ] || Set_Db
         if [ "$1" == "install" ] || [ "$1" == "uninstall" ]; then
                 echo "Error, '$1' commands need root privileges"
                 RUNERROR=1
@@ -43,8 +44,6 @@ if [ -r $VMMGR_LIB_PATH/VMMgr_Functions ]; then
     . $VMMGR_LIB_PATH/VMMgr_Disks
     . $VMMGR_LIB_PATH/VMMgr_CPUs
 fi
-
-[ -r $VMMGR_DB_PATH/VMMGR_.db ] || Set_Db
 
 case "$1" in
     "check")
