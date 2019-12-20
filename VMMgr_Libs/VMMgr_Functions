@@ -72,7 +72,7 @@ function Check_Sudo() {
             break;
         fi
     done
-    echo $RESULT
+    echo $SUDOOK
 }
 
 # Function: Check_Requirements
