@@ -46,7 +46,7 @@ fi
 
 # If DB not exists
 if [ $MYID != 0 ] && [ ! -r $VMMGR_DB_PATH/VMMGR_.db ]; then
-    Set_Db
+    Set_Db $VMMGR_DB_PATH
 fi
 
 case "$1" in
