@@ -2,7 +2,7 @@
  
 **Directory**: DATA
 
-**Description**: Various Var for generate config:
+**Description**: Various Vars for generate config:
 
 **PATH**: $VMMGR_DATA_PATH/DATA
 
