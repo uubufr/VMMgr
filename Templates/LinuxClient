@@ -1,0 +1,40 @@
+#! /bin/bash
+#
+# script name: %%NAME%%
+# autor: Sylvain Girod ( uubu at gmx dot fr )
+# version: 0.05
+# Template: LinuxClient
+# description: Template for linux client
+GROUP="clients"
+NAME="%%NAME%%"         # Unique Name
+MEM="2"                 # Initial Mem Size, in GB
+MAXMEM="2"              # OPTIONAL: Max Allowed mem (defaut: $MEM * 2)
+CPU=CPUHOST
+SMPTPL=SMP1HT
+
+QEMU_TEMPLATE=LINUXBASE
+
+BIOSTYPE="SECURE"
+
+INSTALLISO="Fedora-Workstation-Live-x86_64-31-1.9.iso"
+
+### Disks ###
+DISKPATH=/mnt/$NAME/
+Virtio_Disk[0]="1 10G $DISKPATH"
+
+
+New_Network VM-Bridge "4|10.98.98.0|24" "10.98.98.10|10.98.98.100" 10.98.98.1
+NETWORKDEVICE="VM-Bridge|1"
+
+SPICE=on
+SPICEMODE=plaintext
+SPICEIP=VM-Bridge
+SPICETPL=SPICECLEAR
+QEMU_AUDIO_DRV=spice
+SPICE_DEBUG_ALLOW_MC=0
+
+TELNET=on
+TELNETIP=VM-Bridge
+
+VNC=off
+QMP=off
