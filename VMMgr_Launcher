@@ -45,7 +45,7 @@ if [ -r $VMMGR_LIB_PATH/VMMgr_Functions ]; then
 fi
 
 # If DB not exists
-if [ $MYID != 0] && [ ! -r $VMMGR_DB_PATH/VMMGR_.db ]; then
+if [ $MYID != 0 ] && [ ! -r $VMMGR_DB_PATH/VMMGR_.db ]; then
     Set_Db
 fi
 
