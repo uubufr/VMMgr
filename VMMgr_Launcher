@@ -197,6 +197,7 @@ case "$1" in
         fi
         ;;
     "group")
+            Check_System
             Manage_Group $2 $3 $4
         ;;
     "status")
