@@ -44,6 +44,8 @@ if [ -r $VMMGR_LIB_PATH/VMMgr_Functions ]; then
     . $VMMGR_LIB_PATH/VMMgr_CPUs
 fi
 
+[ -r $VMMGR_DB_PATH/VMMGR_.db ] || Set_Db
+
 case "$1" in
     "check")
         Check_Requirements
