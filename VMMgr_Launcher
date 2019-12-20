@@ -49,6 +49,13 @@ if [ $MYID != 0 ] && [ ! -r $VMMGR_DB_PATH/VMMGR_.db ]; then
     Set_Db $VMMGR_DB_PATH
 fi
 
+# /run/VMMGR
+if [ ! -d /run/VMMGR ]; then
+ sudo mkdir /run/VMMGR
+ sudo chown -R qemu:qemu /run/VMMGR
+ sudo chmod -R 770 /run/VMMGR
+fi
+
 case "$1" in
     "check")
         Check_Requirements
