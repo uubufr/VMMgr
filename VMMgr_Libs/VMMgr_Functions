@@ -657,7 +657,7 @@ function Install_VMMGR() {
     fi
     
     if [ ! -r /etc/systemd/system/VMMgr_.target ]; then
-        cp $(pwd)/UNITS/VMMgr_.target /etc/systemd/system/
+        cp $(pwd)/UNITS-Templates/VMMgr_.target /etc/systemd/system/
     fi
     if [ ! -d /etc/systemd/system/VMMgr_.target.wants ]; then
         mkdir /etc/systemd/system/VMMgr_.target.wants
