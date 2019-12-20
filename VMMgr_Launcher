@@ -112,6 +112,7 @@ case "$1" in
         fi
         ;;
     "start")
+            Check_System
             if [ ! "$2" ]; then
                 echo "Usage $0 start <vm name>"
             elif [ "$3" == "regen" ]; then
