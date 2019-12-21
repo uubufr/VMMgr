@@ -6,7 +6,7 @@
 
 - STOPWAIT: work fine but ignore reverse order.
 
-- Groups: when WAIT=yes, we use "systemctl -H <hostname> is-system-running" to test if vm is correctly started, but 1. this implies ssh keys are set, and 2. we don't now on wich interface sshd is listenning.
+- Groups: when WAIT=yes, we use "systemctl -H <hostname> is-system-running" to test if vm is correctly started, but 1. this implies ssh keys in place, and 2. we don't now on wich interface sshd is listenning.
 
 ## ToDo:
 
@@ -35,4 +35,6 @@
 - Security: be able to use cgroups features to limit ressources accès (using systemd and/or in a docker container)
 
 - LUKS: be able to create encrypted volumes
+
+- Tuned: tuned for guest
 

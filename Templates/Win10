@@ -6,9 +6,9 @@
 # Template: Win10
 # description: Template for Windows 10
 GROUP="windows10"
-NAME="%%NAME%%"         # Unique Name
-MEM="4"                 # Initial Mem Size, in GB
-MAXMEM="4"              # OPTIONAL: Max Allowed mem (defaut: $MEM * 2)
+NAME="%%NAME%%"
+MEM="4"
+MAXMEM="4"
 CPU=CPUHOST
 SMPTPL=SMP1HT
 
@@ -23,7 +23,7 @@ INSTALLISO="fr_windows_10_x64.iso"
 DISKPATH=/mnt/$NAME/
 Virtio_Disk[0]="1 40G $DISKPATH"
 
-
+## Network ###
 New_Network VM-Bridge "4|10.98.98.0|24" "10.98.98.10|10.98.98.100" 10.98.98.1
 NETWORKDEVICE="VM-Bridge|1"
 

@@ -6,9 +6,9 @@
 # Template: LinuxServer
 # description: Template for linux server
 GROUP="servers"
-NAME="%%NAME%%"         # Unique Name
-MEM="2"                 # Initial Mem Size, in GB
-MAXMEM="2"              # OPTIONAL: Max Allowed mem (defaut: $MEM * 2)
+NAME="%%NAME%%"
+MEM="2"
+MAXMEM="2"
 CPU=CPUHOST
 SMPTPL=SMPMAX
 
@@ -22,7 +22,7 @@ INSTALLISO="CentOS-8-x86_64-1905-dvd1.iso"
 DISKPATH=/mnt/$NAME/
 Virtio_Disk[0]="1 10G $DISKPATH"
 
-
+## Network ###
 New_Network VM-Bridge "4|10.98.98.0|24" "10.98.98.10|10.98.98.100" 10.98.98.1
 NETWORKDEVICE="VM-Bridge|1"
 
