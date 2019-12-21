@@ -6,12 +6,12 @@
 # version: 0.05
 # description: Template for Live system
 GROUP=""
-NAME="%%NAME%%"         # Unique Name
+NAME="%%NAME%%"
 
 CPU=CPUHOST
 SMPTPL=SMPMAX
-MEM="2"                 # Initial Mem Size, in GB
-MAXMEM="2"              # OPTIONAL: Max Allowed mem (defaut: $MEM * 2)
+MEM="2"
+MAXMEM="2"
 BIOSTYPE="BIOS"
 
 
