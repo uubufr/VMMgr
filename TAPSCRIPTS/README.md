@@ -8,4 +8,4 @@
 
 ***
 
-**Note**: theses scripts can create/delete bridge (this is in comment by default)
+**Note**: theses scripts can create/delete bridge (this is commented by default)
