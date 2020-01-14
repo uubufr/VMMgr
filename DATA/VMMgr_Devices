@@ -48,7 +48,7 @@ QXL="-device qxl-vga,id=qxl-video0,vgamem_mb=64,ram_size=67108864,vram_size=6710
 
 
 ### for 3D display
-### NOTE: not tested, vfio need lot of steps and requirement, not tested at this time.
+### NOTE: not tested
 VIRTIOGPU="device vfio-pci,host=00:00:02.0,x-vga=off,bus=pcie.0,addr=0x2,x-igd-opregion=on -device virtio-gpu-pci,virgl=on"
 
 ### Physical Graphical card
