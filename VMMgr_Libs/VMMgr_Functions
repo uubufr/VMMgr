@@ -1204,3 +1204,4 @@ if [ "$MAJOR" ]; then
     sudo echo $DEVNAME | sudo tee /sys/dev/block/$MAJOR\:$MINOR/device/driver/unbind 1>/dev/null
     echo "-drive file=$1,if=none,format=raw,aio=native,cache=none,id=hd${2,,} -device virtio-scsi-pci,id=scsi -device scsi-block,drive=hd${2,,},bus=scsi.0"
 fi
+}
