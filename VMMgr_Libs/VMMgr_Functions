@@ -577,7 +577,7 @@ function Start_VM_From_Config() {
         done
     fi
     
-    PDEV="$PKEYBOARD $PMOUSE $PUSB $PHD"
+    PDEV="$PK $PM $PU $PH"
     unset PKEYBOARD PMOUSE PUSB PHD
     
     ### Ok! Now we can start VM ###
