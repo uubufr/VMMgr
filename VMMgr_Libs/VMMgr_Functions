@@ -578,7 +578,7 @@ function Start_VM_From_Config() {
     fi
     
     PDEV="$PKEYBOARD $PMOUSE $PUSB $PHD"
-    
+    unset PKEYBOARD PMOUSE PUSB PHD
     
     ### Ok! Now we can start VM ###
     PIDDIR=/run/VMMGR
@@ -1196,12 +1196,12 @@ function SET_USB_STORAGE() {
 # $1: device name (ex: /dev/sdd)
 # $2: device number
 function SET_PHYS_HD() {
-read d1 d2 d2 d4 MAJOR MINOR d5 <<< $(ls -l $1)
-if [ "$MAJOR" ]; then
-    MAJOR=${MAJOR%,*}
-    DEVNAME=$(ls -l /sys/dev/block/$MAJOR\:$MINOR/ | grep device)
-    DEVNAME=${DEVNAME##*/}
-    sudo echo $DEVNAME | sudo tee /sys/dev/block/$MAJOR\:$MINOR/device/driver/unbind 1>/dev/null
-    echo "-drive file=$1,if=none,format=raw,aio=native,cache=none,id=hd${2,,} -device virtio-scsi-pci,id=scsi -device scsi-block,drive=hd${2,,},bus=scsi.0"
-fi
+    read d1 d2 d2 d4 MAJOR MINOR d5 <<< $(ls -l $1)
+    if [ "$MAJOR" ]; then
+        MAJOR=${MAJOR%,*}
+        DEVNAME=$(ls -l /sys/dev/block/$MAJOR\:$MINOR/ | grep device)
+        DEVNAME=${DEVNAME##*/}
+        sudo echo $DEVNAME | sudo tee /sys/dev/block/$MAJOR\:$MINOR/device/driver/unbind 1>/dev/null
+        echo "-drive file=$1,if=none,format=raw,aio=native,cache=none,id=hd${2,,} -device virtio-scsi-pci,id=scsi -device scsi-block,drive=hd${2,,},bus=scsi.0"
+    fi
 }
