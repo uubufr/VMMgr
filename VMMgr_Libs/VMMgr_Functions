@@ -30,6 +30,9 @@
 # VM_Delete: Delete a vm
 # VM_DB_Manage: Many DB management tasks
 # set_DNS: register vm name with IP
+# SET_HID_PHYS: Find usb hid device (keyboard or mouse), and disconnect from the system
+# SET_USB_STORAGE: Find usb storage device, and disconnect from the system
+# SET_PHYS_HD: Add physical scsi/sata drive
 
 # Function Check_Softwares
 # Description: try to check if all packaged are installed or not
@@ -546,15 +549,35 @@ function Start_VM_From_Config() {
     UUID="-uuid "$(Get_Db_UUID $VMMGR_DB_PATH $NAME)
     VMMGR_LOG "$1" "SETTING" "$1: new $UUID"
     
+    ### Physical Device ###
+    if [ "$PKEYBOARD" ]; then
+        SET_HID_PHYS $PKEYBOARD
+        VMMGR_LOG "$1" "SETTING" "$1: DECONNECTING keyboard: $PKEYBOARD from the system"
+    fi
+    if [ "$PMOUSE" ]; then
+        SET_HID_PHYS $PMOUSE
+        VMMGR_LOG "$1" "SETTING" "$1: DECONNECTING mouse: $PMOUSE from the system"
+    fi
+    
+    if [ "$PUSB" ]; then
+        for USBKEY in ${PUSB[@]}; do
+            SET_USB_STORAGE $PUSB
+            VMMGR_LOG "$1" "SETTING" "$1: DECONNECTING USBSTORAGE: $USBKEY from the system"
+        done
+    fi
+    
+    PDEV="$PKEYBOARD $PMOUSE $PUSB"
+    
+    
     ### Ok! Now we can start VM ###
     PIDDIR=/run/VMMGR
     [ -d $PIDDIR ] || PIDDIR=$VMMGR_DATA_PATH
     if [ "$VMMGR_TEST" == "TEST" ]; then
-        echo "qemu-system-x86_64 -pidfile $PIDDIR/$NAME -name $NAME $UUID $CORE $MEMORY $FIRMWARE ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS $SCSIDISKS -writeconfig $VMMGR_DATA_PATH/QEMU_CONFIGS/$NAME"
+        echo "qemu-system-x86_64 -pidfile $PIDDIR/$NAME -name $NAME $UUID $CORE $MEMORY $FIRMWARE $PDEV ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS $SCSIDISKS -writeconfig $VMMGR_DATA_PATH/QEMU_CONFIGS/$NAME"
     else
         WCONFIG="-writeconfig $VMMGR_DATA_PATH/QEMU_CONFIGS/$NAME"
         VMMGR_LOG "$1" "SETTING" "$1: all done, starting!"
-        qemu-system-x86_64 -pidfile $PIDDIR/$NAME -name $NAME $UUID $CORE $MEMORY $FIRMWARE ${!QEMU_TEMPLATE} $NETARRAY ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $VIRTIODISKS $SCSIDISKS $WCONFIG
+        qemu-system-x86_64 -pidfile $PIDDIR/$NAME -name $NAME $UUID $CORE $MEMORY $FIRMWARE $PDEV ${!QEMU_TEMPLATE} $NETARRAY ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $VIRTIODISKS $SCSIDISKS $WCONFIG
         
         sleep 1
         
@@ -698,7 +721,7 @@ function Uninstall_VMMGR() {
 #   $1: VM name
 function VM_Is_Running() {
     PIDDIR=/run/VMMGR
-    [ -d $PIDDIR ] && PIDDIR=$VMMGR_DATA_PATH
+    [ -d $PIDDIR ] || PIDDIR=$VMMGR_DATA_PATH
     if [ -f "$PIDDIR/$1" ]; then
         Result=$(ps -h -q $(sudo cat $PIDDIR/$1) -o pid)
         if [ "${Result##* }" == "$(sudo cat $PIDDIR/$1)" ]; then
@@ -1109,3 +1132,62 @@ function set_DNS() {
         echo "not implemented, please update manually: $3 $1"
     fi
 }
+
+# Function SET_HID_PHYS
+# Description: Find usb hid device (keyboard or mouse), and disconnect from the system
+# Args:
+#   $1: "VENDORID:DEVICEID"
+function SET_HID_PHYS() {
+    DEVICE=$1
+    DEVFULLNAME=$(ls /sys/bus/hid/drivers/hid-generic/ | grep ${DEVICE^^} | head -1)
+    if [ "$DEVFULLNAME" != "" ]; then
+        sudo echo "$DEVFULLNAME" | sudo tee /sys/bus/hid/drivers/hid-generic/unbind 1>/dev/null
+    fi
+    read -r d1 BUS d2 DEVICE d3 <<< $(lsusb -d $DEVICE)
+    if [ "$BUS" ]; then
+        SBUS=$(( 10#$BUS ))
+        DEVICE=${DEVICE%:}
+        SDEVICE=$(( 10#$DEVICE ))
+        echo "-device usb-host,hostbus=$SBUS,hostaddr=$SDEVICE"
+    fi
+}
+
+# Function SET_USB_STORAGE
+# Description: Find usb storage device, and disconnect from the system
+# Args:
+#   $1: "VENDORID:DEVICEID"
+function SET_USB_STORAGE() {
+    DEVICE=$1
+    IFS=: read VENDID DEVID <<< $(echo "$DEVICE")
+    VENDID=$(( 10#$VENDID ))
+    DEVID=$(( 10#$DEVID ))
+    FILTER="$VENDID/$DEVID"
+    
+    for DEVPATH in $(ls -1d /sys/bus/usb/drivers/usb-storage/[0-9A-F]*); do
+        DEVFULLNAME=$(udevadm info --query=property $DEVPATH | grep PRODUCT | grep $FILTER)
+        if [ "$DEVFULLNAME" ]; then
+            sudo echo $(basename $DEVPATH) | sudo tee $(dirname $DEVPATH)/unbind 1>/dev/null
+            break
+        fi
+    done
+    read -r d1 BUS d2 DEVICE d3 <<< $(lsusb -d $DEVICE)
+    if [ "$BUS" ]; then
+        SBUS=$(( 10#$BUS ))
+        DEVICE=${DEVICE%:}
+        SDEVICE=$(( 10#$DEVICE ))
+        echo "-device usb-host,hostbus=$SBUS,hostaddr=$SDEVICE"
+    fi
+}
+
+# Function SET_PHYS_HD
+# Description: Add physical scsi/sata drive
+# Args:
+# $1: device name (ex: /dev/sdd)
+function SET_PHYS_HD() {
+read d1 d2 d2 d4 MAJOR MINOR d5 <<< $(ls -l $1)
+if [ "$MAJOR" ]; then
+    MAJOR=${MAJOR%,*}
+    DEVNAME=$(ls -l /sys/dev/block/$MAJOR\:$MINOR/ | grep device)
+    DEVNAME=${DEVNAME##*/}
+    sudo echo $DEVNAME | sudo tee /sys/dev/block/$MAJOR\:$MINOR/device/driver/unbind 1>/dev/null
+fi
