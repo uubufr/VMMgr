@@ -51,6 +51,9 @@ QXL="-device qxl-vga,id=qxl-video0,vgamem_mb=64,ram_size=67108864,vram_size=6710
 ### NOTE: not tested, vfio need lot of steps and requirement, not tested at this time.
 VIRTIOGPU="device vfio-pci,host=00:00:02.0,x-vga=off,bus=pcie.0,addr=0x2,x-igd-opregion=on -device virtio-gpu-pci,virgl=on"
 
+### Physical Graphical card
+VFIOGPU="-device ioh3420,bus=pcie.0,addr=1c.0,multifunction=on,port=1,chassis=1,id=root.1 -device vfio-pci,host=17:00.0,bus=root.1,addr=00.0,multifunction=on,x-vga=off -device vfio-pci,host=17:00.1,bus=root.1,addr=00.1"
+
 ### Watchdog:
 WATCHDOG="-device i6300esb,id=watchdog0 -watchdog-action none"
 
@@ -95,3 +98,6 @@ VMCORE="-device vmcoreinfo"
 ### DEVICE TEMPLATES ###
 LINUXBASE="$COMMON $BOOT $S34 $PCI $USB $MOUSE $KEYBOARD $TABLET $IDEDVD $QXL $WATCHDOG $BALLOON $RNG $OVERCOMMIT $UNIXCLOCK $SOUND $NODISPLAY $VMGENID $PVPANIC $VMCORE"
 WINDOWSBASE="$COMMON $BOOT $PCI $USB $MOUSE $KEYBOARD $IDEDVD $QXL $WATCHDOG $BALLOON $RNG $OVERCOMMIT $WINDOWSCLOCK $SOUND $NODISPLAY $VMGENID"
+
+### This allow to dedicate a physical graphical card, See https://github.com/uubufr/VMMgr/wiki/3.9---Assign-Physical-hardware
+WINDOWSPHYSICAL="$COMMON $MEMALLOC $BOOT $S34 $PCI $USB $PMOUSE $PKEYBOARD $TABLET $IDEDVD $VFIOGPU $WATCHDOG $BALLOON $RNG $OVERCOMMIT $WINDOWSCLOCK $SOUND $VMGENID $NODISPLAY"
