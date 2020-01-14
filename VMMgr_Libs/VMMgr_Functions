@@ -551,22 +551,33 @@ function Start_VM_From_Config() {
     
     ### Physical Device ###
     if [ "$PKEYBOARD" ]; then
-        SET_HID_PHYS $PKEYBOARD
+        PK=$(SET_HID_PHYS $PKEYBOARD)
         VMMGR_LOG "$1" "SETTING" "$1: DECONNECTING keyboard: $PKEYBOARD from the system"
     fi
     if [ "$PMOUSE" ]; then
-        SET_HID_PHYS $PMOUSE
+        PM=$(SET_HID_PHYS $PMOUSE)
         VMMGR_LOG "$1" "SETTING" "$1: DECONNECTING mouse: $PMOUSE from the system"
     fi
     
+    PU=""
     if [ "$PUSB" ]; then
         for USBKEY in ${PUSB[@]}; do
-            SET_USB_STORAGE $PUSB
+            PU="$PU $(SET_USB_STORAGE $USBKEY)"
             VMMGR_LOG "$1" "SETTING" "$1: DECONNECTING USBSTORAGE: $USBKEY from the system"
         done
     fi
     
-    PDEV="$PKEYBOARD $PMOUSE $PUSB"
+    PH=""
+    if [ "$PHD" ]; then
+        HDNUM=0
+        for HD in ${PHD[@]}; do
+            PH="$PH "$(SET_PHYS_HD $HD $(echo "ibase=10;obase=16;$HDNUM" | bc))
+            VMMGR_LOG "$1" "SETTING" "$1: DECONNECTING physical drive $HD from the system"
+            HDNUM=$(( $HDNUM + 1 ))
+        done
+    fi
+    
+    PDEV="$PKEYBOARD $PMOUSE $PUSB $PHD"
     
     
     ### Ok! Now we can start VM ###
@@ -1183,6 +1194,7 @@ function SET_USB_STORAGE() {
 # Description: Add physical scsi/sata drive
 # Args:
 # $1: device name (ex: /dev/sdd)
+# $2: device number
 function SET_PHYS_HD() {
 read d1 d2 d2 d4 MAJOR MINOR d5 <<< $(ls -l $1)
 if [ "$MAJOR" ]; then
@@ -1190,4 +1202,5 @@ if [ "$MAJOR" ]; then
     DEVNAME=$(ls -l /sys/dev/block/$MAJOR\:$MINOR/ | grep device)
     DEVNAME=${DEVNAME##*/}
     sudo echo $DEVNAME | sudo tee /sys/dev/block/$MAJOR\:$MINOR/device/driver/unbind 1>/dev/null
+    echo "-drive file=$1,if=none,format=raw,aio=native,cache=none,id=hd${2,,} -device virtio-scsi-pci,id=scsi -device scsi-block,drive=hd${2,,},bus=scsi.0"
 fi
