@@ -188,7 +188,7 @@ case "$1" in
                 . $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
                 if [ "$TELNET" == "on" ]; then
                     IPPORT=$(Set_Service_Listen $TELNETIP $TELNETIPVER $TELNETTYPE $NAME telnet $TELNETPORT)
-                    { echo "system_powerdown"; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
+                    { echo "  system_powerdown"; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
                 elif [ "$QMP" == "on" ]; then
                     IPPORT=$(Set_Service_Listen $QMPIP $QMPIPVER $QMPTYPE $NAME qmp $QMPPORT)
                     { echo  { echo '{ "execute": "qmp_capabilities" } { "execute": "system_powerdown" } { "execute": "quit" }'; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
@@ -208,7 +208,7 @@ case "$1" in
             . $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
             if [ "$TELNET" == "on" ]; then
                 IPPORT=$(Set_Service_Listen $TELNETIP $TELNETIPVER $TELNETTYPE $NAME telnet $TELNETPORT)
-                { echo "info status"; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
+                { echo "  info status"; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
             elif [ "$QMP" == "on" ]; then
                 IPPORT=$(Set_Service_Listen $QMPIP $QMPIPVER $QMPTYPE $NAME qmp $QMPPORT)
                 { echo '{ "execute": "qmp_capabilities" } { "execute": "query-status" }'; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
@@ -224,7 +224,7 @@ case "$1" in
             . $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
             if [ "$TELNET" == "on" ]; then
                 IPPORT=$(Set_Service_Listen $TELNETIP $TELNETIPVER $TELNETTYPE $NAME telnet $TELNETPORT)
-                { echo "quit"; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
+                { echo "  quit"; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
             elif [ "$QMP" == "on" ]; then
                 IPPORT=$(Set_Service_Listen $QMPIP $QMPIPVER $QMPTYPE $NAME qmp $QMPPORT)
                 { echo  { echo '{ "execute": "qmp_capabilities" } { "execute": "quit" }'; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
@@ -240,7 +240,7 @@ case "$1" in
             . $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
             if [ "$TELNET" == "on" ]; then
                 IPPORT=$(Set_Service_Listen $TELNETIP $TELNETIPVER $TELNETTYPE $NAME telnet $TELNETPORT)
-                { echo "system_reset"; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
+                { echo "  system_reset"; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
             elif [ "$QMP" == "on" ]; then
                 IPPORT=$(Set_Service_Listen $QMPIP $QMPIPVER $QMPTYPE $NAME qmp $QMPPORT)
                 { echo  { echo '{ "execute": "qmp_capabilities" } { "execute": "system_reset" } { "execute": "quit" }'; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
@@ -305,9 +305,9 @@ case "$1" in
                 . $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
                 if [ "$TELNET" == "on" ]; then
                     IPPORT=$(Set_Service_Listen $TELNETIP $TELNETIPVER $TELNETTYPE $NAME telnet $TELNETPORT)
-                    { echo "change DVD $ISO"; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
+                    { echo "  change DVD $ISO"; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
                     if [ "$4" == "reset" ]; then
-                        { echo "system_reset"; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
+                        { echo "  system_reset"; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
                     fi
                 elif [ "$QMP" == "on" ]; then
                     IPPORT=$(Set_Service_Listen $QMPIP $QMPIPVER $QMPTYPE $NAME qmp $QMPPORT)
