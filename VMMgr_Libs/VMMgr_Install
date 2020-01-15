@@ -1,0 +1,273 @@
+#! /bin/bash
+#
+# script name: VMMgr_Install
+# autor: Sylvain Girod ( uubu at gmx dot fr )
+# version: 0.04
+# description: Install and Uninstall Functions
+#
+# Functions:
+# Check_Softwares: try to check if all required software are installed
+# Check_Sudo: Check sudo rules
+# Check_Requirements: Helper for hypervisor configuration
+# Check_System: Check system requirements
+# Install_VMMGR: Install VMMGR on the system
+# Uninstall_VMMGR: Remove VMMGR from the system
+
+# Function Check_Softwares
+# Description: try to check if all packaged are installed or not
+# Args:
+#   $1: Software List
+#   $2: (bool) Not Installed=0, Installed=1 
+function Check_Softwares() {
+    TOBEINSTALL=""
+    PACKAGENEEDED=$(echo $1 | tr \|  \   )
+    for PACKAGE in $(echo $PACKAGENEEDED); do
+        if [ "$(rpm -qa $PACKAGE)" == "" ]; then
+            TOBEINSTALL="$TOBEINSTALL $PACKAGE"
+        else
+            INSTALLED="$PACKAGE"
+        fi
+    done
+    if [ $2 -eq 0 ]; then
+        echo $TOBEINSTALL
+    else
+        echo $INSTALLED
+    fi
+}
+
+# Function: Check_Sudo
+# Description: Check sudo rules
+# Args: None
+function Check_Sudo() {
+    SUDOOK="0"
+    for SUDOCMD in $(echo "/usr/sbin/ip /usr/sbin/brctl /usr/bin/ovs-vsctl /usr/bin/nmcli /usr/sbin/setcap /usr/bin/systemctl /usr/bin/cat /usr/bin/chmod /usr/bin/chown /usr/sbin/modprobe /usr/sbin/setcap /usr/bin/mkdir /usr/bin/tee /usr/bin/sed"); do
+        RESULT=$(sudo -l $SUDOCMD 2>&1)
+        if [ "$RESULT" == "" ]; then
+            SUDOOK=1
+            break;
+        elif [ "${RESULT#sudo}" != "$RESULT" ]; then
+             continue
+        elif [ "$SUDOCMD" == "$RESULT" ]; then
+            continue
+        else
+            SUDOOK=1
+            break;
+        fi
+    done
+    echo $SUDOOK
+}
+
+# Function: Check_Requirements
+# Description: Helper for hypervisor configuration
+# Args: None
+function Check_Requirements() {
+    echo "Checking..."
+    echo ""
+    
+    SUDOOK=$(Check_Sudo)
+    if [ "$SUDOOK" == "1" ]; then
+        echo "### Step 1: install sudo rules:"
+    
+        echo "Sudoers: You must set the following rules:"
+        echo "Cmnd_Alias VMMGRCMD= /usr/sbin/ip, /usr/sbin/brctl, /usr/bin/ovs-vsctl, /usr/bin/nmcli, /usr/sbin/setcap, /usr/bin/systemctl, /usr/bin/cat, /usr/bin/chmod, /usr/bin/chown, /usr/sbin/modprobe, /usr/sbin/setcap, /usr/bin/mkdir, /usr/bin/tee, /usr/bin/sed"
+        echo "Cmnd_Alias VMMGRCHECK= /usr/bin/ls"
+    
+        echo "%qemu ALL=(root:root) NOPASSWD: VMMGRCMD"
+        echo "%qemu ALL=(qemu:qemu) NOPASSWD: VMMGRCHECK"
+        echo ""
+    
+    else
+        PACKAGES=$(Check_Softwares "qemu-system-x86|sqlite|edk2-ovmf|virt-viewer|qemu-img" 0)
+        if [ "$PACKAGES" ]; then
+            echo "You must install the following packages: $PACKAGES"
+            echo ""
+        fi
+        PACKAGES=$(Check_Softwares "NetworkManager|openvswitch|virglrenderer|dpdk|tuned" 0)
+        if [ "$PACKAGES" ]; then
+            echo "You can install the following optionals packages: $PACKAGES"
+            echo ""
+        fi
+        PACKAGES=$(Check_Softwares "ulatencyd" 1)
+        if [ "$PACKAGES" ]; then
+            echo "You should delete following packages: $PACKAGES"
+            echo ""
+        fi
+    
+        if [ "$(getent group qemu | grep $(whoami) | grep qemu)" == "" ]; then
+            echo "you account must be member of qemu group:"
+            echo "> usermod -a -G qemu $(whoami)"
+        fi
+        
+        if [ "$(getent group kvm | grep qemu)" == "" ]; then
+            echo "qemu user must be member of kvm group:"
+            echo "> usermod -a -G kvm qemu"
+        fi
+    
+        ISOPATH=$(sudo -u qemu ls -l $VMMGR_ISO_PATH 2>/dev/null)
+        if [ "$ISOPATH" == "" ]; then
+            echo "If you plan to use systemd, you ISO PATH ($VMMGR_ISO_PATH) must be readable by qemu user"
+            echo "> chown -R :qemu $VMMGR_ISO_PATH && chmod 750 $VMMGR_ISO_PATH"
+        fi
+        
+        if [ "$(getent group disk | grep $(whoami) | grep disk)" == "" ]; then
+            echo "if you plan to use block dev, you must member of disk group:"
+            echo "> usermod -a -G qemu $(whoami)"
+        fi
+    
+        echo "DISKPATH: if you plan to use systemd, your DISKPATH var in your VM configs must be readable by qemu user"
+        echo ""
+    
+        for KERNELOPT in $(echo "nodelayacct transparent_hugepage=madvise elevator=deadline kvm-intel.nested=1 iommu=1 intel_iommu=on kvm-intel.ept=1"); do
+            if [ "$(cat /proc/cmdline | grep $KERNELOPT)" == "" ]; then
+                OPTIONS="$OPTIONS $KERNELOPT"
+            fi
+        done
+
+        if [ "$OPTIONS" ]; then
+            echo "You should add the following kernel options in your grub.cfg:"
+            echo $OPTIONS
+            echo ""
+        fi
+
+        if [ "$(tuned-adm list | grep hypervisor)" == "" ]; then
+            echo "You should install tuned profile provided by copying Configs/tuned.conf in /etc/tuned/hypervisor/"
+            echo ""
+        fi
+    
+        if [ "$(tuned-adm active | grep hypervisor)" == "" ]; then
+            echo "tuned profile hypervisor is not active!"
+            echo ""
+        fi
+    
+        echo "SPICE/VNC secure mode: make sure keys and certificates are readable by qemu user and/or group"
+    fi
+}
+
+# Function: Check_System
+# Description: Check system requirements
+# Args: no args
+# Steps:
+#   1: Check module vhost-net
+#   2: Check perms on /dev/net/tun, /dev/vhost-net and /dev/kvm
+#   3: Set cap_net_admin on qemu-system_x86_64
+function Check_System() {
+    if [ $(Check_Sudo) -eq 0 ]; then
+        if [ "$(modinfo vhost-net -F intree)" != "Y" ]; then
+            sudo modprobe vhost vhost-net
+        fi
+    
+        ls -l /dev/net/tun | cut -d\  -f1 | grep 'crw-rw-rw-' > /dev/null
+        if [ $? -ne 0 ]; then
+            sudo chmod 0666 /dev/net/tun
+        fi
+
+        ls -l /dev/vhost-net | cut -d\  -f1 | grep 'crw-rw-rw-' > /dev/null
+        if [ $? -ne 0 ]; then
+            sudo chmod 0666 /dev/vhost-net
+        fi
+
+        ls -l /dev/kvm | cut -d\  -f1 | grep 'crw-rw-rw-' > /dev/null
+        if [ $? -ne 0 ]; then
+            sudo chmod 0666 /dev/kvm
+        fi
+
+        getcap /usr/bin/qemu-system-x86_64 | grep cap_net_admin+ep > /dev/null
+        if [ $? -ne 0 ]; then
+            sudo setcap cap_net_admin+ep /usr/bin/qemu-system-x86_64
+        fi
+    
+        if [ $(cat /proc/sys/net/ipv4/ip_forward) -eq 0 ]; then
+            echo 1 | sudo tee /proc/sys/net/ipv4/ip_forward 1>/dev/null
+        fi
+    
+        modinfo openvswitch 2>/dev/null 1>/dev/null
+        if [ $? -eq 0 ]; then
+            sudo modprobe openvswitch
+            [ -d /run/openvswitch ] || sudo mkdir /run/openvswitch
+        fi
+    
+        if [ ! -r "/run/VMMGR" ]; then
+            sudo mkdir /run/VMMGR 
+            sudo chown -R qemu:qemu /run/VMMGR
+            sudo chmod -R 770 /run/VMMGR
+        fi
+    else
+        echo "Unable to Check System, please verify sudo rules"
+    fi
+}
+
+# Function: Install_VMMGR
+# Description: Install VMMGR on the system
+# Args: None
+function Install_VMMGR() {
+    # /etc/VMMGR/ and main config VMMgr_.conf
+    if [ ! -d /etc/VMMGR/ ]; then
+        mkdir /etc/VMMGR
+        cp -r $(pwd)/VMMgr_.conf /etc/VMMGR/ && chown -R qemu:qemu /etc/VMMGR
+        sed -i 's/^\(\VMMGR_.*\)$//g' /etc/VMMGR/VMMgr_.conf
+        sed -i 's/^#\(\VMMGR_.*\)$/\1/g' /etc/VMMGR/VMMgr_.conf
+    fi
+    # /var/lib/VMMGR/
+    [ -d /var/lib/VMMGR/ ] || mkdir -p /var/lib/VMMGR/{DB,ISO}
+    cp -r $(pwd)/{DATA,DB_BKP,ISO,LOGS,QEMU_CONFIGS,R-SPICE,R-Templates,R-VNC,Remmina,TAPSCRIPTS,Templates,TUNED,UEFI,UNITS,UNITS-Templates,VM_BKP,VM_CONFIGS} /var/lib/VMMGR/ && chown -R qemu:qemu /var/lib/VMMGR && chmod -R 770 /var/lib/VMMGR
+    
+    # Main program
+    cp $(pwd)/VMMgr_Launcher /usr/local/bin/ && chown qemu:qemu /usr/local/bin/VMMgr_Launcher && chmod 0755 /usr/local/bin/VMMgr_Launcher
+    
+    # Libs
+    cp -r $(pwd)/VMMgr_Libs/VMMgr_* /usr/local/lib/ && chown qemu:qemu /usr/local/lib/VMMgr_* && chmod 0650 /usr/local/lib/VMMgr_*
+    
+    # DB
+    [ -r $(pwd)/VMMGR_.db ] && cp -r $(pwd)/VMMGR_.db /var/lib/VMMGR/DB/ && chown qemu:qemu /var/lib/VMMGR/DB/VMMGR_.db && chmod 0660 /var/lib/VMMGR/DB/VMMGR_.db
+    
+    # /run/VMMGR
+    if [ ! -d /run/VMMGR ]; then
+        mkdir /run/VMMGR && chown -R qemu:qemu /run/VMMGR && chmod -R 770 /run/VMMGR
+    fi
+    
+    # /var/log/VMMGR
+    if [ ! -d /var/log/VMMgr ]; then
+        mkdir /var/log/VMMgr
+        touch /var/log/VMMgr/VMMgr.log
+        chown -R qemu:qemu /var/log/VMMgr
+        chmod 770 /var/log/VMMgr
+        chmod 660 /var/log/VMMgr/*
+    fi
+    
+    if [ ! -r /etc/systemd/system/VMMgr_.target ]; then
+        cp $(pwd)/UNITS-Templates/VMMgr_.target /etc/systemd/system/
+    fi
+    if [ ! -d /etc/systemd/system/VMMgr_.target.wants ]; then
+        mkdir /etc/systemd/system/VMMgr_.target.wants
+    fi
+    VMMGR_LOG "VMMGR" "INSTALL" "VMMgr is installed on your system."
+}
+
+# Function: Uninstall_VMMGR
+# Description: Remove VMMGR from the system
+# Args: None
+function Uninstall_VMMGR() {
+    # DB
+    if [ -r /var/lib/VMMGR/DB/VMMGR_.db ]; then
+        echo "Before Uninstall, do you want to save your DB? [Y/n]"; read answer
+        if [ "${answer^^}" == "Y" ] || [  "$answer" == "" ]; then
+            cp /var/lib/VMMGR/DB/VMMGR_.db ~/VMMgr_.db.bkp$(date --iso)
+            echo "VMMGR_.db saved to: ~/VMMgr_.db.bkp$(date --iso)"
+        fi
+        rm /var/lib/VMMGR/DB/VMMGR_.db
+    fi
+    # DB Backups
+    if [ "$(ls -I README.md /var/lib/VMMGR/DB_BKP)" != "" ]; then
+        echo "Do you want to save you DB backup? [y/N]"; read answer
+        if [ "${answer^^}" == "Y" ]; then
+            cp -r /var/lib/VMMGR/DB_BKP ~/VMMgr_.DB_BKP
+            echo "DB backups saved to: ~/DB_BKP"
+        fi
+    fi
+    
+    rm /usr/local/bin/VMMgr_Launcher
+    rm /usr/local/lib/VMMgr_{CPUs,Db,Disks,Functions,Networks}
+    VMMGR_LOG "VMMGR" "UNINSTALL" "VMMgr is removed on your system except:"
+    VMMGR_LOG "VMMGR" "UNINSTALL" "/etc/VMMGR directory will not be deleted"
+    VMMGR_LOG "VMMGR" "UNINSTALL" "/var/lib/VMMGR, VM configs and templates will not be deleted"
+}

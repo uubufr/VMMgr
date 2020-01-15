@@ -1,0 +1,177 @@
+#! /bin/bash
+#
+# script name: VMMgr_Group
+# autor: Sylvain Girod ( uubu at gmx dot fr )
+# version: 0.04
+# description: Functions for group management
+#
+# Functions:
+# VM_Get_Order: get ORDER var from vmconfig
+# Get_Start_Wait: get STARTWAIT var from vmconfig
+# Get_Stop_Wait: get STOPWAIT var from vmconfig
+# Manage_Group: Dispatcher for group management
+
+# Function VM_Get_Order
+# Description: get ORDER var from vmconfig
+# Args:
+#   $1: VM name
+function VM_Get_Order() {
+    VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $1)
+    VMORDER=$(cat $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF | grep "^ORDER=")
+    echo ${VMORDER#ORDER=}
+}
+
+# Function Get_Start_Wait
+# Description: get STARTWAIT var from vmconfig
+# Args:
+#   $1: VM Name
+function Get_Start_Wait() {
+    VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $1)
+    VMCOND=$(cat $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF | grep "^STARTWAIT=")
+    echo ${VMCOND#STARTWAIT=}
+}
+
+# Function Get_Stop_Wait
+# Description: get STOPWAIT var from vmconfig
+# Args:
+#   $1: VM Name
+function Get_Stop_Wait() {
+    VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $1)
+    VMCOND=$(cat $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF | grep "^STOPWAIT=")
+    echo ${VMCOND#STOPWAIT=}
+}
+
+# Function: Manage_Group
+# Description: Dispatcher for group management
+# Args:
+#   $1: action
+#   $2: group name
+#   $3: optional "order": used to force start <group> order
+function Manage_Group() {
+    case $1 in
+        "list")
+            case $2 in
+                "all")
+                    Db_Get_Groups $VMMGR_DB_PATH
+                ;;
+                *)
+                    Db_Get_Group_Member $VMMGR_DB_PATH $2
+                ;;
+            esac
+        ;;
+        "start")
+            VMMGR_LOG "VMMGR" "GROUP" "Starting group $2"
+            if [ "$(Db_IsEnabled_Group $VMMGR_DB_PATH $2)" == "1" ] && [ "$3" != "order" ]; then
+                sudo systemctl start $2.target
+            else
+                MEMBERS=$(Db_Get_Group_Member $VMMGR_DB_PATH $2)                # Get Group Members
+                ORDER=""; WAIT=""; PREC=""
+                for MEMBER in $MEMBERS; do                                      # Ordering
+                    VMO=$(VM_Get_Order $MEMBER)
+                    [ "$VMO" ] || VMO=1000
+                    ORDER="$ORDER $VMO;$MEMBER"
+                done
+                ORDER=$(echo $ORDER | tr " " "\n" | sort | tr "\n" " " )
+                for MEMBER in $ORDER; do
+                    if [ "$PREC" ]; then
+                        if [ "$PREC" == ${MEMBER%;*} ]; then                    # Same order value, we start
+                            VMMGR_LOG "VMMGR" "GROUP" "Starting member of $2: ${MEMBER#*;} with ORDER ${MEMBER%;*}"
+                            $VMMGR_PATH/VMMgr_Launcher start ${MEMBER#*;}
+                            PREC=${MEMBER%;*}
+                        else
+                            WAIT=$(Get_Start_Wait ${MEMBER#*;})
+                            if [ "${WAIT^^}" == "YES" ]; then
+                                ISOK="1"; COUNT=0
+                                until [ $ISOK -eq 0 ]; do
+                                    systemctl -H "${MEMBER#*;}" is-system-running 2>&1
+                                    ISOK=$?
+                                    COUNT=$(( COUNT + 1 ))
+                                    echo $COUNT
+                                    if [ $COUNT -gt 30 ]; then break; fi
+                                    sleep 5
+                                done
+                                if [ $ISOK -eq 0 ]; then
+                                    VMMGR_LOG "VMMGR" "GROUP" "Starting member of $2: ${MEMBER#*;} with ORDER ${MEMBER%;*}"
+                                    $VMMGR_PATH/VMMgr_Launcher start ${MEMBER#*;}
+                                    PREC=${MEMBER%;*}
+                                else
+                                    break;
+                                fi
+                            else
+                                sleep $WAIT
+                                VMMGR_LOG "VMMGR" "GROUP" "Starting member of $2: ${MEMBER#*;} with ORDER ${MEMBER%;*}"
+                                $VMMGR_PATH/VMMgr_Launcher start ${MEMBER#*;}
+                                PREC=${MEMBER%;*}
+                            fi
+                        fi
+                    else
+                        VMMGR_LOG "VMMGR" "GROUP" "Starting member of $2: ${MEMBER#*;} with ORDER ${MEMBER%;*}"
+                        $VMMGR_PATH/VMMgr_Launcher start ${MEMBER#*;}                  # First VM
+                        PREC=${MEMBER%;*}
+                    fi
+                done
+            fi
+            ;;
+        "stop")
+            VMMGR_LOG "VMMGR" "GROUP" "Stoping group $2"
+            COUNT=0; PREC=""
+            for MEMBER in $(Db_Get_Group_Member $VMMGR_DB_PATH $2); do
+                if [ "$(Get_Stop_Wait $MEMBER)" == "1" ]; then
+                    COUNT=0
+                    if [ "$PREC" ]; then
+                        while [ "$(VM_Is_Running $PREC)" == "1" ]; do
+                            COUNT=$(( $COUNT + 1 ))
+                            if [ $COUNT -gt 120 ]; then break; fi
+                            sleep 1
+                        done
+                    fi
+                fi
+                if [ $COUNT -le 120 ]; then
+                    VMMGR_LOG "VMMGR" "GROUP" "Stopping member of $2: $MEMBER"
+                    $VMMGR_PATH/VMMgr_Launcher stop $MEMBER
+                    PREC=$MEMBER
+                else
+                    echo "An error occur, $PREC don't stopped after 120s, cannot stop $MEMBER"
+                fi
+            done
+        ;;
+        "enable")
+            VMMGR_LOG "VMMGR" "GROUP" "Enabling group $2"
+            TARGET=$(systemctl list-unit-files $2.target | grep 1)
+            VMMGR_LOG "VMMGR" "GROUP" "Generating target unit for $2"
+            cp $VMMGR_DATA_PATH/UNITS/group-template.target $VMMGR_DATA_PATH/UNITS/$2.target
+            Customize_Target $2
+            if [ ! "$TARGET" ]; then
+                UNITPATH=$(systemctl status $2.target | grep "Loaded:" | cut -d\( -f2 ); UNITPATH="${UNITPATH%%.target*}.target"
+                if [ "$(sha1sum $VMMGR_DATA_PATH/UNITS/$2.target | awk '{print $1}')" == "$(sha1sum $UNITPATH | awk '{print $1}')" ]; then
+                    echo "VM $2 already enabled"
+                else
+                    VMMGR_LOG "VMMGR" "GROUP" "Installing target unit for $2"
+                    sudo cp $VMMGR_DATA_PATH/UNITS/$2.target /etc/systemd/system/$2.target
+                    sudo systemctl daemon-reload
+                fi
+            else
+                VMMGR_LOG "VMMGR" "GROUP" "Installing target unit for $2"
+                sudo cp $VMMGR_DATA_PATH/UNITS/$2.target /etc/systemd/system/$2.target
+                sudo systemctl daemon-reload
+                [ -d /etc/systemd/system/$2.target.wants ] || sudo mkdir /etc/systemd/system/$2.target.wants
+            fi
+            VMMGR_LOG "VMMGR" "GROUP" "Mark $2 as enabled in DB"
+            Db_Enable_Group $VMMGR_DB_PATH $2
+            for MEMBER in $(Db_Get_Group_Member $VMMGR_DB_PATH $2); do
+                VMMGR_LOG "VMMGR" "GROUP" "Enabling memberof $2: $MEMBER"
+                $VMMGR_PATH/VMMgr_Launcher enable $MEMBER
+            done
+        ;;
+        "disable")
+            VMMGR_LOG "VMMGR" "GROUP" "Disabling group $2"
+            for MEMBER in $(Db_Get_Group_Member $VMMGR_DB_PATH $2); do
+                VMMGR_LOG "VMMGR" "GROUP" "Disabling member of $2: $MEMBER"
+                $VMMGR_PATH/VMMgr_Launcher disable $MEMBER
+            done
+            VMMGR_LOG "VMMGR" "GROUP" "Mark $2 as disabled in DB"
+            sudo systemctl disable $2.target
+            Db_Disable_Group $VMMGR_DB_PATH $2
+        ;;
+    esac
+}
