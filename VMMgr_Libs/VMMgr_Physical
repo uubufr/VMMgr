@@ -26,7 +26,7 @@ function SET_HID_PHYS() {
         DEVICE=${DEVICE%:}
         SDEVICE=$(( 10#$DEVICE ))
         echo "-device usb-host,hostbus=$SBUS,hostaddr=$SDEVICE"
-        sudo chown root:qemu /dev/usb/$BUS/$DEVICE
+        sudo chown root:qemu /dev/bus/usb/$BUS/$DEVICE
     fi
 }
 
