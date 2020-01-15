@@ -1,0 +1,73 @@
+#! /bin/bash
+#
+# script name: VMMgr_Devices
+# autor: Sylvain Girod ( uubu at gmx dot fr )
+# version: 0.04
+# description: Functions for various devices
+#
+# Functions:
+# Check_MEM: calculate and/or check MEM and MAXMEM
+# Set_UEFI: Create UEFI firmware
+# Set_IPMI: Create IPMI device, using OpenIPMI-lanserv 
+
+# Function Check_MEM
+# Description: Check if MEM and MAXMEM
+# if MAXMEM is undefined, calculate MEM * 2
+# Args:
+#   $1: $MEM
+#   $2: $MAXMEM
+#   $3: Max Slots (optional)
+function Check_MEM() {
+ [ "$1" ] || return 0
+ MAXSYS=$(( $(grep "MemTotal: " /proc/meminfo  | awk '{print $2}' ) / 1024 / 1024 ))
+ if [ $1 -gt $MAXSYS ]; then MEM=$MAXSYS; else MEM=$1; fi
+ if [ "$2" == "undefined" ]; then 
+    MAXMEM=$(( $MEM * 2 ));
+ elif [ $2 -gt $MAXSYS ]; then
+    MAXMEM=$MAXSYS
+ else 
+    MAXMEM=$2
+ fi
+ if [ $3 ]; then SLOT=$3; else SLOT=1; fi
+ if [ $MEM -eq $MAXMEM ]; then
+    echo "-m "$MEM"G"
+ else
+    echo "-m "$MEM"G,slots=$SLOT,maxmem=$MAXMEM""G"
+ fi
+}
+
+# Function: Set_UEFI
+# Description: Create UEFI firmware
+# Args:
+#   $1: VM Name
+#   $2: (bool) Secure boot
+function Set_UEFI() {
+    VMMGR_LOG "$1" "SETTING" "Prepare UEFI for $1"
+    SECURE=""
+    [ "$2" == "on" ] && SECURE=".secboot"
+        
+    if [ ! -d $VMMGR_DATA_PATH/UEFI/$NAME/ ]; then 
+        mkdir -p $VMMGR_DATA_PATH/UEFI/$NAME/
+        cp $(rpm -ql edk2-ovmf | grep OVMF_VARS$SECURE.fd | head -1) $VMMGR_DATA_PATH/UEFI/$NAME/
+        touch $VMMGR_DATA_PATH/UEFI/$NAME/OVMF_LOG.log
+        sudo chown -R qemu:qemu $VMMGR_DATA_PATH/UEFI/$NAME/
+        sudo chmod 660 $VMMGR_DATA_PATH/UEFI/$NAME/*
+    fi
+    echo "-drive if=pflash,format=raw,readonly=on,file=$(rpm -ql edk2-ovmf | grep OVMF_CODE$SECURE.fd | head -1) -drive if=pflash,format=raw,file=$VMMGR_DATA_PATH/UEFI/$NAME/OVMF_VARS$SECURE.fd -global isa-debugcon.iobase=0x402 -debugcon file:$VMMGR_DATA_PATH/UEFI/$NAME/OVMF_LOG.log"
+}
+
+# Function: Set_IPMI
+# Description: Create IPMI device, using OpenIPMI-lanserv 
+# Args:
+#   $1: Vm Name
+#   $2: IPMI Template Path
+#   $3: IPMI Address
+#   $4: IPMI Port
+function Set_IPMI() {
+  if [ ! -f /etc/ipmi/$2.conf ]; then
+    cp $2 /etc/ipmi/$1.conf
+    sed -i "s/%%IPMIADDR%%/$3/" /etc/ipmi/$1.conf
+    sed -i "s/%%IPMIPORT%%/$4/" /etc/ipmi/$1.conf
+    sed -i "s/%%NAME%%/$1/g" /etc/ipmi/$1.conf
+  fi
+}
