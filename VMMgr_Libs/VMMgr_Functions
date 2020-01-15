@@ -129,6 +129,11 @@ function Check_Requirements() {
             echo "If you plan to use systemd, you ISO PATH ($VMMGR_ISO_PATH) must be readable by qemu user"
             echo "> chown -R :qemu $VMMGR_ISO_PATH && chmod 750 $VMMGR_ISO_PATH"
         fi
+        
+        if [ "$(getent group disk | grep $(whoami) | grep disk)" == "" ]; then
+            echo "if you plan to use block dev, you must member of disk group:"
+            echo "> usermod -a -G qemu $(whoami)"
+        fi
     
         echo "DISKPATH: if you plan to use systemd, your DISKPATH var in your VM configs must be readable by qemu user"
         echo ""
@@ -192,9 +197,9 @@ function Check_System() {
             sudo setcap cap_net_admin+ep /usr/bin/qemu-system-x86_64
         fi
     
-        #if [ $(cat /proc/sys/net/ipv4/ip_forward) -eq 0 ]; then
-            #sudo echo 1 > /proc/sys/net/ipv4/ip_forward
-        #fi
+        if [ $(cat /proc/sys/net/ipv4/ip_forward) -eq 0 ]; then
+            echo 1 | sudo tee /proc/sys/net/ipv4/ip_forward 1>/dev/null
+        fi
     
         modinfo openvswitch 2>/dev/null 1>/dev/null
         if [ $? -eq 0 ]; then
@@ -614,7 +619,7 @@ function Start_VM_From_Config() {
                 if [ "$TELNET" == "on" ]; then
                     TIP=${TELNETTPL##*monitor telnet:}
                     TIP=${TIP%%,server,nowait}
-                    { echo "set_password vnc $VNCPWD"; sleep 1; } | telnet ${TIP%:*} ${TIP##*:}
+                    { echo "  set_password vnc $VNCPWD"; sleep 1; } | telnet ${TIP%:*} ${TIP##*:}
                 elif [ "$QMP" == "on" ]; then
                     TIP=${QMPTPL##*chardev socket,id=qmp01,host=}
                     TIP=${TIP%%,server,nowait*}
@@ -627,7 +632,7 @@ function Start_VM_From_Config() {
         if [ "$TELNET" == "on" ]; then
             TIP=${TELNETTPL##*monitor telnet:}
             TIP=${TIP%%,server,nowait}
-            { echo "info status"; sleep 1; } | telnet ${TIP%:*} ${TIP##*:}
+            { echo "  info status"; sleep 1; } | telnet ${TIP%:*} ${TIP##*:}
         elif [ "$QMP" == "on" ]; then
             TIP=${QMPTPL##*chardev socket,id=qmp01,host=}
             TIP=${TIP%%,server,nowait*}
@@ -1152,7 +1157,7 @@ function SET_HID_PHYS() {
     DEVICE=$1
     DEVFULLNAME=$(ls /sys/bus/hid/drivers/hid-generic/ | grep ${DEVICE^^} | head -1)
     if [ "$DEVFULLNAME" != "" ]; then
-        sudo echo "$DEVFULLNAME" | sudo tee /sys/bus/hid/drivers/hid-generic/unbind 1>/dev/null
+        echo "$DEVFULLNAME" | sudo tee /sys/bus/hid/drivers/hid-generic/unbind 1>/dev/null
     fi
     read -r d1 BUS d2 DEVICE d3 <<< $(lsusb -d $DEVICE)
     if [ "$BUS" ]; then
@@ -1160,6 +1165,7 @@ function SET_HID_PHYS() {
         DEVICE=${DEVICE%:}
         SDEVICE=$(( 10#$DEVICE ))
         echo "-device usb-host,hostbus=$SBUS,hostaddr=$SDEVICE"
+        sudo chown root:qemu /dev/usb/$BUS/$DEVICE
     fi
 }
 
@@ -1177,7 +1183,7 @@ function SET_USB_STORAGE() {
     for DEVPATH in $(ls -1d /sys/bus/usb/drivers/usb-storage/[0-9A-F]*); do
         DEVFULLNAME=$(udevadm info --query=property $DEVPATH | grep PRODUCT | grep $FILTER)
         if [ "$DEVFULLNAME" ]; then
-            sudo echo $(basename $DEVPATH) | sudo tee $(dirname $DEVPATH)/unbind 1>/dev/null
+            echo $(basename $DEVPATH) | sudo tee $(dirname $DEVPATH)/unbind 1>/dev/null
             break
         fi
     done
@@ -1201,7 +1207,6 @@ function SET_PHYS_HD() {
         MAJOR=${MAJOR%,*}
         DEVNAME=$(ls -l /sys/dev/block/$MAJOR\:$MINOR/ | grep device)
         DEVNAME=${DEVNAME##*/}
-        sudo echo $DEVNAME | sudo tee /sys/dev/block/$MAJOR\:$MINOR/device/driver/unbind 1>/dev/null
-        echo "-drive file=$1,if=none,format=raw,aio=native,cache=none,id=hd${2,,} -device virtio-scsi-pci,id=scsi -device scsi-block,drive=hd${2,,},bus=scsi.0"
+        echo "-drive file=$1,format=raw,if=none,cache=none,id=hd${2,,} -device ich9-ahci,id=ahci${2,,} -device ide-drive,drive=hd${2,,},bus=ahci${2,,}.0
     fi
 }
