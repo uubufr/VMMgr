@@ -77,7 +77,7 @@ function SET_PHYS_HD() {
 # Args:
 #   $1: "VENDORID:DEVICEID"
 #   $2: sysfs path
-Function SET_USB_PHYS() {
+function SET_USB_PHYS() {
     DEVICE=$1
     DEVFULLNAME=$(ls ${2%/}/ | grep ${DEVICE^^} | head -1)
     if [ "$DEVFULLNAME" != "" ]; then
