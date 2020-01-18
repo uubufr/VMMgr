@@ -244,7 +244,13 @@ function Start_VM_From_Config() {
         done
     fi
     
-    PDEV="$PK $PM $PU $PH"
+    SU=""
+    if [ "$SUSB" ]; then
+        SU=$(SET_HID_PHYS ${SUSB%%|*} ${SUSB##*|})
+        VMMGR_LOG "$1" "SETTING" "$1: DECONNECTING USB device: $SUSB from the system"
+    fi
+    
+    PDEV="$PK $PM $PU $PH $SU"
     unset PKEYBOARD PMOUSE PUSB PHD
     
     ### Ok! Now we can start VM ###
