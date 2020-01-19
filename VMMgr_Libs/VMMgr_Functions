@@ -246,8 +246,10 @@ function Start_VM_From_Config() {
     
     SU=""
     if [ "$SUSB" ]; then
-        SU=$(SET_USB_PHYS ${SUSB%%|*} ${SUSB##*|})
-        VMMGR_LOG "$1" "SETTING" "$1: DECONNECTING USB device: $SUSB from the system"
+        for USB in ${SUSB[@]}; do
+            SU="$SU "$(SET_USB_PHYS ${SUSB%%|*} ${SUSB##*|})
+            VMMGR_LOG "$1" "SETTING" "$1: DECONNECTING USB device: $SUSB from the system"
+        done
     fi
     
     PDEV="$PK $PM $PU $PH $SU"
