@@ -14,6 +14,7 @@
 # List_All_VM: Get the list of VMs
 # VM_Delete: Delete a vm
 # set_DNS: register vm name with IP
+# Set_Run_Dir: create /run/VMMGR dir
 
 # Function : Check_Existing_VM
 # Description: Check on DB if VM already exists
@@ -82,7 +83,7 @@ function VMMGR_LOG() {
     VMNAME=$1
     VMPROC=""
     PIDDIR=/run/VMMGR
-    [ -d $PIDDIR ] && PIDDIR=$VMMGR_DATA_PATH
+    [ -d $PIDDIR ] || PIDDIR=$VMMGR_DATA_PATH
     
     if [ -f $PIDDIR/$1 ]; then
         VMPROC=$(sudo cat $PIDDIR/$1)
@@ -256,6 +257,7 @@ function Start_VM_From_Config() {
     unset PKEYBOARD PMOUSE PUSB PHD
     
     ### Ok! Now we can start VM ###
+    Set_Run_Dir
     PIDDIR=/run/VMMGR
     [ -d $PIDDIR ] || PIDDIR=$VMMGR_DATA_PATH
     if [ "$VMMGR_TEST" == "TEST" ]; then
@@ -332,7 +334,7 @@ function Start_VM_From_Config() {
 function VM_Is_Running() {
     PIDDIR=/run/VMMGR
     [ -d $PIDDIR ] || PIDDIR=$VMMGR_DATA_PATH
-    if [ -f "$PIDDIR/$1" ]; then
+    if [ -f "$PIDDIR/$1" ] || [ -f "$VMMGR_DATA_PATH/$1" ] ; then
         Result=$(ps -h -q $(sudo cat $PIDDIR/$1) -o pid)
         if [ "${Result##* }" == "$(sudo cat $PIDDIR/$1)" ]; then
             echo 1
@@ -473,5 +475,16 @@ function set_DNS() {
     fi
     if [ "${NSUPDATE^^}" == "YES" ]; then
         echo "not implemented, please update manually: $3 $1"
+    fi
+}
+
+# Function Set_Run_Dir
+# Description: create /run/VMMGR dir
+# Args: None
+function Set_Run_Dir() {
+    if [ ! -d /run/VMMGR ]; then
+        sudo mkdir /run/VMMGR
+        sudo chown -R qemu:qemu /run/VMMGR
+        sudo chmod -R 770 /run/VMMGR
     fi
 }
