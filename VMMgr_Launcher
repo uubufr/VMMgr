@@ -56,11 +56,7 @@ if [ $MYID != 0 ] && [ ! -r $VMMGR_DB_PATH/VMMGR_.db ]; then
 fi
 
 # /run/VMMGR
-if [ ! -d /run/VMMGR ]; then
- sudo mkdir /run/VMMGR
- sudo chown -R qemu:qemu /run/VMMGR
- sudo chmod -R 770 /run/VMMGR
-fi
+Set_Run_Dir
 
 case "$1" in
     "check")
@@ -364,20 +360,7 @@ esac
 if [ "$1" == "install" ] || [ "$1" == "check" ]; then
     VMMGR_LOG "VMMGR" "SYSTEM" "action $1 done!"
 else
-    LATEST=""
-    if [ -r $VMMGR_DATA_PATH/DB_BKP/*-DB.latest.bkp ]; then
-        LATEST=$( ls $VMMGR_DATA_PATH/DB_BKP/*-DB.latest.bkp)
-        if [ -r "$LATEST" ]; then
-            if [ "$(sha1sum $LATEST | awk '{print $1}')" != "$(sha1sum $VMMGR_DB_PATH/VMMGR_.db | awk '{print $1}')" ]; then
-                TARGET=$(basename $LATEST)
-                mv $LATEST $VMMGR_DATA_PATH/DB_BKP/${TARGET%%.latest.bkp}.bkp
-            fi
-        fi
-    fi
-    if [ ! -r "$LATEST" ]; then
-        cp $VMMGR_DB_PATH/VMMGR_.db $VMMGR_DATA_PATH/DB_BKP/$(date '+%Y-%m-%d_%H-%M-%S')-DB.latest.bkp;
-        VMMGR_LOG "VMMGR" "DB" "changed, new DB Backup."
-    fi
+    Auto_Backup_Db
 fi
 
 ### Recheck Perms ###
