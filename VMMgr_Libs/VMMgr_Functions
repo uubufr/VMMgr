@@ -332,17 +332,17 @@ function Start_VM_From_Config() {
 # Args:
 #   $1: VM name
 function VM_Is_Running() {
-    PIDDIR=/run/VMMGR
-    [ -d $PIDDIR ] || PIDDIR=$VMMGR_DATA_PATH
-    if [ -f "$PIDDIR/$1" ] || [ -f "$VMMGR_DATA_PATH/$1" ] ; then
-        Result=$(ps -h -q $(sudo cat $PIDDIR/$1) -o pid)
-        if [ "${Result##* }" == "$(sudo cat $PIDDIR/$1)" ]; then
+    [ -f "/run/VMMGR/$1" ] && PIDFILE="/run/VMMGR/$1"
+    [ -f "$VMMGR_DATA_PATH/$1" ] && PIDFILE="$VMMGR_DATA_PATH/$1"
+    if [ "$PIDFILE" == "" ]; then
+        echo 0
+    else
+        Result=$(ps -h -q $(sudo cat $PIDFILE) -o pid)
+        if [ "${Result##* }" == "$(sudo cat $PIDFILE)" ]; then
             echo 1
         else
             echo 0
         fi
-    else
-        echo 0
     fi
 }
 
