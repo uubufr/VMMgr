@@ -7,6 +7,7 @@
 #
 # Functions:
 # VM_DB_Manage: Many DB management tasks
+# Auto_Backup_Db: Backup Database
 
 # Function: VM_DB_Manage
 # Description: Many DB management tasks
@@ -109,4 +110,24 @@ function VM_DB_Manage() {
             fi
         ;;
     esac
+}
+
+# Function: Auto_Backup_Db
+# Description: Backup Database
+# Args: None
+function Auto_Backup_Db() {
+    LATEST=""
+    if [ -r $VMMGR_DATA_PATH/DB_BKP/*-DB.latest.bkp ]; then
+        LATEST=$( ls $VMMGR_DATA_PATH/DB_BKP/*-DB.latest.bkp)
+        if [ -r "$LATEST" ]; then
+            if [ "$(sha1sum $LATEST | awk '{print $1}')" != "$(sha1sum $VMMGR_DB_PATH/VMMGR_.db | awk '{print $1}')" ]; then
+                TARGET=$(basename $LATEST)
+                mv $LATEST $VMMGR_DATA_PATH/DB_BKP/${TARGET%%.latest.bkp}.bkp
+            fi
+        fi
+    fi
+    if [ ! -r "$LATEST" ]; then
+        cp $VMMGR_DB_PATH/VMMGR_.db $VMMGR_DATA_PATH/DB_BKP/$(date '+%Y-%m-%d_%H-%M-%S')-DB.latest.bkp;
+        VMMGR_LOG "VMMGR" "DB" "changed, new DB Backup."
+    fi
 }
