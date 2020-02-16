@@ -41,15 +41,22 @@
 # Arg:
 #   $1: Db Path (parent dir)
 function Set_Db() {
+ DBVERSION=1
  if [ ! -r $1/VMMGR_.db ]; then
     sqlite3 $1/VMMGR_.db <<EOF
+
+CREATE TABLE VMMGR(
+   VERSION INTERGER NOT NULL
+);
 CREATE TABLE VM(
     VMiD INTEGER PRIMARY KEY,
     Name TEXT NOT NULL,
     Config TEXT NOT NULL,
     Enabled INTEGER,
     UUID TEXT NOT NULL,
-    MemberOf TEXT
+    MemberOf TEXT,
+    SSHIP TEXT,
+    SSHHOSTNAME TEXT
 );
 
 CREATE TABLE SPICE(
@@ -115,6 +122,8 @@ CREATE TABLE GROUPS(
 );
 EOF
  fi
+
+echo "INSERT INTO VMMGR ( VERSION ) values ( '$DBVERSION' );" | sqlite3 $1/VMMGR_.db
 }
 
 # Function: Db_Create_VM
@@ -487,4 +496,40 @@ function Db_Import_VM() {
             fi
         fi
     fi
+}
+
+# Function: Db_Set_SSH
+# Description: add IP/Hostname for ssh - systemd acces
+# Args:
+#   $1: Db Path (parent dir)
+#   $2: VM name
+#   $3: SSH IP
+#   $4: Hostname (optional, use VM name if undefined)
+function Db_Set_SSH() {
+    if [ "$4" == "" ]; then NAME=$1; else NAME=$4; fi
+    echo "update VM SET SSHIP='$3' , SSHHOSTNAME='$NAME' WHERE NAME='$2';" | sqlite3 $1/VMMGR_.db
+}
+
+function Db_Get_SSH() {
+    echo "SELECT SSHIP from VM WHERE NAME='$2';" | sqlite3 $1/VMMGR_.db
+}
+
+function Db_Delete_SSh() {
+    echo "update VM SET SSHIP='' , SSHHOSTNAME='' WHERE NAME='$2';" | sqlite3 $1/VMMGR_.db
+}
+
+function Db_Update_SHEMA() {
+    cat $1../DB_UPDATES/VERSION-$1 | sqlite3 $1/VMMGR_.db
+}
+
+function Db_Update_SCHEMA() {
+   TABLE=$(echo "SELECT name FROM sqlite_master WHERE type='table' AND name='VMMGR';" | sqlite3 $1/VMMGR_.db)
+   if [ "$TABLE" == "" ]; then
+        Db_Update_SCHEMA $1 1;
+   else
+        # on get version
+        #on get current version
+        #seq version + 1 current-version
+            #Db_Update_SHEMA file;
+   fi
 }

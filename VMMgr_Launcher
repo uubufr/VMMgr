@@ -333,6 +333,9 @@ case "$1" in
         ### Spice Guest Tools
         wget https://www.spice-space.org/download/windows/spice-guest-tools/spice-guest-tools-latest.exe --directory-prefix=$VMMGR_ISO_PATH/
         ;;
+     "ssh")
+        VMMGR_LOG "VMMGR" "SSH" "Setting SSH param"
+        #1. le set_ssh doit permettre d'attribuer un hostname à une IP. Donc, l'ip en premier, obligatoire, puis le hostname, optionnel, utiliser VMNAME si non fournis.
     *)
         echo "Usage: VMMgr_Launcher <command> <options>
         install/uninstall: Install or uninstall on your system instead of running all in the current folder
