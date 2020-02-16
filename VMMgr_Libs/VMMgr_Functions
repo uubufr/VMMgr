@@ -477,6 +477,27 @@ function set_DNS() {
         echo "not implemented, please update manually: $3 $1"
     fi
 }
+# Set_SSH: Set ssh access
+
+# Function get_DNS
+# Description: find any existing entry in DNS/hosts
+# Args: $
+#   $1: Name
+#   $2: IP
+function get_DNS() {
+    if [ "${HOSTS^^}" == "YES" ]; then
+        ENTRY="$2 $1"
+        if [ "$(egrep "^$ENTRY$" /etc/hosts)" ]; then
+            EXIST=1
+        else
+            EXIST=0
+        fi
+        echo $EXIST
+    fi
+    if [ "${NSUPDATE^^}" == "YES" ]; then
+        echo "not implemented, please update manually: $3 $1"
+    fi 
+}
 
 # Function Set_Run_Dir
 # Description: create /run/VMMGR dir
@@ -488,3 +509,33 @@ function Set_Run_Dir() {
         sudo chmod -R 770 /run/VMMGR
     fi
 }
+
+# Function: Set_SSH
+# Description: Set ssh access
+# Args:
+#   $1: vm name
+#   $2: IP
+#   $3: hostname (optional, use vmname if not provided)
+function Set_SSH() {
+    if [ "$(get_DNS ${3-$1} $2)" == "1" ]; then
+        set_DNS ${3-$1} remove $2
+    fi
+    set_DNS ${3-$1} add $2
+# on a besoin des options suivantes:
+    #1) on définis une IP et un hostname pour ssh dans la db
+    Db_Set_SSH $2 $3
+    #2) on update l'ip et/ou l'hostname pour ssh dans la db
+    Db_Update_SSH $2 $3
+    #3) on delete l'ip et/out l'hostname pour ssh dans la db
+    Db_Delete_SSH $2 $3
+    #4) On propose de pusher la clé public si on en trouve une ?
+    Ssh_Push_Key $2
+    #5) on renseigne DNS, soit /etc/hosts
+    #6) 
+    
+}
+
+# on a besoin d'une action: trouver une entrée correspondant à la vm
+# remplacer une entrée
+# ajouter une entrée
+# supprimer une entrée
