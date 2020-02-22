@@ -509,8 +509,7 @@ function Db_Import_VM() {
 #   $3: SSH IP
 #   $4: Hostname (optional, use VM name if undefined)
 function Db_Set_SSH() {
-    if [ "$4" == "" ]; then NAME=$1; else NAME=$4; fi
-    echo "update VM SET SSHIP='$3' , SSHHOSTNAME='$NAME' WHERE NAME='$2';" | sqlite3 $1/VMMGR_.db
+    echo "update VM SET SSHIP='$3' , SSHHOSTNAME='${4-$1}' WHERE NAME='$2';" | sqlite3 $1/VMMGR_.db
 }
 
 function Db_Get_SSH() {
