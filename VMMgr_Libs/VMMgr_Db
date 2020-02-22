@@ -121,9 +121,11 @@ CREATE TABLE GROUPS(
     MEMBERS TEXT
 );
 EOF
+
+    echo "INSERT INTO VMMGR ( VERSION ) values ( '$DBVERSION' );" | sqlite3 $1/VMMGR_.db
  fi
 
-echo "INSERT INTO VMMGR ( VERSION ) values ( '$DBVERSION' );" | sqlite3 $1/VMMGR_.db
+ Db_Check_SCHEMA $1 $DBVERSION
 }
 
 # Function: Db_Create_VM
@@ -518,18 +520,30 @@ function Db_Delete_SSh() {
     echo "update VM SET SSHIP='' , SSHHOSTNAME='' WHERE NAME='$2';" | sqlite3 $1/VMMGR_.db
 }
 
-function Db_Update_SHEMA() {
-    cat $1../DB_UPDATES/VERSION-$1 | sqlite3 $1/VMMGR_.db
+# Function: Db_Check_SCHEMA
+# Description: Check Schema Version
+# Args:
+#   $1: Db Path (parent dir)
+#   $2: Last DB Version
+function Db_Check_SCHEMA() {
+    TABLE=$(echo "SELECT name FROM sqlite_master WHERE type='table' AND name='VMMGR';" | sqlite3 $1/VMMGR_.db)
+    if [ "$TABLE" == "" ]; then
+        Db_Update_SCHEMA 0 $2
+    else
+        VERSION=$(echo "SELECT VERSION FROM VMMGR;" | sqlite3 $1/VMMGR_.db)
+        if [ "$VERSION" != $2 ]; then
+            Db_Update_SCHEMA $VERSION $2
+        fi
 }
 
+# Function: Db_Update_SCHEMA
+# Description: Update db tables
+# Args:
+#   $1: Db Path (parent dir)
+#   $2: Current DB Version
+#   $3: Last Db Version
 function Db_Update_SCHEMA() {
-   TABLE=$(echo "SELECT name FROM sqlite_master WHERE type='table' AND name='VMMGR';" | sqlite3 $1/VMMGR_.db)
-   if [ "$TABLE" == "" ]; then
-        Db_Update_SCHEMA $1 1;
-   else
-        # on get version
-        #on get current version
-        #seq version + 1 current-version
-            #Db_Update_SHEMA file;
-   fi
+   for DBUPD in $(seq $(( 2 + 1 )) $3); do
+    cat $1../DB_UPDATES/VERSION-$DBUPD | sqlite3 $1/VMMGR_.db
+   done
 }
