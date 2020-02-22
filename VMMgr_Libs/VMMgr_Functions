@@ -496,7 +496,7 @@ function get_DNS() {
     fi
     if [ "${NSUPDATE^^}" == "YES" ]; then
         echo "not implemented, please update manually: $3 $1"
-    fi 
+    fi
 }
 
 # Function Set_Run_Dir
@@ -514,28 +514,39 @@ function Set_Run_Dir() {
 # Description: Set ssh access
 # Args:
 #   $1: vm name
-#   $2: IP
-#   $3: hostname (optional, use vmname if not provided)
+#   $2: action (set|update|delete)
+#   $3: IP
+#   $4: hostname (optional, use vmname if not provided)
+#   $5: optionals hostname?
 function Set_SSH() {
-    if [ "$(get_DNS ${3-$1} $2)" == "1" ]; then
-        set_DNS ${3-$1} remove $2
-    fi
-    set_DNS ${3-$1} add $2
-# on a besoin des options suivantes:
-    #1) on définis une IP et un hostname pour ssh dans la db
-    Db_Set_SSH $2 $3
-    #2) on update l'ip et/ou l'hostname pour ssh dans la db
-    Db_Update_SSH $2 $3
-    #3) on delete l'ip et/out l'hostname pour ssh dans la db
-    Db_Delete_SSH $2 $3
+
+    case $2 in
+        "set")
+            Db_Set_SSH $3 ${4-$1}
+            set_DNS ${4-$1} add $3
+            echo 0
+            ;;
+        "update")
+            Db_Update_SSH $3 ${4-$1}
+            if [ "$(get_DNS ${4-$1} $3)" == "1" ]; then
+                set_DNS ${4-$1} remove $3
+            fi
+            set_DNS ${4-$1} add $3
+            echo 0
+            ;;
+        "delete")
+            Db_Delete_SSH $3 ${4-$1}
+            set_DNS ${4-$1} remove $3
+            echo 0
+            ;;
+        *)
+            echo "1"
+            ;;
+    esac
     #4) On propose de pusher la clé public si on en trouve une ?
     Ssh_Push_Key $2
-    #5) on renseigne DNS, soit /etc/hosts
-    #6) 
-    
+        ### à pusher ailleur, ça doit être une fonction autonome, on pourra lancer auto si besoin.
+        ### on doit avoir déjà définis le DNS/ip
+        ### on lance le scp pour pousser la clé
+        ### puis on se déco.
 }
-
-# on a besoin d'une action: trouver une entrée correspondant à la vm
-# remplacer une entrée
-# ajouter une entrée
-# supprimer une entrée
