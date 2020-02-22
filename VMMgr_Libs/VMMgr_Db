@@ -534,6 +534,7 @@ function Db_Check_SCHEMA() {
         if [ "$VERSION" != $2 ]; then
             Db_Update_SCHEMA $VERSION $2
         fi
+    fi
 }
 
 # Function: Db_Update_SCHEMA
