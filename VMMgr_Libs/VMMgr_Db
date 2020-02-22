@@ -528,11 +528,11 @@ function Db_Delete_SSh() {
 function Db_Check_SCHEMA() {
     TABLE=$(echo "SELECT name FROM sqlite_master WHERE type='table' AND name='VMMGR';" | sqlite3 $1/VMMGR_.db)
     if [ "$TABLE" == "" ]; then
-        Db_Update_SCHEMA 0 $2
+        Db_Update_SCHEMA $1 0 $2
     else
         VERSION=$(echo "SELECT VERSION FROM VMMGR;" | sqlite3 $1/VMMGR_.db)
         if [ "$VERSION" != $2 ]; then
-            Db_Update_SCHEMA $VERSION $2
+            Db_Update_SCHEMA $1 $VERSION $2
         fi
     fi
 }
