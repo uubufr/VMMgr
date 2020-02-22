@@ -43,6 +43,7 @@
 function Set_Db() {
  DBVERSION=1
  if [ ! -r $1/VMMGR_.db ]; then
+    VMMGR_LOG "VMMGR" "DB" "Creating Database"
     sqlite3 $1/VMMGR_.db <<EOF
 
 CREATE TABLE VMMGR(
@@ -124,7 +125,7 @@ EOF
 
     echo "INSERT INTO VMMGR ( VERSION ) values ( '$DBVERSION' );" | sqlite3 $1/VMMGR_.db
  fi
-
+ VMMGR_LOG "VMMGR" "DB" "Checking for schema update"
  Db_Check_SCHEMA $1 $DBVERSION
 }
 
@@ -544,6 +545,7 @@ function Db_Check_SCHEMA() {
 #   $2: Current DB Version
 #   $3: Last Db Version
 function Db_Update_SCHEMA() {
+    VMMGR_LOG "VMMGR" "DB" "Updating DB from vesion $2 to $3"
    for DBUPD in $(seq $(( 2 + 1 )) $3); do
     cat $1../DB_UPDATES/VERSION-$DBUPD | sqlite3 $1/VMMGR_.db
    done
