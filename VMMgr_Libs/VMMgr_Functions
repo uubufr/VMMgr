@@ -16,6 +16,17 @@
 # set_DNS: register vm name with IP
 # Set_Run_Dir: create /run/VMMGR dir
 
+# Function Set_Run_Dir
+# Description: create /run/VMMGR dir
+# Args: None
+function Set_Run_Dir() {
+    if [ ! -d /run/VMMGR ]; then
+        sudo mkdir /run/VMMGR
+        sudo chown -R qemu:qemu /run/VMMGR
+        sudo chmod -R 770 /run/VMMGR
+    fi
+}
+
 # Function : Check_Existing_VM
 # Description: Check on DB if VM already exists
 # Args:
@@ -496,17 +507,6 @@ function get_DNS() {
     fi
     if [ "${NSUPDATE^^}" == "YES" ]; then
         echo "not implemented, please update manually: $3 $1"
-    fi
-}
-
-# Function Set_Run_Dir
-# Description: create /run/VMMGR dir
-# Args: None
-function Set_Run_Dir() {
-    if [ ! -d /run/VMMGR ]; then
-        sudo mkdir /run/VMMGR
-        sudo chown -R qemu:qemu /run/VMMGR
-        sudo chmod -R 770 /run/VMMGR
     fi
 }
 
