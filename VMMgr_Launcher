@@ -279,6 +279,9 @@ case "$1" in
                 "vnc")
                     nohup remote-viewer $VMMGR_DATA_PATH/R-VNC/$2 &
                 ;;
+                "ssh")
+                    ssh $(Db_Get_SSH $2)
+                ;;
             esac
         fi
         ;;
