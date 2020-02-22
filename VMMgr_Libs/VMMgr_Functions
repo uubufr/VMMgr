@@ -519,7 +519,6 @@ function get_DNS() {
 #   $4: hostname (optional, use vmname if not provided)
 #   $5: optionals hostname?
 function Set_SSH() {
-
     case $2 in
         "set")
             Db_Set_SSH $3 ${4-$1}
@@ -543,10 +542,4 @@ function Set_SSH() {
             echo "1"
             ;;
     esac
-    #4) On propose de pusher la clé public si on en trouve une ?
-    Ssh_Push_Key $2
-        ### à pusher ailleur, ça doit être une fonction autonome, on pourra lancer auto si besoin.
-        ### on doit avoir déjà définis le DNS/ip
-        ### on lance le scp pour pousser la clé
-        ### puis on se déco.
 }
