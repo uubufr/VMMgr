@@ -335,7 +335,7 @@ case "$1" in
         ;;
      "ssh")
         VMMGR_LOG "VMMGR" "SSH" "Setting SSH param"
-        #1. le set_ssh doit permettre d'attribuer un hostname à une IP. Donc, l'ip en premier, obligatoire, puis le hostname, optionnel, utiliser VMNAME si non fournis.
+        Set_SSH $1 $2 $3 $4
         ;;
     *)
         echo "Usage: VMMgr_Launcher <command> <options>
@@ -347,7 +347,7 @@ case "$1" in
         kill <vm name>: force stop vm
         reset <vm name>: reset vm
         status <vm name>: is the vm running?
-        connect <vm name> <spice|vnc|telnet|qmp> connect to you vm
+        connect <vm name> <spice|vnc|telnet|qmp|ssh> connect to your vm
         load <vmname> <fullpath iso|rel to iso path|virtiowin> <reset>: load iso into DVD drive, optionally reset immediatly after
         wintools: download Windows drivers and tools in your iso path (actually: $VMMGR_ISO_PATH)
         enable: Install unit systemd and enable
@@ -356,6 +356,7 @@ case "$1" in
         group: <list|start|stop|enable|disable> group management
         list <all|running|stopped|enabled|disabled> list vms
         db <reconf|todb|import|export|list|purge>
+        ssh <set|update|delete> <vmname> <IP> [ <ssh hostname> ]: register IP and hostname for ssh access
         "
         ;;
 esac
