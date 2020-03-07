@@ -481,7 +481,7 @@ function set_DNS() {
         fi
         if [ "$2" == "remove" ] && [ $EXIST -eq 1 ]; then
             VMMGR_LOG "VMMGR" "DNS" "Removing from /etc/hosts: $3 $1"
-            sudo sed -i -e "s/^$ENTRY$//" /etc/hosts
+            sudo sed -i -e "/^$ENTRY$//d" /etc/hosts
         fi
     fi
     if [ "${NSUPDATE^^}" == "YES" ]; then
@@ -525,7 +525,7 @@ function Set_SSH() {
             set_DNS ${4-$1} add $3
             ;;
         "update")
-            OLDSSH=$(Db_Get_SSH $VMMGR_DB_PATH)
+            OLDSSH=$(Db_Get_SSH $VMMGR_DB_PATH $1)
             NEWNAME=""
             if [ "$4" ]; then 
                 NEWNAME=$4;
@@ -536,9 +536,10 @@ function Set_SSH() {
             fi
             
             if [ "$OLDSSH" != "" ]; then 
-                Db_Delete_SSH $VMMGR_DB_PATH $1 $3 $NEWNAME
+                Db_Delete_SSH $VMMGR_DB_PATH $1
             fi
             Db_Set_SSH $VMMGR_DB_PATH $1 $3 $NEWNAME
+            
             if [ "$(get_DNS ${OLDSSH#*|} ${OLDSSH%|*})" == "1" ]; then
                 set_DNS ${OLDSSH#*|} remove ${OLDSSH%|*}
             fi
