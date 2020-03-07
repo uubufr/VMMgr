@@ -338,7 +338,7 @@ case "$1" in
         ;;
      "ssh")
         VMMGR_LOG "VMMGR" "SSH" "Setting SSH param"
-        Set_SSH $2 $3 $4 $5
+        Set_SSH $3 $2 $4 $5
         ;;
     *)
         echo "Usage: VMMgr_Launcher <command> <options>
