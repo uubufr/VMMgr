@@ -481,7 +481,7 @@ function set_DNS() {
         fi
         if [ "$2" == "remove" ] && [ $EXIST -eq 1 ]; then
             VMMGR_LOG "VMMGR" "DNS" "Removing from /etc/hosts: $3 $1"
-            sudo sed -i -e "/^$ENTRY$//d" /etc/hosts
+            sudo sed -i -e "/^$ENTRY$/d" /etc/hosts
         fi
     fi
     if [ "${NSUPDATE^^}" == "YES" ]; then
