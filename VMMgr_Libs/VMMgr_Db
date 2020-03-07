@@ -518,8 +518,7 @@ function Db_Set_SSH() {
 #   $1: Db Path (parent dir)
 #   $2: VM name
 function Db_Get_SSH() {
-    RESULT=$(echo "SELECT SSHIP from VM WHERE NAME='$2';" | sqlite3 $1/VMMGR_.db)
-    if [ "$RESULT" ]; then echo 0; else echo 1; fi
+    echo "SELECT SSHIP,SSHHOSTNAME from VM WHERE NAME='$2';" | sqlite3 $1/VMMGR_.db
 }
 
 # Function: Db_Delete_SSH
