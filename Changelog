@@ -1,7 +1,14 @@
 Changelog:
 
+0.93:
+Add differed USB devices
+
+0.92:
+Add ssh IP/Name for direct access
+
 0.91:
 Add physical hardware: keyboard, mouse, usb storage and scsi/sata hard drive
 
 0.90:
 1st public release
+
