@@ -335,6 +335,38 @@ function Start_VM_From_Config() {
                 sed -i -e 's/\(^INSTALLISO=.*$\)/#\1/' $2
             fi
         fi
+        
+        if [ "${#DUSB[@]}" ]; then
+            MAXWAITING=0;
+            for USB in ${DUSB[@]}; do
+                CURWAITING=${USB##*|};
+                if [ $CURWAITING -gt $MAXWAITING ]; then MAXWAITING=$CURWAITING; fi;
+            done;
+            echo "Connecting ${#DUSB[@]} devices in $MAXWAITING seconds";
+            echo -n "Waiting";
+            for WAITING in $(seq 1 $MAXWAITING); do
+                echo -n ".";
+                for USB in ${DUSB[@]}; do  
+                    declare -i CURWAITING=${USB##*|};
+                    if [ "$CURWAITING" == "$WAITING" ]; then
+                        if [ "$TELNET" == "on" ]; then
+                            echo -e "\nWaiting";
+                            TIP=${TELNETTPL##*monitor telnet:}
+                            TIP=${TIP%%,server,nowait}
+                            echo "  $(SET_DIF_USB ${USB%%|*})"; sleep 1; } | telnet ${TIP%:*} ${TIP##*:}
+                            echo -n "Waiting";
+                        elif [ "$QMP" == "on" ]; then
+                            echo -e "\nWaiting";
+                            TIP=${QMPTPL##*chardev socket,id=qmp01,host=}
+                            TIP=${TIP%%,server,nowait*}
+                            echo '{ "execute": "qmp_capabilities" } { "execute": "$(SET_DIF_USB ${USB%%|*})" }'; sleep 1; } | telnet ${TIP%%,*} ${TIP##*port=}
+                            echo -n "Waiting";
+                        fi;
+                    fi;
+                done;
+                sleep 1;
+            done;
+        fi
     fi
 }
 
