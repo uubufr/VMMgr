@@ -92,3 +92,18 @@ function SET_USB_PHYS() {
         sudo chown root:qemu /dev/bus/usb/$BUS/$DEVICE
     fi
 }
+
+# Function SET_DIF_PHYS
+# Description: Connect usb device while vm is running
+# Args:
+#   $1: "VENDORID:DEVICEID"
+function SET_DIF_USB() {
+    DEVICE=$1
+    read -r d1 BUS d2 DEVICE d3 <<< $(lsusb -d $DEVICE);
+    if [ "$BUS" ]; then
+        SBUS=$(( 10#$BUS ));
+        DEVICE=${DEVICE%:};
+        SDEVICE=$(( 10#$DEVICE ));
+        echo "device_add usb-host,hostbus=$SBUS,hostaddr=$SDEVICE"
+    fi;
+}
