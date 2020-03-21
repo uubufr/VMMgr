@@ -354,6 +354,7 @@ function Start_VM_From_Config() {
                             TIP=${TELNETTPL##*monitor telnet:}
                             TIP=${TIP%%,server,nowait}
                             { echo "  $(SET_DIF_USB ${USB%%|*})"; sleep 1; } | telnet ${TIP%:*} ${TIP##*:}
+                            { echo "  set_password vnc $VNCPWD "; sleep 1; } | telnet ${TIP%:*} ${TIP##*:}
                             echo -n "Waiting";
                         elif [ "$QMP" == "on" ]; then
                             echo -e "\nWaiting";
