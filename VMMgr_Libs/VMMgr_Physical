@@ -103,7 +103,8 @@ function SET_DIF_USB() {
     if [ "$BUS" ]; then
         SBUS=$(( 10#$BUS ));
         DEVICE=${DEVICE%:};
-        SDEVICE=$(( 10#$DEVICE ));
+        SDEVICE=$(( 10#$DEVICE ))
+        sudo chown root:qemu /dev/bus/usb/$BUS/$DEVICE
         echo "device_add usb-host,hostbus=$SBUS,hostaddr=$SDEVICE"
     fi;
 }
