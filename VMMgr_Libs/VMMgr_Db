@@ -35,6 +35,18 @@
 #   Db_Get_MemberOf: Get Group of a vm
 #   Db_Export_VM: Export VM
 #   Db_Import_VM: Import VM
+#   Db_Set_SSH: add IP/Hostname for ssh - systemd access
+#   Db_Get_SSH: find SSH IP
+#   Db_Delete_SSH: find SSH IP
+#   Db_Check_SCHEMA: Check Schema Version
+#   Db_Update_SCHEMA: Update db tables
+#   Db_Drop_USB_Table: Drop USB table if exists
+#   Db_Create_USB_Table: Create USB table, drop existing
+#   Db_Get_USB-VD: list USB devices
+#   Db_Get_USB-ID: Return ID based on VENDOR:DEVICE
+#   Db_Search_USB-ID: Return ID if exists
+#   Db_Add_USB-device: Insert USB device
+#   Db_Delete_USB-device: Delete USB device
 
 # function: Set_Db
 # description: Check and initialize DB
@@ -502,7 +514,7 @@ function Db_Import_VM() {
 }
 
 # Function: Db_Set_SSH
-# Description: add IP/Hostname for ssh - systemd acces
+# Description: add IP/Hostname for ssh - systemd access
 # Args:
 #   $1: Db Path (parent dir)
 #   $2: VM name
@@ -558,4 +570,89 @@ function Db_Update_SCHEMA() {
    for DBUPD in $(seq $(( $2 + 1 )) $3); do
     cat $1/../DB_UPDATES/VERSION-$DBUPD | sqlite3 $1/VMMGR_.db
    done
+}
+
+# Function: Db_Drop_USB_Table
+# Description: Drop USB table if exists
+# Args:
+#   $1: Db Path (parent dir)
+#   $2: Table name
+function Db_Drop_USB_Table() {
+    VMMGR_LOG "VMMGR" "DB" "Droping table $2"
+    echo "DROP TABLE IF EXISTS '$2';" | sqlite3 $1/VMMGR_.db
+}
+
+# Function: Db_Create_USB_Table
+# Description: Create USB table, drop existing
+# Args:
+#   $1: Db Path (parent dir)
+#   $2: vm name
+function Db_Create_USB_Table() {
+    Db_Drop_USB_Table $1 "USB-$2"
+    VMMGR_LOG "VMMGR" "DB" "Creating table 'USB-$2'"
+    sqlite3 $1/VMMGR_.db <<EOF
+
+CREATE TABLE 'USB-$2'(
+    VD TEXT NOT NULL,
+    PRODUCT TEXT NOT NULL,
+    ID TEXT NOT NULL
+);
+EOF
+}
+
+# Function: Db_Get_USB-VD
+# Description: list USB devices
+# Args:
+#   $1: Db Path (parent dir)
+#   $2: vm name
+#   $3: Device:Vendor
+function Db_Get_USB-VDs() {
+    echo "select VD from 'USB-$2';" | sqlite3 $1/VMMGR_.db
+}
+
+# Function: Db_Get_USB-ID
+# Description: Return ID based on VENDOR:DEVICE
+# Args:
+#   $1: Db Path (parent dir)
+#   $2: vm name
+#   $3: Device:Vendor
+function Db_Get_USB-ID() {
+    echo "select ID from 'USB-$2' WHERE VD='$3';" | sqlite3 $1/VMMGR_.db
+}
+
+# Function: Db_Search_USB-ID
+# Description: Return ID if exists
+# Args:
+#   $1: Db Path (parent dir)
+#   $2: vm name
+#   $3: Device ID
+function Db_Search_USB-ID() {
+    echo "select ID from 'USB-$2' WHERE ID='$3';"  | sqlite3 $1/VMMGR_.db
+}
+
+# Function: Db_Add_USB-device
+# Description: Insert USB device
+# Args:
+#   $1: Db Path (parent dir)
+#   $2: vm name
+#   $3: Vendor:Device
+#   $4: Product name
+#   $5: USB ID
+function Db_Add_USB-device() {
+    VMMGR_LOG "VMMGR" "DB" "Adding USB device to $2"
+    EXISTS=$(echo "select VD from 'USB-$2' WHERE VD='$3';" | sqlite3 $1/VMMGR_.db)
+    if [ "$EXISTS" == "" ]; then
+        echo "INSERT INTO 'USB-$2' ( VD, PRODUCT, ID ) values ( '$3', '$4', '$5' );" | sqlite3 $1/VMMGR_.db
+    fi
+}
+
+# Function: Db_Delete_USB-device
+# Description: Delete USB device
+# Args:
+#   $1: Db Path (parent dir)
+#   $2: vm name
+#   $3: Vendor:Device
+function Db_Delete_USB-device() {
+    VMMGR_LOG "VMMGR" "DB" "removing USB device to $2"
+    echo "delete from 'USB-$2' where VD='$3';" | sqlite3 $1/VMMGR_.db
 }

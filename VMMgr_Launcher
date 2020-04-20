@@ -1,9 +1,9 @@
 #! /bin/bash
 #
-# script name: VMMgr_Launcher
-# autor: Sylvain Girod ( uubu at gmx dot fr )
-# version: 0.04
-# description: VMMgr_Launcher main entry for VM management
+# Script Name: VMMgr_Launcher
+# Autor: Sylvain Girod ( uubu at gmx dot fr )
+# Version: 0.05
+# Description: VMMgr_Launcher main entry for VM management
 
 
 ### except install and uninstall, we never run as root:
@@ -328,6 +328,36 @@ case "$1" in
     "list")
         List_All_VM $2
         ;;
+    "usb") ### add DEVICE:VENDOR USB Device at runtime
+        VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
+        if [ ! -r $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF ]; then
+            echo "VM $2 not found"
+        else
+            . $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
+            if [ "$TELNET" == "on" ]; then
+                IPPORT=$(Set_Service_Listen $TELNETIP $TELNETIPVER $TELNETTYPE $NAME telnet $TELNETPORT)
+                TELNETTPL="-monitor telnet:$(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}'):${IPPORT#*|},server,nowait"
+                TIP=${TELNETTPL##*monitor telnet:}
+                TIP=${TIP%%,server,nowait}
+                { echo "  $(SET_DIF_USB $3)"; sleep 1; } | telnet ${TIP%:*} ${TIP##*:}
+            elif [ "$QMP" == "on" ]; then
+                IPPORT=$(Set_Service_Listen $QMPIP $QMPIPVER $QMPTYPE $NAME qmp $QMPPORT)
+                QMPTPL="-chardev socket,id=qmp01,host=$(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}'),port=${IPPORT#*|},server,nowait -mon chardev=qmp01,mode=control,pretty=on"
+                TIP=${QMPTPL##*chardev socket,id=qmp01,host=}
+                TIP=${TIP%%,server,nowait*}
+                { echo '{ "execute": "qmp_capabilities" } { "execute": "$(SET_DIF_USB $3)" }'; sleep 1; } | telnet ${TIP%%,*} ${TIP##*port=}
+            fi
+        fi
+        ;;
+    "usb-daemon") ### monitor usb device for disconnection
+            VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
+            if [ ! -r $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF ]; then
+                echo "VM $2 not found"
+            else
+                #nohup $VMMGR_LIB_PATH/VMMgr_USB-daemon $2 $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF &
+                $VMMGR_LIB_PATH/VMMgr_USB-daemon $2 $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
+            fi
+        ;;
      "wintools")
         VMMGR_LOG "VMMGR" "WINTOOLS" "Downloading wintools..."
         ### Virtio Win
@@ -361,6 +391,8 @@ case "$1" in
         list <all|running|stopped|enabled|disabled> list vms
         db <reconf|todb|import|export|list|purge>
         ssh <set|update|delete> <vmname> <IP> [ <ssh hostname> ]: register IP and hostname for ssh access
+        usb <DEVICE:VENDOR>: connect usb device at runtime
+        usb-daemon <vm name>: monitor missing usb devices and re-add it once plugged again
         "
         ;;
 esac

@@ -21,11 +21,12 @@ function SET_HID_PHYS() {
         echo "$DEVFULLNAME" | sudo tee /sys/bus/hid/drivers/hid-generic/unbind 1>/dev/null
     fi
     read -r d1 BUS d2 DEVICE d3 <<< $(lsusb -d $DEVICE)
+    ID=$(echo ${d3##*$1} | tr \  -  | tr \  - | tr -dc '[:alnum:]-\n\r')
     if [ "$BUS" ]; then
         SBUS=$(( 10#$BUS ))
         DEVICE=${DEVICE%:}
         SDEVICE=$(( 10#$DEVICE ))
-        echo "-device usb-host,hostbus=$SBUS,hostaddr=$SDEVICE"
+        echo "-device usb-host,id=$ID,hostbus=$SBUS,hostaddr=$SDEVICE"
         sudo chown root:qemu /dev/bus/usb/$BUS/$DEVICE
     fi
 }
@@ -49,11 +50,12 @@ function SET_USB_STORAGE() {
         fi
     done
     read -r d1 BUS d2 DEVICE d3 <<< $(lsusb -d $DEVICE)
+    ID=$(echo ${d3##*$1} | tr \  -  | tr \  - | tr -dc '[:alnum:]-\n\r')
     if [ "$BUS" ]; then
         SBUS=$(( 10#$BUS ))
         DEVICE=${DEVICE%:}
         SDEVICE=$(( 10#$DEVICE ))
-        echo "-device usb-host,hostbus=$SBUS,hostaddr=$SDEVICE"
+        echo "-device usb-host,id=$ID,hostbus=$SBUS,hostaddr=$SDEVICE"
     fi
 }
 
@@ -84,27 +86,29 @@ function SET_USB_PHYS() {
         echo "$DEVFULLNAME" | sudo tee ${2%/}/unbind 1>/dev/null
     fi
     read -r d1 BUS d2 DEVICE d3 <<< $(lsusb -d $DEVICE)
+    ID=$(echo ${d3##*$1} | tr \  -  | tr \  - | tr -dc '[:alnum:]-\n\r')
     if [ "$BUS" ]; then
         SBUS=$(( 10#$BUS ))
         DEVICE=${DEVICE%:}
         SDEVICE=$(( 10#$DEVICE ))
-        echo "-device usb-host,hostbus=$SBUS,hostaddr=$SDEVICE"
+        echo "-device usb-host,id=$ID,hostbus=$SBUS,hostaddr=$SDEVICE"
         sudo chown root:qemu /dev/bus/usb/$BUS/$DEVICE
     fi
 }
 
 # Function SET_DIF_PHYS
-# Description: Connect usb device while vm is running
+# Description: Connect usb device while vm at runtime
 # Args:
 #   $1: "VENDORID:DEVICEID"
 function SET_DIF_USB() {
     DEVICE=$1
     read -r d1 BUS d2 DEVICE d3 <<< $(lsusb -d $DEVICE);
+    ID=$(echo ${d3##*$1} | tr \  - | tr -dc '[:alnum:]-\n\r')
     if [ "$BUS" ]; then
         SBUS=$(( 10#$BUS ));
         DEVICE=${DEVICE%:};
         SDEVICE=$(( 10#$DEVICE ))
         sudo chown root:qemu /dev/bus/usb/$BUS/$DEVICE
-        echo "device_add usb-host,hostbus=$SBUS,hostaddr=$SDEVICE"
+        echo "device_add usb-host,id=$ID,hostbus=$SBUS,hostaddr=$SDEVICE"
     fi;
 }
