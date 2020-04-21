@@ -27,11 +27,13 @@
 #   $3: QMP IP
 #   $4: QMP PORT
 function Delete_Missing_USB() {
+    echo $1 $2
     DEVID=$(Db_Get_USB-ID $VMMGR_DB_PATH $1 $2)
-    if [ "$(lsusb -d $2)" == "" ] AND [ "$DEVID" ] ; then
+    echo $DEVID
+    if [ "$(lsusb -d $2)" == "" ] && [ "$DEVID" != "" ] ; then
         { echo "  device_del $DEVID"; sleep 1; } | telnet ${3%:*} ${4##*:}
         Db_Delete_USB-device $VMMGR_DB_PATH $1 $2
-        sleep 1
+        #sleep 1
     fi
 }
 
@@ -45,12 +47,13 @@ function Delete_Missing_USB() {
 #   $5: (optional) driver path
 function Add_Missing_USB() {
     DEVID=$(Db_Get_USB-ID $VMMGR_DB_PATH $1 $2)
-    if [ "$(lsusb -d $2)" ] AND [ ! "$DEVID" ] ; then
+    if [ "$(lsusb -d $2)" ] && [ ! "$DEVID" ] ; then
         if [ "$5" ]; then
             ADDCMD=$(SET_USB_PHYS $2 $5)
             ADDCMD=${ADDCMD/-device/device_add}
         else
             ADDCMD=$(SET_DIF_USB  $2)
+            #ADDCMD=${ADDCMD/usb-host,/usb-host,bus=2,port=15,}
         fi
         { echo "  $ADDCMD"; sleep 1; } | telnet ${3%:*} ${4##*:}
         USBID=${ADDCMD#*,id=}
@@ -59,9 +62,17 @@ function Add_Missing_USB() {
         for ENTRY in $( { echo "  info usb"; sleep 1; } | telnet ${3%:*} ${4##*:} | tr \  _ | grep "Device" ); do
             if [ "$( echo $ENTRY | grep $USBID)" ]; then
                 PRODUCT=${ENTRY##*Product_}
-                PRODUCT=${PRODUCT%% ID:*}
-                Db_Add_USB-device $VMMR_DB_PATH $1 $2 $PRODUCT $USBID
+                PRODUCT=${PRODUCT%%,_ID:*}
+                PRODUCT=$(echo $PRODUCT | tr \_ \  )
+                echo "args"
+                echo "$VMMGR_DB_PATH"
+                echo "$1"
+                echo "$2"
+                echo "$PRODUCT"
+                echo "$USBID"
+                Db_Add_USB-device $VMMGR_DB_PATH $1 $2 "$PRODUCT" $USBID
                 break
+            fi
         done
     fi
 }
@@ -100,6 +111,8 @@ if [ "$PKEYBOARD" ] || [ "$PMOUSE" ] || [ "$PUSB" ] || [ "$SUSB" ]; then
 
     ### Only with HMP, QMP don't work
     if [ "$TELNET" == "on" ]; then
+        IPPORT=$(Set_Service_Listen $TELNETIP $TELNETIPVER $TELNETTYPE $NAME telnet $TELNETPORT)
+        TELNETTPL="-monitor telnet:$(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}'):${IPPORT#*|},server,nowait"
         TIP=${TELNETTPL##*monitor telnet:}
         TIP=${TIP%%,server,nowait}
 
@@ -126,17 +139,14 @@ if [ "$PKEYBOARD" ] || [ "$PMOUSE" ] || [ "$PUSB" ] || [ "$SUSB" ]; then
     
             ### We create 2 array, one for Product name, and one with ID
             for count in $(seq 0 $(( ${#USB[@]} - 1 )) ); do
-                echo ${USB[$count]}
                 DEVICE=${USB[$count]}
                 DEVICE=${DEVICE##*Product_}
                 DEVICE=$(echo $DEVICE | tr \_ \  | tr -d , );
                 if [ "${DEVICE##*ID: }" == "" ]; then    ### we cannot disconnect USB device without ID
                     continue;
                 fi
-                echo "on a donc: "${DEVICE%% ID:*}
                 for count in $(seq 0 $(( ${#PRODUCT[@]} - 1 )) ); do
                     if [ "${PRODUCT[$count]}" == "${DEVICE%% ID:*}" ]; then
-                        echo "on ajoute: $1 ${VD[$count]} ${DEVICE%% ID:*} ${DEVICE##*ID: }"
                         Db_Add_USB-device $VMMGR_DB_PATH $1 "${VD[$count]}" "${DEVICE%% ID:*}" "${DEVICE##*ID: }"
                         break;
                     fi
@@ -172,12 +182,17 @@ if [ "$PKEYBOARD" ] || [ "$PMOUSE" ] || [ "$PUSB" ] || [ "$SUSB" ]; then
             fi
             if [ "$SUSB" ]; then
                 for USBKEY in ${SUSB[@]}; do
-                    Delete_Missing_USB $1 {SUSB%%|*} ${TIP%:*} ${TIP##*:}
+                    Delete_Missing_USB $1 ${USBKEY%%|*} ${TIP%:*} ${TIP##*:}
+                done
+            fi
+            
+            if [ "$DUSB" ]; then
+                for USBKEY in ${DUSB[@]}; do
+                    Delete_Missing_USB $1 ${USBKEY%%|*} ${TIP%:*} ${TIP##*:}
                 done
             fi
         
             ### 5. All done, we can now parse dev again, and add missing:
-            
             if [ "$PKEYBOARD" ]; then
                 Add_Missing_USB $1 $PKEYBOARD ${TIP%:*} ${TIP##*:}
             fi
@@ -191,11 +206,18 @@ if [ "$PKEYBOARD" ] || [ "$PMOUSE" ] || [ "$PUSB" ] || [ "$SUSB" ]; then
             fi
             if [ "$SUSB" ]; then
                 for USBKEY in ${SUSB[@]}; do
-                    Add_Missing_USB $1 {SUSB%%|*} ${TIP%:*} ${TIP##*:}
+                    Add_Missing_USB $1 ${USBKEY%%|*} ${TIP%:*} ${TIP##*:}
                 done
             fi
-            echo "sleep------"
-            sleep 10
+            
+            if [ "$DUSB" ]; then
+                for USBKEY in ${DUSB[@]}; do
+                    Add_Missing_USB $1 ${USBKEY%%|*} ${TIP%:*} ${TIP##*:}
+                done
+            fi
+            
+            #echo "sleep------"
+            #sleep 1
             VMSTATE=$(VMMgr_Launcher status $1 | grep "VM status: running")
         done
         Db_Drop_USB_Table $VMMGR_DB_PATH "USB-$1"
