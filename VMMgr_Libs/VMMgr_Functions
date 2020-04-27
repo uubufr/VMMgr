@@ -264,7 +264,7 @@ function Start_VM_From_Config() {
         done
     fi
     
-    PDEV="$PK $PM $PU $PH $SU"
+    PDEV="$PK $PM $PU $SU"
     unset PKEYBOARD PMOUSE PUSB PHD
     
     ### Ok! Now we can start VM ###
@@ -272,11 +272,11 @@ function Start_VM_From_Config() {
     PIDDIR=/run/VMMGR
     [ -d $PIDDIR ] || PIDDIR=$VMMGR_DATA_PATH
     if [ "$VMMGR_TEST" == "TEST" ]; then
-        echo "qemu-system-x86_64 -pidfile $PIDDIR/$NAME -name $NAME $UUID $CORE $MEMORY $FIRMWARE ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS $SCSIDISKS $PDEV -writeconfig $VMMGR_DATA_PATH/QEMU_CONFIGS/$NAME"
+        echo "qemu-system-x86_64 -pidfile $PIDDIR/$NAME -name $NAME $UUID $CORE $MEMORY $FIRMWARE ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS $SCSIDISKS $PH -writeconfig $VMMGR_DATA_PATH/QEMU_CONFIGS/$NAME" $PDEV
     else
         WCONFIG="-writeconfig $VMMGR_DATA_PATH/QEMU_CONFIGS/$NAME"
         VMMGR_LOG "$1" "SETTING" "$1: all done, starting!"
-        qemu-system-x86_64 -pidfile $PIDDIR/$NAME -name $NAME $UUID $CORE $MEMORY $FIRMWARE ${!QEMU_TEMPLATE} $NETARRAY ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $VIRTIODISKS $SCSIDISKS $PDEV $WCONFIG
+        qemu-system-x86_64 -pidfile $PIDDIR/$NAME -name $NAME $UUID $CORE $MEMORY $FIRMWARE ${!QEMU_TEMPLATE} $NETARRAY ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $VIRTIODISKS $SCSIDISKS $PH $WCONFIG $PDEV
         
         sleep 1
         
@@ -336,10 +336,12 @@ function Start_VM_From_Config() {
             fi
         fi
         
+        ### connecting differed USB devices
         if [ "${#DUSB[@]}" ]; then
             MAXWAITING=0;
             for USB in ${DUSB[@]}; do
-                CURWAITING=${USB##*|};
+                #CURWAITING=${USB##*|};
+                CURWAITING=$(echo $USB | awk -F \| '{print $2}')
                 if [ $CURWAITING -gt $MAXWAITING ]; then MAXWAITING=$CURWAITING; fi;
             done;
             echo "Connecting ${#DUSB[@]} devices in $MAXWAITING seconds";
@@ -347,25 +349,31 @@ function Start_VM_From_Config() {
             for WAITING in $(seq 1 $MAXWAITING); do
                 echo -n ".";
                 for USB in ${DUSB[@]}; do  
-                    declare -i CURWAITING=${USB##*|};
+                    #declare -i CURWAITING=${USB##*|};
+                    declare -i CURWAITING=$(echo $USB | awk -F \| '{print $2}')
                     if [ "$CURWAITING" == "$WAITING" ]; then
                         if [ "$TELNET" == "on" ]; then
                             echo -e "\nWaiting";
                             TIP=${TELNETTPL##*monitor telnet:}
                             TIP=${TIP%%,server,nowait}
-                            { echo "  $(SET_DIF_USB ${USB%%|*})"; sleep 1; } | telnet ${TIP%:*} ${TIP##*:}
+                            #{ echo "  $(SET_DIF_USB ${USB%%|*})"; sleep 1; } | telnet ${TIP%:*} ${TIP##*:}
+                            { echo "  $(SET_DIF_USB $(echo $USB | awk -F \| '{print $1}') $(echo $USB | awk -F \| '{print $3}') )"; sleep 1; } | telnet ${TIP%:*} ${TIP##*:}
                             echo -n "Waiting";
                         elif [ "$QMP" == "on" ]; then
                             echo -e "\nWaiting";
                             TIP=${QMPTPL##*chardev socket,id=qmp01,host=}
                             TIP=${TIP%%,server,nowait*}
-                            { echo '{ "execute": "qmp_capabilities" } { "execute": "$(SET_DIF_USB ${USB%%|*})" }'; sleep 1; } | telnet ${TIP%%,*} ${TIP##*port=}
+                            #{ echo '{ "execute": "qmp_capabilities" } { "execute": "$(SET_DIF_USB ${USB%%|*})" }'; sleep 1; } | telnet ${TIP%%,*} ${TIP##*port=}
+                            { echo '{ "execute": "qmp_capabilities" } { "execute": "$(SET_DIF_USB $(echo $USB | awk -F \| '{print $1}') $(echo $USB | awk -F \| '{print $3}') )" }'; sleep 1; } | telnet ${TIP%%,*} ${TIP##*port=}
                             echo -n "Waiting";
                         fi;
                     fi;
                 done;
                 sleep 1;
             done;
+        fi
+        if [ "$USBMONITOR" == "yes" ]; then
+            $VMMGR_PATH/VMMgr_Launcher usb-daemon $1
         fi
     fi
 }

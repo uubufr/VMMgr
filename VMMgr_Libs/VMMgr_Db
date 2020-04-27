@@ -137,7 +137,6 @@ EOF
 
     echo "INSERT INTO VMMGR ( VERSION ) values ( '$DBVERSION' );" | sqlite3 $1/VMMGR_.db
  fi
- VMMGR_LOG "VMMGR" "DB" "Checking for schema update"
  Db_Check_SCHEMA $1 $DBVERSION
 }
 
@@ -578,7 +577,7 @@ function Db_Update_SCHEMA() {
 #   $1: Db Path (parent dir)
 #   $2: Table name
 function Db_Drop_USB_Table() {
-    VMMGR_LOG "VMMGR" "DB" "Droping table $2"
+    VMMGR_LOG "$2" "DB" "Droping table $2"
     echo "DROP TABLE IF EXISTS '$2';" | sqlite3 $1/VMMGR_.db
 }
 
@@ -589,7 +588,7 @@ function Db_Drop_USB_Table() {
 #   $2: vm name
 function Db_Create_USB_Table() {
     Db_Drop_USB_Table $1 "USB-$2"
-    VMMGR_LOG "VMMGR" "DB" "Creating table 'USB-$2'"
+    VMMGR_LOG "$2" "DB" "Creating table 'USB-$2'"
     sqlite3 $1/VMMGR_.db <<EOF
 
 CREATE TABLE 'USB-$2'(
@@ -639,9 +638,9 @@ function Db_Search_USB-ID() {
 #   $4: Product name
 #   $5: USB ID
 function Db_Add_USB-device() {
-    VMMGR_LOG "VMMGR" "DB" "Adding USB device to $2"
     EXISTS=$(echo "select VD from 'USB-$2' WHERE VD='$3';" | sqlite3 $1/VMMGR_.db)
     if [ "$EXISTS" == "" ]; then
+        VMMGR_LOG "$2" "DB" "Adding USB device to $2"
         echo "INSERT INTO 'USB-$2' ( VD, PRODUCT, ID ) values ( '$3', '$4', '$5' );" | sqlite3 $1/VMMGR_.db
     fi
 }
@@ -653,6 +652,6 @@ function Db_Add_USB-device() {
 #   $2: vm name
 #   $3: Vendor:Device
 function Db_Delete_USB-device() {
-    VMMGR_LOG "VMMGR" "DB" "removing USB device to $2"
+    VMMGR_LOG "$2" "DB" "removing USB device to $2"
     echo "delete from 'USB-$2' where VD='$3';" | sqlite3 $1/VMMGR_.db
 }

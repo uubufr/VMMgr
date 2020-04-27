@@ -30,7 +30,7 @@ S34="-global PIIX4_PM.disable_s3=1 -global PIIX4_PM.disable_s4=1"
 PCI="-device pci-bridge,id=pci.0,chassis_nr=1"
 
 ### except old OS like Windows 7, we use xhci usb3 controller:
-USB="-device qemu-xhci,p3=15"
+USB="-device qemu-xhci,p2=15,p3=15"
 
 ### Mouse, Keyboard and Tablet using Virtio:
 MOUSE="-device virtio-mouse-pci"

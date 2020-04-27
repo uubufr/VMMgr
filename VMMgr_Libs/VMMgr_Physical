@@ -86,7 +86,7 @@ function SET_USB_PHYS() {
         echo "$DEVFULLNAME" | sudo tee ${2%/}/unbind 1>/dev/null
     fi
     read -r d1 BUS d2 DEVICE d3 <<< $(lsusb -d $DEVICE)
-    ID=$(echo ${d3##*$1} | tr \  -  | tr \  - | tr -dc '[:alnum:]-\n\r')
+    ID=$(echo ${d3##*$1} | tr \  -  | tr -dc '[:alnum:]-\n\r')
     if [ "$BUS" ]; then
         SBUS=$(( 10#$BUS ))
         DEVICE=${DEVICE%:}
@@ -100,8 +100,14 @@ function SET_USB_PHYS() {
 # Description: Connect usb device while vm at runtime
 # Args:
 #   $1: "VENDORID:DEVICEID"
+#   $2: (optionnal) sysfs path
 function SET_DIF_USB() {
     DEVICE=$1
+    DEVFULLNAME={2:-/sys/bus/hid/drivers/hid-generic/}
+    DEVFULLNAME=$(ls ${DEVFULLNAME%/}/ | grep ${DEVICE^^} | head -1)
+    if [ "$DEVFULLNAME" != "" ]; then
+        echo "$DEVFULLNAME" | sudo tee ${2%/}/unbind 1>/dev/null
+    fi
     read -r d1 BUS d2 DEVICE d3 <<< $(lsusb -d $DEVICE);
     ID=$(echo ${d3##*$1} | tr \  - | tr -dc '[:alnum:]-\n\r')
     if [ "$BUS" ]; then

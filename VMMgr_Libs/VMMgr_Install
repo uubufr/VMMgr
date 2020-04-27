@@ -213,6 +213,7 @@ function Install_VMMGR() {
     
     # Main program
     cp $(pwd)/VMMgr_Launcher /usr/local/bin/ && chown qemu:qemu /usr/local/bin/VMMgr_Launcher && chmod 0755 /usr/local/bin/VMMgr_Launcher
+    cp $(pwd)/VMMgr_USB-daemon /usr/local/bin/ && chown qemu:qemu /usr/local/bin/VMMgr_USB-daemon && chmod 0755 /usr/local/bin/VMMgr_USB-daemon
     
     # Libs
     cp -r $(pwd)/VMMgr_Libs/VMMgr_* /usr/local/lib/ && chown qemu:qemu /usr/local/lib/VMMgr_* && chmod 0650 /usr/local/lib/VMMgr_*
@@ -266,6 +267,7 @@ function Uninstall_VMMGR() {
     fi
     
     rm /usr/local/bin/VMMgr_Launcher
+    rm /usr/local/bin/VMMgr_USB-daemon
     rm /usr/local/lib/VMMgr_{CPUs,Db,Disks,Functions,Networks}
     VMMGR_LOG "VMMGR" "UNINSTALL" "VMMgr is removed on your system except:"
     VMMGR_LOG "VMMGR" "UNINSTALL" "/etc/VMMGR directory will not be deleted"

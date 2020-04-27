@@ -7,17 +7,20 @@
 #              This is helper for manage unplugged devices
 #              This script stop automatically at VM exit
 #
-# How it work: A correct, plugged and fully working usb device have 3 characteristics:
-#               1. it as a VENDOR:DEVICE using lsusb and 'info usbhost'
-#               2. 'info usb' and 'info usbhost' give a Product Name
-#               3. 'info usb' give a device ID
-#   The script create a sqlite table named 'USB-<vmname>', to maintain fully working USB devices
-#   1) the script collect the triplet VENDOR:DEVICE/Product/ID, and do 'lsusb' check, then add it into de sqlite table
-#   2) once we have only fully working dev, we parse each USB device in vmconfig, we check if it exits into the host,
-#      and add it to the vm
-#   3) we sleep 10 seconds, then we loop
+# How it work: A correct, plugged and fully working usb device have 4 characteristics:
+#               1. it is plugged into the system, seen using lsusb command
+#               2. 'info usbhost' show VENDOR:DEVICE
+#               3. 'info usb' and 'info usbhost' show a Product Name
+#               4. 'info usb' give a device ID
+#   First, we create a sqlite table named 'USB-<vmname>', to maintain fully working USB devices, then:
+#       1) we collect the triplet VENDOR:DEVICE/Product/deviceID, and 'lsusb' check, then we add it into de sqlite table if all is ok
+#           All devices listed by 'info usb' but without it 4 characteristics are 'device_del' from the vm
+#       2) once we have only fully working dev in the DB, we parse each USB device in vmconfig, we check if it exits into the host,
+#           and add it to the vm using device_add
+#       3) and we loop while vm still running
+#
 # Note: 'info usb' and 'info usbhost' don't exists using QMP, so this script use HMP (telnet monitor).
-#       this is a problem because you will be disconnected repeatedly by the script
+#        this is a problem because you will be disconnected repeatedly by the script
 
 # Function: Delete_Missing_USB
 # Description: Delete USB not plugged into the host
@@ -27,13 +30,10 @@
 #   $3: QMP IP
 #   $4: QMP PORT
 function Delete_Missing_USB() {
-    echo $1 $2
     DEVID=$(Db_Get_USB-ID $VMMGR_DB_PATH $1 $2)
-    echo $DEVID
     if [ "$(lsusb -d $2)" == "" ] && [ "$DEVID" != "" ] ; then
         { echo "  device_del $DEVID"; sleep 1; } | telnet ${3%:*} ${4##*:}
         Db_Delete_USB-device $VMMGR_DB_PATH $1 $2
-        #sleep 1
     fi
 }
 
@@ -48,14 +48,8 @@ function Delete_Missing_USB() {
 function Add_Missing_USB() {
     DEVID=$(Db_Get_USB-ID $VMMGR_DB_PATH $1 $2)
     if [ "$(lsusb -d $2)" ] && [ ! "$DEVID" ] ; then
-        if [ "$5" ]; then
-            ADDCMD=$(SET_USB_PHYS $2 $5)
-            ADDCMD=${ADDCMD/-device/device_add}
-        else
-            ADDCMD=$(SET_DIF_USB  $2)
-            #ADDCMD=${ADDCMD/usb-host,/usb-host,bus=2,port=15,}
-        fi
-        { echo "  $ADDCMD"; sleep 1; } | telnet ${3%:*} ${4##*:}
+        { echo "  $(SET_DIF_USB $2 $5)"; sleep 1; } | telnet ${3%:*} ${4##*:}
+        #{ echo "  $(SET_USB_PHYS $2 $5)"; sleep 1; } | telnet ${3%:*} ${4##*:}
         USBID=${ADDCMD#*,id=}
         USBID=${USBID%%,*}
         sleep 1
@@ -64,12 +58,6 @@ function Add_Missing_USB() {
                 PRODUCT=${ENTRY##*Product_}
                 PRODUCT=${PRODUCT%%,_ID:*}
                 PRODUCT=$(echo $PRODUCT | tr \_ \  )
-                echo "args"
-                echo "$VMMGR_DB_PATH"
-                echo "$1"
-                echo "$2"
-                echo "$PRODUCT"
-                echo "$USBID"
                 Db_Add_USB-device $VMMGR_DB_PATH $1 $2 "$PRODUCT" $USBID
                 break
             fi
@@ -105,8 +93,11 @@ fi
 
 VMSTATE=$(VMMgr_Launcher status $1 | grep "VM status: running")
 
+
+VMMGR_LOG "$1" "DB" "USB manager started for $1"
+echo "on est la $VMSTATE"
 ### Main ###
-if [ "$PKEYBOARD" ] || [ "$PMOUSE" ] || [ "$PUSB" ] || [ "$SUSB" ]; then
+if [ "$PKEYBOARD" ] || [ "$PMOUSE" ] || [ "$PUSB" ] || [ "$SUSB" ] || [ "$DUSB" ]; then
     Db_Create_USB_Table $VMMGR_DB_PATH $1
 
     ### Only with HMP, QMP don't work
@@ -119,11 +110,12 @@ if [ "$PKEYBOARD" ] || [ "$PMOUSE" ] || [ "$PUSB" ] || [ "$SUSB" ]; then
         while [ "$VMSTATE" != "" ]; do
             USBHOST=()
             USB=()
+
             ### 1. Getting USB device (info usbhost) on the VM:
             for ENTRY in $( { echo "  info usbhost"; sleep 1; } | telnet ${TIP%:*} ${TIP##*:} | tr \  _ | grep "USB_device" | grep ","); do
                 USBHOST+=($ENTRY)
             done
-            ### We create 2 array, one for DEVICE:VENDOR, and one for Product name:
+            ### and we create 2 array, one for DEVICE:VENDOR, and one for Product name:
                 for count in $(seq 0 $(( ${#USBHOST[@]} - 1 )) ); do
                     DEVICE=${USBHOST[$count]}
                     DEVICE=$(echo $DEVICE | tr \_ \  | tr -d , );
@@ -136,7 +128,6 @@ if [ "$PKEYBOARD" ] || [ "$PMOUSE" ] || [ "$PUSB" ] || [ "$SUSB" ]; then
             for ENTRY in $( { echo "  info usb"; sleep 1; } | telnet ${TIP%:*} ${TIP##*:} | tr \  _ | grep "Device" ); do
                 USB+=($ENTRY)
             done
-    
             ### We create 2 array, one for Product name, and one with ID
             for count in $(seq 0 $(( ${#USB[@]} - 1 )) ); do
                 DEVICE=${USB[$count]}
@@ -147,13 +138,14 @@ if [ "$PKEYBOARD" ] || [ "$PMOUSE" ] || [ "$PUSB" ] || [ "$SUSB" ]; then
                 fi
                 for count in $(seq 0 $(( ${#PRODUCT[@]} - 1 )) ); do
                     if [ "${PRODUCT[$count]}" == "${DEVICE%% ID:*}" ]; then
-                        Db_Add_USB-device $VMMGR_DB_PATH $1 "${VD[$count]}" "${DEVICE%% ID:*}" "${DEVICE##*ID: }"
+                        TMPDEVID=$(echo ${DEVICE##*ID: } | dos2unix)
+                        Db_Add_USB-device $VMMGR_DB_PATH $1 "${VD[$count]}" "${DEVICE%% ID:*}" "$TMPDEVID"
                         break;
                     fi
                 done
             done
         
-            ### 3. listed in 'info usb' with an ID, but not in DB, we delete it:
+            ### 3. device shown with 'info usb' and with a deviceID, but not in DB, we delete it:
             for count in $(seq 0 $(( ${#USB[@]} - 1 )) ); do
                 DEVICE=${USB[$count]}
                 DEVICE=${DEVICE##*Product_}
@@ -161,14 +153,14 @@ if [ "$PKEYBOARD" ] || [ "$PMOUSE" ] || [ "$PUSB" ] || [ "$SUSB" ]; then
                 if [ "${DEVICE##*ID: }" == "" ]; then    ### we cannot disconnect USB device without ID
                     continue;
                 fi
-                DEVID=$(Db_Search_USB-ID $VMMGR_DB_PATH $1 ${DEVICE##*ID: })
+                DEVID=$(echo ${DEVICE##*ID: } | dos2unix)
+                DEVID=$(Db_Search_USB-ID $VMMGR_DB_PATH $1 $DEVID)
                 if [ "$DEVID" == "" ]; then
                     { echo "  device_del '$DEVID'"; sleep 1; } | telnet ${TIP%:*} ${TIP##*:}
-                    sleep 1
                 fi
             done
     
-            ### 4. Take all USB devices in vmconfig, if in db, but not listed by 'lsusb', we delete it
+            ### 4. Manage unplugged USB devices: Take all USB devices in vmconfig, if in db, but not by 'lsusb', we delete it
             if [ "$PKEYBOARD" ]; then
                 Delete_Missing_USB $1 $PKEYBOARD ${TIP%:*} ${TIP##*:}
             fi
@@ -192,13 +184,15 @@ if [ "$PKEYBOARD" ] || [ "$PMOUSE" ] || [ "$PUSB" ] || [ "$SUSB" ]; then
                 done
             fi
         
-            ### 5. All done, we can now parse dev again, and add missing:
+            ### 5. All done, we can now parse vmconfig again, and add devices
             if [ "$PKEYBOARD" ]; then
                 Add_Missing_USB $1 $PKEYBOARD ${TIP%:*} ${TIP##*:}
             fi
+            
             if [ "$PMOUSE" ]; then
                 Add_Missing_USB $1 $PKEYBOARD ${TIP%:*} ${TIP##*:}
             fi
+
             if [ "$PUSB" ]; then
                 for USBKEY in ${PUSB[@]}; do
                     Add_Missing_USB $1 $USBKEY ${TIP%:*} ${TIP##*:}
@@ -206,20 +200,19 @@ if [ "$PKEYBOARD" ] || [ "$PMOUSE" ] || [ "$PUSB" ] || [ "$SUSB" ]; then
             fi
             if [ "$SUSB" ]; then
                 for USBKEY in ${SUSB[@]}; do
-                    Add_Missing_USB $1 ${USBKEY%%|*} ${TIP%:*} ${TIP##*:}
+                    Add_Missing_USB $1 $(echo $USBKEY | awk -F \| '{print $1}') ${TIP%:*} ${TIP##*:} 
                 done
             fi
             
             if [ "$DUSB" ]; then
                 for USBKEY in ${DUSB[@]}; do
-                    Add_Missing_USB $1 ${USBKEY%%|*} ${TIP%:*} ${TIP##*:}
+                    Add_Missing_USB $1 $(echo $USBKEY | awk -F \| '{print $1}') ${TIP%:*} ${TIP##*:} $(echo $USBKEY | awk -F \| '{print $3}')
                 done
             fi
-            
-            #echo "sleep------"
-            #sleep 1
             VMSTATE=$(VMMgr_Launcher status $1 | grep "VM status: running")
         done
+        
+        # finally, delete table before quit
         Db_Drop_USB_Table $VMMGR_DB_PATH "USB-$1"
     fi
 fi
