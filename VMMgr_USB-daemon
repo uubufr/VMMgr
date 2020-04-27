@@ -95,7 +95,7 @@ VMSTATE=$(VMMgr_Launcher status $1 | grep "VM status: running")
 
 
 VMMGR_LOG "$1" "DB" "USB manager started for $1"
-echo "on est la $VMSTATE"
+
 ### Main ###
 if [ "$PKEYBOARD" ] || [ "$PMOUSE" ] || [ "$PUSB" ] || [ "$SUSB" ] || [ "$DUSB" ]; then
     Db_Create_USB_Table $VMMGR_DB_PATH $1
