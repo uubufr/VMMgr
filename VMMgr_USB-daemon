@@ -48,12 +48,11 @@ function Delete_Missing_USB() {
 function Add_Missing_USB() {
     DEVID=$(Db_Get_USB-ID $VMMGR_DB_PATH $1 $2)
     if [ "$(lsusb -d $2)" ] && [ ! "$DEVID" ] ; then
-        { echo "  $(SET_DIF_USB $2 $5)"; sleep 1; } | telnet ${3%:*} ${4##*:}
-        #{ echo "  $(SET_USB_PHYS $2 $5)"; sleep 1; } | telnet ${3%:*} ${4##*:}
+        ADDCMD=$(SET_DIF_USB $2 $5)
+        { echo "  $ADDCMD"; sleep 1; } | telnet ${3%:*} ${4##*:}
         USBID=${ADDCMD#*,id=}
         USBID=${USBID%%,*}
-        sleep 1
-        for ENTRY in $( { echo "  info usb"; sleep 1; } | telnet ${3%:*} ${4##*:} | tr \  _ | grep "Device" ); do
+         for ENTRY in $( { echo "  info usb"; sleep 1; } | telnet ${3%:*} ${4##*:} | tr \  _ | grep "Device" ); do
             if [ "$( echo $ENTRY | grep $USBID)" ]; then
                 PRODUCT=${ENTRY##*Product_}
                 PRODUCT=${PRODUCT%%,_ID:*}
@@ -125,7 +124,7 @@ if [ "$PKEYBOARD" ] || [ "$PMOUSE" ] || [ "$PUSB" ] || [ "$SUSB" ] || [ "$DUSB" 
                 done
     
             ### 2. Getting USB devices (info usb) on the VM:
-            for ENTRY in $( { echo "  info usb"; sleep 1; } | telnet ${TIP%:*} ${TIP##*:} | tr \  _ | grep "Device" | grep -v "Product USB Redirection" ); do
+            for ENTRY in $( { echo "  info usb"; sleep 1; } | telnet ${TIP%:*} ${TIP##*:} | tr \  _ | grep "Device" | grep -v "Product_USB_Redirection" ); do
                 USB+=($ENTRY)
             done
             ### We create 2 array, one for Product name, and one with ID

@@ -103,7 +103,7 @@ function SET_USB_PHYS() {
 #   $2: (optionnal) sysfs path
 function SET_DIF_USB() {
     DEVICE=$1
-    DEVFULLNAME={2:-/sys/bus/hid/drivers/hid-generic/}
+    DEVFULLNAME=${2:-/sys/bus/hid/drivers/hid-generic/}
     DEVFULLNAME=$(ls ${DEVFULLNAME%/}/ | grep ${DEVICE^^} | head -1)
     if [ "$DEVFULLNAME" != "" ]; then
         echo "$DEVFULLNAME" | sudo tee ${2%/}/unbind 1>/dev/null
