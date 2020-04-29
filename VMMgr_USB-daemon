@@ -125,7 +125,7 @@ if [ "$PKEYBOARD" ] || [ "$PMOUSE" ] || [ "$PUSB" ] || [ "$SUSB" ] || [ "$DUSB" 
                 done
     
             ### 2. Getting USB devices (info usb) on the VM:
-            for ENTRY in $( { echo "  info usb"; sleep 1; } | telnet ${TIP%:*} ${TIP##*:} | tr \  _ | grep "Device" ); do
+            for ENTRY in $( { echo "  info usb"; sleep 1; } | telnet ${TIP%:*} ${TIP##*:} | tr \  _ | grep "Device" | grep -v "Product USB Redirection" ); do
                 USB+=($ENTRY)
             done
             ### We create 2 array, one for Product name, and one with ID
