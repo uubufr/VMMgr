@@ -26,8 +26,6 @@
 
 - IPMI
 
-- Physical Dev: be able to give a physical dev to a vm
-
 - virgl: be able to add a physical graphical card a vm and use spice virgl=on
 
 - Audit/Performances: be able to evaluate and compare various options and features
