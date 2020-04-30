@@ -1,5 +1,8 @@
 Changelog:
 
+0.94:
+Add USB daemon monitoring
+
 0.93:
 Add differed USB devices
 
