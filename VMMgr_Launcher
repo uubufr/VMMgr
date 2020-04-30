@@ -143,7 +143,7 @@ case "$1" in
                         qemu-system-x86_64 -daemonize -pidfile /run/VMMGR/$NAME --uuid $(Get_Db_UUID $VMMGR_DB_PATH $2) $ADDED -no-user-config -nodefaults -readconfig $VMMGR_DATA_PATH/QEMU_CONFIGS/$2
                         VMMGR_LOG "$2" "START" "Starting $2 using qemu config"
                         if [ "$USBMONITOR" == "yes" ]; then
-                            $VMMGR_PATH/VMMgr_Launcher usb-daemon $1
+                            $VMMGR_PATH/VMMgr_Launcher usb-daemon $2
                         fi
                     else
                          if [ ! -r $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF ]; then
