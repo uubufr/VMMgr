@@ -345,7 +345,7 @@ case "$1" in
                 { echo "  $(SET_DIF_USB $3)"; sleep 1; } | telnet ${TIP%:*} ${TIP##*:}
             elif [ "$QMP" == "on" ]; then
                 IPPORT=$(Set_Service_Listen $QMPIP $QMPIPVER $QMPTYPE $NAME qmp $QMPPORT)
-                QMPTPL="-chardev socket,id=qmp01,host=$(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}'),port=${IPPORT#*|},server,nowait -mon chardev=qmp01,mode=control,pretty=on"
+                QMPTPL="-chardev socket,id=qmp01,host=$(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}'),port=${IPPORT#*|},server,nowait -mon chardev=qmp01,mode=control"
                 TIP=${QMPTPL##*chardev socket,id=qmp01,host=}
                 TIP=${TIP%%,server,nowait*}
                 { echo '{ "execute": "qmp_capabilities" } { "execute": "$(SET_DIF_USB $3)" }'; sleep 1; } | telnet ${TIP%%,*} ${TIP##*port=}
