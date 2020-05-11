@@ -70,7 +70,7 @@ function SET_PHYS_HD() {
         MAJOR=${MAJOR%,*}
         DEVNAME=$(ls -l /sys/dev/block/$MAJOR\:$MINOR/ | grep device)
         DEVNAME=${DEVNAME##*/}
-        echo "-drive file=$1,format=raw,if=none,cache=none,id=hd${2,,} -device ich9-ahci,id=ahci${2,,} -device ide-drive,drive=hd${2,,},bus=ahci${2,,}.0"
+        echo "-drive file=$1,format=raw,if=none,cache=none,id=hd${2,,} -device ich9-ahci,id=ahci${2,,} -device ide-hd,drive=hd${2,,},bus=ahci${2,,}.0"
     fi
 }
 
