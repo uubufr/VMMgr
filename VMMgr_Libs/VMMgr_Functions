@@ -171,7 +171,7 @@ function Start_VM_From_Config() {
     ### QMP MONITOR ###
     if [ "$QMP" == "on" ]; then
         IPPORT=$(Set_Service_Listen $QMPIP $QMPIPVER $QMPTYPE $NAME qmp $QMPPORT)
-        QMPTPL="-chardev socket,id=qmp01,host=$(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}'),port=${IPPORT#*|},server,nowait -mon chardev=qmp01,mode=control,pretty=on"
+        QMPTPL="-chardev socket,id=qmp01,host=$(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}'),port=${IPPORT#*|},server,nowait -mon chardev=qmp01,mode=control"
         VMMGR_LOG "$1" "SETTING" "$1: QMP monitor: $QMPTPL"
     else
         QMPTPL=""
