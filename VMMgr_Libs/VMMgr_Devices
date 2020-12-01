@@ -32,7 +32,8 @@ function Check_MEM() {
  if [ $MEM -eq $MAXMEM ]; then
     echo "-m "$MEM"G"
  else
-    echo "-m "$MEM"G,slots=$SLOT,maxmem=$MAXMEM""G"
+    #echo "-m "$MEM"G,slots=$SLOT,maxmem=$MAXMEM""G"
+    echo "-m "$MEM"G,maxmem=$MAXMEM""G"
  fi
 }
 

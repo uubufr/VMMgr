@@ -76,6 +76,7 @@ function Manage_Group() {
                     if [ "$PREC" ]; then
                         if [ "$PREC" == ${MEMBER%;*} ]; then                    # Same order value, we start
                             VMMGR_LOG "VMMGR" "GROUP" "Starting member of $2: ${MEMBER#*;} with ORDER ${MEMBER%;*}"
+                            echo "### Starting: ${MEMBER#*;} ###"
                             $VMMGR_PATH/VMMgr_Launcher start ${MEMBER#*;}
                             PREC=${MEMBER%;*}
                         else
@@ -92,6 +93,7 @@ function Manage_Group() {
                                 done
                                 if [ $ISOK -eq 0 ]; then
                                     VMMGR_LOG "VMMGR" "GROUP" "Starting member of $2: ${MEMBER#*;} with ORDER ${MEMBER%;*}"
+                                    echo "### Starting: ${MEMBER#*;} ###"
                                     $VMMGR_PATH/VMMgr_Launcher start ${MEMBER#*;}
                                     PREC=${MEMBER%;*}
                                 else
@@ -100,12 +102,14 @@ function Manage_Group() {
                             else
                                 sleep $WAIT
                                 VMMGR_LOG "VMMGR" "GROUP" "Starting member of $2: ${MEMBER#*;} with ORDER ${MEMBER%;*}"
+                                echo "### Starting: ${MEMBER#*;} ###"
                                 $VMMGR_PATH/VMMgr_Launcher start ${MEMBER#*;}
                                 PREC=${MEMBER%;*}
                             fi
                         fi
                     else
                         VMMGR_LOG "VMMGR" "GROUP" "Starting member of $2: ${MEMBER#*;} with ORDER ${MEMBER%;*}"
+                        echo "### Starting: ${MEMBER#*;} ###"
                         $VMMGR_PATH/VMMgr_Launcher start ${MEMBER#*;}                  # First VM
                         PREC=${MEMBER%;*}
                     fi
@@ -128,6 +132,7 @@ function Manage_Group() {
                 fi
                 if [ $COUNT -le 120 ]; then
                     VMMGR_LOG "VMMGR" "GROUP" "Stopping member of $2: $MEMBER"
+                    echo "### Stopping: ${MEMBER#*;} ###"
                     $VMMGR_PATH/VMMgr_Launcher stop $MEMBER
                     PREC=$MEMBER
                 else

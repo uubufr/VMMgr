@@ -213,7 +213,7 @@ case "$1" in
             . $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
             if [ "$TELNET" == "on" ]; then
                 IPPORT=$(Set_Service_Listen $TELNETIP $TELNETIPVER $TELNETTYPE $NAME telnet $TELNETPORT)
-                { echo "  info status"; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
+                { echo "  info status"; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|} 2>/dev/null
             elif [ "$QMP" == "on" ]; then
                 IPPORT=$(Set_Service_Listen $QMPIP $QMPIPVER $QMPTYPE $NAME qmp $QMPPORT)
                 { echo '{ "execute": "qmp_capabilities" } { "execute": "query-status" }'; sleep 1; } | telnet $(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}') ${IPPORT#*|}
@@ -374,6 +374,14 @@ case "$1" in
         VMMGR_LOG "VMMGR" "SSH" "Setting SSH param"
         Set_SSH $3 $2 $4 $5
         ;;
+     "edit")
+        VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
+        if [ "$VMCONF" == "" ]; then
+            echo "$2 not found in DB"
+        else
+            vi $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
+        fi
+        ;;
     *)
         echo "Usage: VMMgr_Launcher <command> <options>
         install/uninstall: Install or uninstall on your system instead of running all in the current folder
@@ -384,6 +392,7 @@ case "$1" in
         kill <vm name>: force stop vm
         reset <vm name>: reset vm
         status <vm name>: is the vm running?
+        edit <vm name>: edit vm config
         connect <vm name> <spice|vnc|telnet|qmp|ssh> connect to your vm
         load <vmname> <fullpath iso|rel to iso path|virtiowin> <reset>: load iso into DVD drive, optionally reset immediatly after
         wintools: download Windows drivers and tools in your iso path (actually: $VMMGR_ISO_PATH)

@@ -1,10 +1,8 @@
 Changelog:
 
-0.94:
-Add USB daemon monitoring
-
 0.93:
 Add differed USB devices
+Add USB daemon monitoring
 
 0.92:
 Add ssh IP/Name for direct access

@@ -1,0 +1,10 @@
+
+(remote-viewer:193834): GSpice-WARNING **: 14:27:21.745: Warning no automount-inhibiting implementation available
+
+(remote-viewer:193834): GLib-GObject-WARNING **: 14:27:31.761: value "64" of type 'gint' is invalid or out of range for property 'desktop-width' of type 'gint'
+
+(remote-viewer:193834): GLib-GObject-WARNING **: 14:27:31.761: value "64" of type 'gint' is invalid or out of range for property 'desktop-height' of type 'gint'
+
+(remote-viewer:193834): Gtk-WARNING **: 14:28:53.651: Failed to measure available space: L’emplacement indiqué n’est pas pris en charge
+
+(remote-viewer:203090): GSpice-WARNING **: 14:29:23.239: Warning no automount-inhibiting implementation available
