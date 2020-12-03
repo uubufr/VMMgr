@@ -110,17 +110,24 @@ function Set_Custom_SMP() {
 # Description: Generate Numa defs
 # Args:
 #   $1: Nb of Numa nodes
+#   $2: RAM SIZE in GB
+### TODO:
+### 1) on récupère la quantité de ram
+### 2) en divise la RAM par numa et on déclare des memory-backend-ram
 function Set_NUMA_NODE() {
+    MEMNB=$(( $2 / $1 ))
     if [ "$1" == "1" ]; then
-        echo "-numa node,nodeid=0 -numa cpu,node-id=0,socket-id=0"
+        echo "-object memory-backend-ram,id=ram0,size=2G,merge=on,dump=off,prealloc=no -numa node,nodeid=0,memdev=ram0 -numa cpu,node-id=0,socket-id=0"
     else
         NUMANODES=""
+        MEMDEVS=""
         for i in $(seq 0 $(( $1 - 1)) ); do
-            NUMANODES="$NUMANODES $(echo "-numa node,nodeid=$i")"
+            MEMDEVS="$MEMDEVS -object memory-backend-ram,id=ram$i,size=2G,merge=on,dump=off,prealloc=no"
+            NUMANODES="$NUMANODES $(echo "-numa node,nodeid=$i,memdev=ram$i")"
         done
         for i in $(seq 0 $(( $1 - 1 )) ); do
             NUMANODES="$NUMANODES $(echo "-numa cpu,node-id=$i,socket-id=0,core-id=$i ")"
         done
-        echo $NUMANODES
+        echo $MEMDEVS $NUMANODES
     fi
 }
