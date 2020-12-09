@@ -24,7 +24,8 @@ KEY_LANG="-k fr"
 MEMALLOC="--mem-prealloc"
 
 ### we disable S3 and S4:
-S34="-global PIIX4_PM.disable_s3=1 -global PIIX4_PM.disable_s4=1"
+#S34="-global PIIX4_PM.disable_s3=1 -global PIIX4_PM.disable_s4=1"
+S34="-global ICH9-LPC.disable_s3=1 -global ICH9-LPC.disable_s4=1"
 
 ### Our first pci-bridge:
 PCI="-device pci-bridge,id=pci.0,chassis_nr=1"
@@ -73,7 +74,7 @@ WINDOWSCLOCK="-rtc base=localtime,clock=vm,driftfix=none -global kvm-pit.lost_ti
 
 ### Sound card
 SOUND="-soundhw hda"
-AUDIOSPICE="audiodev driver=spice,id=audio1"
+AUDIOSPICE="-audiodev driver=spice,id=audio1"
 
 ### No Display, used when we access to vm using vnc or spice:
 NODISPLAY="-display none"
@@ -99,8 +100,8 @@ FW="-fw_cfg name=init/GuestInfo,file=$VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF"
 
 
 ### DEVICE TEMPLATES ###
-LINUXBASE="$COMMON $BOOT $S34 $PCI $USB $MOUSE $KEYBOARD $TABLET $IDEDVD $QXL $WATCHDOG $BALLOON $RNG $OVERCOMMIT $UNIXCLOCK $SOUND $NODISPLAY $VMGENID $PVPANIC $VMCORE $FW"
-WINDOWSBASE="$COMMON $BOOT $PCI $USB $MOUSE $KEYBOARD $IDEDVD $QXL $WATCHDOG $BALLOON $RNG $OVERCOMMIT $WINDOWSCLOCK $SOUND $NODISPLAY $VMGENID"
+LINUXBASE="$COMMON $BOOT $S34 $PCI $USB $MOUSE $KEYBOARD $TABLET $IDEDVD $QXL $WATCHDOG $BALLOON $RNG $OVERCOMMIT $UNIXCLOCK $NODISPLAY $VMGENID $PVPANIC $VMCORE $FW"
+WINDOWSBASE="$COMMON $BOOT $PCI $USB $MOUSE $KEYBOARD $IDEDVD $QXL $WATCHDOG $BALLOON $RNG $OVERCOMMIT $WINDOWSCLOCK $NODISPLAY $VMGENID"
 
 ### This allow to dedicate a physical graphical card, See: https://github.com/uubufr/VMMgr/wiki/3.9---Assign-Physical-hardware
 WINDOWSPHYSICAL="$COMMON $MEMALLOC $BOOT $S34 $PCI $USB $TABLET $IDEDVD $VFIOGPU $WATCHDOG $OVERCOMMIT $WINDOWSCLOCK $SOUND $VMGENID $NODISPLAY"
