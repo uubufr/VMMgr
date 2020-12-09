@@ -141,6 +141,7 @@ function Start_VM_From_Config() {
         . $VMMGR_DATA_PATH/DATA/VMMgr_Spice
         Set_Remote_Viewer spice $SPICETPL $NAME $IPPORT $SPICEPWD
         VMMGR_LOG "$1" "SETTING" "$1: Spice remote access: ${!SPICETPL}"
+        AUDIO="-audiodev driver=spice,id=audiospice"
     else
         SPICETPL=TPLNULL
     fi
@@ -272,11 +273,11 @@ function Start_VM_From_Config() {
     PIDDIR=/run/VMMGR
     [ -d $PIDDIR ] || PIDDIR=$VMMGR_DATA_PATH
     if [ "$VMMGR_TEST" == "TEST" ]; then
-        echo "qemu-system-x86_64 -pidfile $PIDDIR/$NAME -name $NAME $UUID $CORE $MEMORY $FIRMWARE ${!QEMU_TEMPLATE} ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS $SCSIDISKS $PH -writeconfig $VMMGR_DATA_PATH/QEMU_CONFIGS/$NAME" $PDEV
+        echo "qemu-system-x86_64 -pidfile $PIDDIR/$NAME -name $NAME $UUID $CORE $MEMORY $FIRMWARE ${!QEMU_TEMPLATE} ${!SPICETPL} $AUDIO ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS $SCSIDISKS $PH -writeconfig $VMMGR_DATA_PATH/QEMU_CONFIGS/$NAME" $PDEV
     else
         WCONFIG="-writeconfig $VMMGR_DATA_PATH/QEMU_CONFIGS/$NAME"
         VMMGR_LOG "$1" "SETTING" "$1: all done, starting!"
-        qemu-system-x86_64 -pidfile $PIDDIR/$NAME -name $NAME $UUID $CORE $MEMORY $FIRMWARE ${!QEMU_TEMPLATE} $NETARRAY ${!SPICETPL} ${!VNCTPL} $QMPTPL $TELNETTPL $VIRTIODISKS $SCSIDISKS $PH $WCONFIG $PDEV
+        qemu-system-x86_64 -pidfile $PIDDIR/$NAME -name $NAME $UUID $CORE $MEMORY $FIRMWARE ${!QEMU_TEMPLATE} $NETARRAY ${!SPICETPL} $AUDIO ${!VNCTPL} $QMPTPL $TELNETTPL $VIRTIODISKS $SCSIDISKS $PH $WCONFIG $PDEV
         
         sleep 1
         

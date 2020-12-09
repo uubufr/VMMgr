@@ -19,17 +19,17 @@ CPUWIN="$CPUKVM,kvm=off,-hypervisor"
 # 1 cpu
 SMP1="-smp 1,cores=1,threads=1,sockets=1,maxcpus=1"
 # 1 cpu HyperThreaded
-SMP1HT=$(Set_Custom_SMP 1 1)
+SMP1HT=$(Set_Custom_SMP 1 1 $MEM)
 # Map you physical CPU
-SMPMAX=$(Map_SMP_1CPU $(Get_Total_CPUs))
+SMPMAX=$(Map_SMP_1CPU $(Get_Total_CPUs) $MEM)
 # Start with 4 cores
-SMP4HT=$(Set_Custom_SMP 4 1)
+SMP4HT=$(Set_Custom_SMP 4 $MEM 1)
 # start with 1 cpu, to max phycical cpu
-SMP1TOMAX=$(Map_SMP_1CPU)
+SMP1TOMAX=$(Map_SMP_1CPU 1 $MEM)
 # One numa node per core
-SMPMAXNUMA=$(Map_SMP_1CPU $(Get_Total_CPUs) on)
+SMPMAXNUMA=$(Map_SMP_1CPU $(Get_Total_CPUs) $MEM on)
 # Start with 4 cpu, and create 4 numa nodes:
-SMP4NUMA=$(Set_Custom_SMP 4 1 4 on)
+SMP4NUMA=$(Set_Custom_SMP 4 1 4 $MEM on)
 
 ### Machines ###
 MACHINE35="q35,accel=kvm"

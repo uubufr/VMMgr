@@ -74,6 +74,7 @@ WINDOWSCLOCK="-rtc base=localtime,clock=vm,driftfix=none -global kvm-pit.lost_ti
 
 ### Sound card
 SOUND="-soundhw hda"
+AUDIOSPICE="audiodev driver=spice,id=audio1"
 
 ### No Display, used when we access to vm using vnc or spice:
 NODISPLAY="-display none"
@@ -103,4 +104,4 @@ LINUXBASE="$COMMON $BOOT $S34 $PCI $USB $MOUSE $KEYBOARD $TABLET $IDEDVD $QXL $W
 WINDOWSBASE="$COMMON $BOOT $PCI $USB $MOUSE $KEYBOARD $IDEDVD $QXL $WATCHDOG $BALLOON $RNG $OVERCOMMIT $WINDOWSCLOCK $SOUND $NODISPLAY $VMGENID"
 
 ### This allow to dedicate a physical graphical card, See: https://github.com/uubufr/VMMgr/wiki/3.9---Assign-Physical-hardware
-WINDOWSPHYSICAL="$COMMON $MEMALLOC $BOOT $S34 $PCI $USB $TABLET $IDEDVD $VFIOGPU $WATCHDOG $BALLOON $RNG $OVERCOMMIT $WINDOWSCLOCK $SOUND $VMGENID $NODISPLAY"
+WINDOWSPHYSICAL="$COMMON $MEMALLOC $BOOT $S34 $PCI $USB $TABLET $IDEDVD $VFIOGPU $WATCHDOG $OVERCOMMIT $WINDOWSCLOCK $SOUND $VMGENID $NODISPLAY"
