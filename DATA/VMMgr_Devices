@@ -24,7 +24,9 @@ KEY_LANG="-k fr"
 MEMALLOC="--mem-prealloc"
 
 ### we disable S3 and S4:
+#> i440fx only
 #S34="-global PIIX4_PM.disable_s3=1 -global PIIX4_PM.disable_s4=1"
+#> q35
 S34="-global ICH9-LPC.disable_s3=1 -global ICH9-LPC.disable_s4=1"
 
 ### Our first pci-bridge:
@@ -73,6 +75,7 @@ UNIXCLOCK="-rtc base=utc,clock=vm,driftfix=none -global kvm-pit.lost_tick_policy
 WINDOWSCLOCK="-rtc base=localtime,clock=vm,driftfix=none -global kvm-pit.lost_tick_policy=discard"
 
 ### Sound card
+#> -soundhw is deprecated
 SOUND="-soundhw hda"
 AUDIOSPICE="-audiodev driver=spice,id=audio1"
 
