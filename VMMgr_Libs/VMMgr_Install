@@ -82,7 +82,7 @@ function Check_Requirements() {
             echo "You must install the following packages: $PACKAGES"
             echo ""
         fi
-        PACKAGES=$(Check_Softwares "NetworkManager|openvswitch|virglrenderer|dpdk|tuned" 0)
+        PACKAGES=$(Check_Softwares "NetworkManager|openvswitch|virglrenderer|dpdk|tuned|swtpm|libtpms" 0)
         if [ "$PACKAGES" ]; then
             echo "You can install the following optionals packages: $PACKAGES"
             echo ""

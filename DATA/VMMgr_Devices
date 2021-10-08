@@ -94,7 +94,8 @@ PANIC="-device pvpanic"
 ### vmcoreinfo
 VMCORE="-device vmcoreinfo"
 
-### TPM
+### TPM2
+TPM2="-chardev socket,id=chrtpm,path=/var/lib/VMMGR/TPM2/$NAME.sock -tpmdev emulator,id=tpm2,chardev=chrtpm -device tpm-tis,tpmdev=tpm2"
 
 ### ccid
 
@@ -107,4 +108,4 @@ LINUXBASE="$COMMON $BOOT $S34 $PCI $USB $MOUSE $KEYBOARD $TABLET $IDEDVD $QXL $W
 WINDOWSBASE="$COMMON $BOOT $PCI $USB $MOUSE $KEYBOARD $IDEDVD $QXL $WATCHDOG $BALLOON $RNG $OVERCOMMIT $WINDOWSCLOCK $NODISPLAY $VMGENID"
 
 ### This allow to dedicate a physical graphical card, See: https://github.com/uubufr/VMMgr/wiki/3.9---Assign-Physical-hardware
-WINDOWSPHYSICAL="$COMMON $MEMALLOC $BOOT $S34 $PCI $USB $TABLET $IDEDVD $VFIOGPU $WATCHDOG $OVERCOMMIT $WINDOWSCLOCK $SOUND $VMGENID $NODISPLAY"
+WINDOWSPHYSICAL="$COMMON $MEMALLOC $BOOT $S34 $PCI $USB $TABLET $IDEDVD $VFIOGPU $WATCHDOG $OVERCOMMIT $WINDOWSCLOCK $SOUND $VMGENID $NODISPLAY $TPM2"

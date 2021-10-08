@@ -132,6 +132,7 @@ case "$1" in
                     echo "$2 not found in DB"
                 else
                     . $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
+                    ### If qemu_config exists ###
                     if  [ -r "$VMMGR_DATA_PATH/QEMU_CONFIGS/$2" ] && [ "$USEQEMUCONFIG" != "no" ]; then
                         DISPLAY=$(grep "^# display " $VMMGR_DATA_PATH/QEMU_CONFIGS/$2 | awk '{print $3}' )
                         if [ "$DISPLAY" ]; then ADDED="-display $DISPLAY "; fi
@@ -139,6 +140,16 @@ case "$1" in
                         if [ "$SOUND" ]; then ADDED="$ADDED -soundhw $SOUND "; fi
                         CPU=$(grep "^# cpu " $VMMGR_DATA_PATH/QEMU_CONFIGS/$2 | awk '{print $3}' )
                         if [ "$CPU" ]; then ADDED="$ADDED -cpu $CPU "; fi
+                        TPM=$(egrep "^[tpmdev "tpm2"]$" $VMMGR_DATA_PATH/QEMU_CONFIGS/$2)
+                        if [ "$TPM" ]; then
+                            VMMGR_LOG "VMMGR" "START" "Starting TPM2 service"
+                            if [ -d $VMMGR_DATA_PATH/TPM2/$NAME ]; then
+                		rm -f $VMMGR_DATA_PATH/TPM2/$NAME/*
+		            else
+		                mkdir -p $VMMGR_DATA_PATH/TPM2/$NAME/
+		            fi
+                            swtpm socket --terminate --daemon --ctrl type=unixio,path=$VMMGR_DATA_PATH/TPM2/$NAME.sock --tpmstate dir=$VMMGR_DATA_PATH/TPM2/$NAME/ --tpm2 --log file=$VMMGR_LOG_PATH/$NAME-tpm2.log --seccomp action=kill
+                        fi
                         VMMGR_LOG "VMMGR" "START" "Starting $2 using qemu-config"
                         qemu-system-x86_64 -daemonize -pidfile /run/VMMGR/$NAME --uuid $(Get_Db_UUID $VMMGR_DB_PATH $2) $ADDED -no-user-config -nodefaults -readconfig $VMMGR_DATA_PATH/QEMU_CONFIGS/$2
                         VMMGR_LOG "$2" "START" "Starting $2 using qemu config"
@@ -357,7 +368,6 @@ case "$1" in
             if [ ! -r $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF ]; then
                 echo "VM $2 not found"
             else
-                #nohup $VMMGR_LIB_PATH/VMMgr_USB-daemon $2 $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF &
                 nohup $VMMGR_PATH/VMMgr_USB-daemon $2 $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF &
             fi
         ;;

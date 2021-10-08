@@ -129,6 +129,7 @@ function Start_VM_From_Config() {
         echo "No config VMMgr_.conf found, abording..."
         return
     fi
+    . $2
     . $VMMGR_DATA_PATH/DATA/VMMgr_Devices
     Get_Bridge_Tool
     
@@ -268,6 +269,20 @@ function Start_VM_From_Config() {
     PDEV="$PK $PM $PU $SU"
     unset PKEYBOARD PMOUSE PUSB PHD
     
+### TPM2 ###
+    if [ "$TPM2" ]; then
+        if [ "$VMMGR_TEST" == "TEST" ]; then
+            echo "swtpm socket --terminate --daemon --ctrl type=unixio,path=$VMMGR_DATA_PATH/TPM2/$NAME.sock --tpmstate dir=$VMMGR_DATA_PATH/TPM2/$NAME/ --tpm2 --log file=$VMMGR_LOG_PATH/$NAME-tpm2.log --seccomp action=kill"
+        else
+            if [ -d $VMMGR_DATA_PATH/TPM2/$NAME ]; then
+                rm -f $VMMGR_DATA_PATH/TPM2/$NAME/*
+            else
+                mkdir -p $VMMGR_DATA_PATH/TPM2/$NAME/
+            fi
+            swtpm socket --terminate --daemon --ctrl type=unixio,path=$VMMGR_DATA_PATH/TPM2/$NAME.sock --tpmstate dir=$VMMGR_DATA_PATH/TPM2/$NAME/ --tpm2 --log file=$VMMGR_LOG_PATH/$NAME-tpm2.log --seccomp action=kill
+        fi
+    fi
+
     ### Ok! Now we can start VM ###
     Set_Run_Dir
     PIDDIR=/run/VMMGR
