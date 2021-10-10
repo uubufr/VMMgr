@@ -2,7 +2,7 @@
 
 **Directory**: VM_CONFIGS
 
-**Description**: This dir contain all you VM definition, used for generate a qemu config
+**Description**: This dir contain all your VM definition, used for generate a qemu config
 
 **PATH**: $VMMGR_DATA_PATH/VM_CONFIGS
 
