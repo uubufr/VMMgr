@@ -146,7 +146,7 @@ case "$1" in
                             if [ "$CPU" ]; then ADDED="$ADDED -cpu $CPU "; fi
 
                             ### TPM ###
-                            TPM=$(egrep "^[tpmdev "tpm2"]$" $VMMGR_DATA_PATH/QEMU_CONFIGS/$2)
+                            TPM=$(egrep '^\[tpmdev "tpm2"\]$' $VMMGR_DATA_PATH/QEMU_CONFIGS/$2)
                             if [ "$TPM" ]; then
                                 VMMGR_LOG "VMMGR" "START" "Starting TPM2 service"
                                 if [ -d $VMMGR_DATA_PATH/TPM2/$NAME ]; then
