@@ -115,52 +115,61 @@ case "$1" in
         ;;
     "start")
             Check_System
-            if [ ! "$2" ]; then
-                echo "Usage $0 start <vm name>"
-            elif [ "$3" == "regen" ]; then
-                VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
-                if [ ! -r $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF ]; then
-                    echo "VM $2 not found"
-                else
-                    Start_VM_From_Config $2 $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
-                fi
-            elif [ -r /etc/systemd/system/$2 ]; then
-                systemctl start $2
+            if [ "$($VMMGR_PATH/VMMgr_Launcher status $2 | grep running)" != "" ]; then
+                echo "VM $1 already running"
             else
-                VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
-                if  [ "$VMCONF" == "" ]; then
-                    echo "$2 not found in DB"
-                else
-                    . $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
-                    ### If qemu_config exists ###
-                    if  [ -r "$VMMGR_DATA_PATH/QEMU_CONFIGS/$2" ] && [ "$USEQEMUCONFIG" != "no" ]; then
-                        DISPLAY=$(grep "^# display " $VMMGR_DATA_PATH/QEMU_CONFIGS/$2 | awk '{print $3}' )
-                        if [ "$DISPLAY" ]; then ADDED="-display $DISPLAY "; fi
-                        SOUND=$(grep "^# soundhw " $VMMGR_DATA_PATH/QEMU_CONFIGS/$2 | awk '{print $3}' )
-                        if [ "$SOUND" ]; then ADDED="$ADDED -soundhw $SOUND "; fi
-                        CPU=$(grep "^# cpu " $VMMGR_DATA_PATH/QEMU_CONFIGS/$2 | awk '{print $3}' )
-                        if [ "$CPU" ]; then ADDED="$ADDED -cpu $CPU "; fi
-                        TPM=$(egrep "^[tpmdev "tpm2"]$" $VMMGR_DATA_PATH/QEMU_CONFIGS/$2)
-                        if [ "$TPM" ]; then
-                            VMMGR_LOG "VMMGR" "START" "Starting TPM2 service"
-                            if [ -d $VMMGR_DATA_PATH/TPM2/$NAME ]; then
-                		rm -f $VMMGR_DATA_PATH/TPM2/$NAME/*
-		            else
-		                mkdir -p $VMMGR_DATA_PATH/TPM2/$NAME/
-		            fi
-                            swtpm socket --terminate --daemon --ctrl type=unixio,path=$VMMGR_DATA_PATH/TPM2/$NAME.sock --tpmstate dir=$VMMGR_DATA_PATH/TPM2/$NAME/ --tpm2 --log file=$VMMGR_LOG_PATH/$NAME-tpm2.log --seccomp action=kill
-                        fi
-                        VMMGR_LOG "VMMGR" "START" "Starting $2 using qemu-config"
-                        qemu-system-x86_64 -daemonize -pidfile /run/VMMGR/$NAME --uuid $(Get_Db_UUID $VMMGR_DB_PATH $2) $ADDED -no-user-config -nodefaults -readconfig $VMMGR_DATA_PATH/QEMU_CONFIGS/$2
-                        VMMGR_LOG "$2" "START" "Starting $2 using qemu config"
-                        if [ "$USBMONITOR" == "yes" ]; then
-                            $VMMGR_PATH/VMMgr_Launcher usb-daemon $2
-                        fi
+                if [ ! "$2" ]; then
+                    echo "Usage $0 start <vm name>"
+                elif [ "$3" == "regen" ]; then
+                    VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
+                    if [ ! -r $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF ]; then
+                        echo "VM $2 not found"
                     else
-                         if [ ! -r $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF ]; then
-                            echo "VM $2 not found"
+                        Start_VM_From_Config $2 $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
+                    fi
+                elif [ -r /etc/systemd/system/$2.service ]; then
+                    systemctl start $2
+                else
+                    VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
+                    if  [ "$VMCONF" == "" ]; then
+                        echo "$2 not found in DB"
+                    else
+                        . $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
+
+                        ### If qemu_config exists ###
+                        if  [ -r "$VMMGR_DATA_PATH/QEMU_CONFIGS/$2" ] && [ "$USEQEMUCONFIG" != "no" ]; then
+                            DISPLAY=$(grep "^# display " $VMMGR_DATA_PATH/QEMU_CONFIGS/$2 | awk '{print $3}' )
+                            if [ "$DISPLAY" ]; then ADDED="-display $DISPLAY "; fi
+                            SOUND=$(grep "^# soundhw " $VMMGR_DATA_PATH/QEMU_CONFIGS/$2 | awk '{print $3}' )
+                            if [ "$SOUND" ]; then ADDED="$ADDED -soundhw $SOUND "; fi
+                            CPU=$(grep "^# cpu " $VMMGR_DATA_PATH/QEMU_CONFIGS/$2 | awk '{print $3}' )
+                            if [ "$CPU" ]; then ADDED="$ADDED -cpu $CPU "; fi
+
+                            ### TPM ###
+                            TPM=$(egrep "^[tpmdev "tpm2"]$" $VMMGR_DATA_PATH/QEMU_CONFIGS/$2)
+                            if [ "$TPM" ]; then
+                                VMMGR_LOG "VMMGR" "START" "Starting TPM2 service"
+                                if [ -d $VMMGR_DATA_PATH/TPM2/$NAME ]; then
+                                    rm -f $VMMGR_DATA_PATH/TPM2/$NAME/*
+		                else
+		                    mkdir -p $VMMGR_DATA_PATH/TPM2/$NAME/
+	                        fi
+                                swtpm socket --terminate --daemon --ctrl type=unixio,path=$VMMGR_DATA_PATH/TPM2/$NAME.sock --tpmstate dir=$VMMGR_DATA_PATH/TPM2/$NAME/ --tpm2 --log file=$VMMGR_LOG_PATH/$NAME-tpm2.log --seccomp action=kill
+                            fi
+
+                            VMMGR_LOG "VMMGR" "START" "Starting $2 using qemu-config"
+                            qemu-system-x86_64 -daemonize -pidfile /run/VMMGR/$NAME --uuid $(Get_Db_UUID $VMMGR_DB_PATH $2) $ADDED -no-user-config -nodefaults -readconfig $VMMGR_DATA_PATH/QEMU_CONFIGS/$2
+                            VMMGR_LOG "$2" "START" "Starting $2 using qemu config"
+
+                            if [ "$USBMONITOR" == "yes" ]; then
+                                $VMMGR_PATH/VMMgr_Launcher usb-daemon $2
+                            fi
                         else
-                            Start_VM_From_Config $2 $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
+                            if [ ! -r $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF ]; then
+                                echo "VM $2 not found"
+                            else
+                                Start_VM_From_Config $2 $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
+                            fi
                         fi
                     fi
                 fi
