@@ -23,9 +23,15 @@ function VM_DB_Manage() {
                 echo "VM $2 not found in db"
             else
                 echo "please select a template" && read template
-                if [ "$template" ] && [ -r $VMMGR_DATA_PATH/Templates/$template ] ; then
-                    cp $VMMGR_DATA_PATH/Templates/$template $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
-                    Custom_VM_Config $2 $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
+                if [ "$template ]; then
+                  [ -r $VMMGR_DATA_PATH/Templates/$template ] && TEMPLATE=$VMMGR_DATA_PATH/Templates/$template
+                  [ -r $VMMGR_CONFIG_PATH/Templates/$template ] && TEMPLATE=$VMMGR_CONFIG_PATH/Templates/$template
+                  if [ -r "$TEMPLATE" ]; then
+                      cp $TEMPLATE $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
+                      Custom_VM_Config $2 $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
+                  else
+                    echo "Template not found"
+                  fi
                 else
                     echo "Template not found"
                 fi

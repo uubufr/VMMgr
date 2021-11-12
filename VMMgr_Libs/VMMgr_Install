@@ -202,7 +202,7 @@ function Check_System() {
 function Install_VMMGR() {
     # /etc/VMMGR/ and main config VMMgr_.conf
     if [ ! -d /etc/VMMGR/ ]; then
-        mkdir /etc/VMMGR
+        mkdir -p /etc/VMMGR/{DATA,Templates}
         cp -r $(pwd)/VMMgr_.conf /etc/VMMGR/ && chown -R qemu:qemu /etc/VMMGR
         sed -i 's/^\(\VMMGR_.*\)$//g' /etc/VMMGR/VMMgr_.conf
         sed -i 's/^#\(\VMMGR_.*\)$/\1/g' /etc/VMMGR/VMMgr_.conf

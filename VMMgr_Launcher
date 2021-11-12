@@ -81,17 +81,19 @@ case "$1" in
                 echo "Usage $0 <vm name> <template>"
             elif [ "$(echo $2 | grep "-")" ]; then
                 echo "Error, VM name contain '-' character, please use '_' or other char instead"
-            elif [ ! -r $VMMGR_DATA_PATH/Templates/$3 ]; then
-                echo "Error, template $VMMGR_DATA_PATH/Templates/$3 doesn't exists"
+            elif [ ! -r $VMMGR_DATA_PATH/Templates/$3 ] || [ ! -r $VMMGR_CONFIG_PATH/Template/$3 ]; then
+                echo "Error, template $3 doesn't exists"
             else
                 VMMGR_LOG "VMMGR" "CREATE" "Creating vm with name: $2 from template $3"
                 VMCONF=$(Check_Existing_VM $2)
+                [ -r $VMMGR_DATA_PATH/Templates/$3 ] && TEMPLATE=$VMMGR_DATA_PATH/Templates/$3
+                [ -r $VMMGR_CONFIG_PATH/Templates/$3 ] && TEMPLATE=$VMMGR_CONFIG_PATH/Templates/$3
                 if [ "$VMCONF" == "" ]; then VMCONF="$2.conf"; fi
-                if [ -r $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF ]; then 
+                if [ -r $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF ]; then
                     echo "Warning, config file $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF already exists"
                     VMMGR_LOG "VMMGR" "CREATE" "Error, config for $2 already exists"
                 else
-                    cp $VMMGR_DATA_PATH/Templates/$3 $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
+                    cp $TEMPLATE $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
                     Custom_VM_Config $2 $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
                 fi
                 GROUP=$(cat $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF | grep "^GROUP=" | cut -d\" -f2)

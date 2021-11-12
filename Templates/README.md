@@ -2,9 +2,9 @@
 
 **Directory**: Templates
 
-**Description**: Contain all templates for create vmconfigs
+**Description**: Contain all templates for create vmconfigs, for custom templates, prefer $VMMGR_CONFIG_PATH/Templates
 
-**PATH**: $VMMGR_DATA_PATH/Templates
+**PATH**: $VMMGR_DATA_PATH/Templates $VMMGR_CONFIG_PATH/Templates
 
 ***
 

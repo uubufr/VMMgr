@@ -131,15 +131,18 @@ function Start_VM_From_Config() {
     fi
     . $2
     . $VMMGR_DATA_PATH/DATA/VMMgr_Devices
+    [ -r $VMMGR_CONFIG_PATH/DATA/VMMgr_Devices ] && . $VMMGR_CONFIG_PATH/DATA/VMMgr_Devices
     Get_Bridge_Tool
     
     ### SPICE ###
     . $VMMGR_DATA_PATH/DATA/VMMgr_Spice
+    [ -r $VMMGR_CONFIG_PATH/DATA/VMMgr_Spice ] && . $VMMGR_CONFIG_PATH/DATA/VMMgr_Spice
     . $2
     if [ "$SPICE" == "on" ]; then
         IPPORT=$(Set_Service_Listen $SPICEIP $SPICEIPVER $SPICETYPE $NAME spice $SPICEPORT)
         SPICEIP=${IPPORT%|*}; SPICEPORT=${IPPORT#*|}
         . $VMMGR_DATA_PATH/DATA/VMMgr_Spice
+        [ -r $VMMGR_CONFIG_PATH/DATA/VMMgr_Spice ] && . $VMMGR_CONFIG_PATH/DATA/VMMgr_Spice
         Set_Remote_Viewer spice $SPICETPL $NAME $IPPORT $SPICEPWD
         VMMGR_LOG "$1" "SETTING" "$1: Spice remote access: ${!SPICETPL}"
         AUDIO="-audiodev driver=spice,id=audiospice"
@@ -159,10 +162,12 @@ function Start_VM_From_Config() {
     ### VNC ###
     if [ "$VNC" == "on" ]; then
         . $VMMGR_DATA_PATH/DATA/VMMgr_VNC
+        [ -r $VMMGR_CONFIG_PATH/DATA/VMMgr_VNC ] && . $VMMGR_CONFIG_PATH/DATA/VMMgr_VNC
         . $2
         IPPORT=$(Set_Service_Listen $VNCIP $VNCIPVER $VNCTYPE $NAME vnc $VNCPORT)
         VNCIP=$(ip -br a s | grep ${IPPORT%|*} | awk '{print $1}'); VNCPORT=${IPPORT#*|}
         . $VMMGR_DATA_PATH/DATA/VMMgr_VNC
+        [ -r $VMMGR_CONFIG_PATH/DATA/VMMgr_VNC ] && . $VMMGR_CONFIG_PATH/DATA/VMMgr_VNC
         echo "Remote Viewer with x509 do not work, please use another vnc viewer like Remina"
         Set_Remote_Viewer vnc $VNCTPL $NAME $IPPORT $VNCPWD
         VMMGR_LOG "$1" "SETTING" "$1: VNC remote access: ${!VNCTPL}"
@@ -181,6 +186,7 @@ function Start_VM_From_Config() {
 
     ### Virtio NETWORK ###
     . $VMMGR_DATA_PATH/DATA/VMMgr_VirtioNet
+    [ -r $VMMGR_CONFIG_PATH/DATA/VMMgr_VirtioNet ] && . $VMMGR_CONFIG_PATH/DATA/VMMgr_VirtioNet
     declare -i NUMDEV=0
     for NET in $(echo $NETWORKDEVICE); do
         NETARRAY="$NETARRAY $(Set_NetDev $NAME ${NET%|*} ${NET#*|} "$NETDEV" "$DEVICE" $NUMDEV)"
@@ -209,6 +215,7 @@ function Start_VM_From_Config() {
     
     ### CPU/SMP/NUMA/MACHINE ###
     . $VMMGR_DATA_PATH/DATA/VMMgr_CPU
+    [ -r $VMMGR_CONFIG_PATH/DATA/VMMgr_CPU ] && . $VMMGR_CONFIG_PATH/DATA/VMMgr_CPU
     CORE="-machine ${!MACHINETPL} ${!SMPTPL} -cpu ${!CPU}"
     [ "$MAXMEM" ] || MAXMEM="undefined"
     MEMORY=$(Check_MEM $MEM $MAXMEM $SLOT)
