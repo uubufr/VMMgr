@@ -23,7 +23,7 @@ function VM_DB_Manage() {
                 echo "VM $2 not found in db"
             else
                 echo "please select a template" && read template
-                if [ "$template ]; then
+                if [ "$template" ]; then
                   [ -r $VMMGR_DATA_PATH/Templates/$template ] && TEMPLATE=$VMMGR_DATA_PATH/Templates/$template
                   [ -r $VMMGR_CONFIG_PATH/Templates/$template ] && TEMPLATE=$VMMGR_CONFIG_PATH/Templates/$template
                   if [ -r "$TEMPLATE" ]; then
@@ -65,7 +65,7 @@ function VM_DB_Manage() {
         "import") # $2 = <full vm backup path>
             VMMGR_LOG "VMMGR" "EXPORT" "Importing VM into db from $2"
             Db_Import_VM $VMMGR_DB_PATH $2
-            echo "Warn: Import don\'t check if services IP:PORT are unique, you must check it manually"
+            echo "Warn: Import don't check if services IP:PORT are unique, you must check it manually"
         ;;
         "backup") # $2 = "list"
             if [ "$2" == "list" ]; then
