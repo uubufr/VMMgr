@@ -18,17 +18,17 @@ function VM_DB_Manage() {
     case $1 in
         "reconf") # $2 = <vm name>
             VMMGR_LOG "VMMGR" "RECONF" "Regenerate config for $2"
-            VMCONF=$(Db_Get_VM_Config $VMMGR_DB_PATH $2)
+            VMCONF=$(Db_Get_VM_Config "$VMMGR_DB_PATH" "$2")
             if [ ! "$VMCONF" ]; then
                 echo "VM $2 not found in db"
             else
-                echo "please select a template" && read template
+                echo "please select a template" && read -r template
                 if [ "$template" ]; then
-                  [ -r $VMMGR_DATA_PATH/Templates/$template ] && TEMPLATE=$VMMGR_DATA_PATH/Templates/$template
-                  [ -r $VMMGR_CONFIG_PATH/Templates/$template ] && TEMPLATE=$VMMGR_CONFIG_PATH/Templates/$template
+                  [ -r "$VMMGR_DATA_PATH/Templates/$template" ] && TEMPLATE=$VMMGR_DATA_PATH/Templates/$template
+                  [ -r "$VMMGR_CONFIG_PATH/Templates/$template" ] && TEMPLATE=$VMMGR_CONFIG_PATH/Templates/$template
                   if [ -r "$TEMPLATE" ]; then
-                      cp $TEMPLATE $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
-                      Custom_VM_Config $2 $VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF
+                      cp "$TEMPLATE" "$VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF"
+                      Custom_VM_Config "$2" "$VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF"
                   else
                     echo "Template not found"
                   fi
@@ -39,17 +39,17 @@ function VM_DB_Manage() {
         ;;
         "todb") # $2 = <config name>
             VMMGR_LOG "VMMGR" "TODB" "Recreate VM in DB for $2"
-            if [ -r $VMMGR_DATA_PATH/VM_CONFIGS/$2 ]; then
+            if [ -r "$VMMGR_DATA_PATH/VM_CONFIGS/$2" ]; then
                 VMCONF="$VMMGR_DATA_PATH/VM_CONFIGS/$2"
-                VMTPL=$(cat $VMCONF | grep "^# Template Name: "); VMTPL=${VMTPL#\# Template Name: }
-                VMNAME=$(cat $VMCONF | grep "^NAME=" | cut -d\" -f2);
-                VMGRP=$(cat $VMCONF | grep "^GROUP=" | cut -d\" -f2)
-                EXIST=$(Db_Get_VM_Config $VMMGR_DB_PATH $VMNAME)
+                VMTPL=$(grep "^# Template Name: " "$VMCONF"); VMTPL=${VMTPL#\# Template Name: }
+                VMNAME=$(grep "^NAME=" "$VMCONF" | cut -d\" -f2);
+                VMGRP=$(grep "^GROUP=" "$VMCONF" | cut -d\" -f2)
+                EXIST=$(Db_Get_VM_Config "$VMMGR_DB_PATH" "$VMNAME")
                 if [ "$EXIST" ]; then
                     echo "Error, VM already exists in db"
                 else
-                    VMID=$(Db_Create_VM $VMMGR_DB_PATH $VMNAME $(basename $VMCONF) $(cat /proc/sys/kernel/random/uuid) $VMGRP)
-                    Db_Set_Group $VMMGR_DB_PATH $VMNAME $VMGRP
+                    Db_Create_VM "$VMMGR_DB_PATH" "$VMNAME" "$(basename "$VMCONF")" "$(cat /proc/sys/kernel/random/uuid)" "$VMGRP"
+                    Db_Set_Group "$VMMGR_DB_PATH" "$VMNAME" "$VMGRP"
                 fi
             else
                 echo "error $VMMGR_DATA_PATH/VM_CONFIGS/$2 not found"
@@ -59,34 +59,36 @@ function VM_DB_Manage() {
         "export") # $2 = <vm name>
             VMMGR_LOG "VMMGR" "EXPORT" "Exporting DB for VM $2"
             VMMGR_LOG "$2" "DELETE" "Deleting vm $2 in database"
-            Db_Export_VM $VMMGR_DB_PATH $2
+            Db_Export_VM "$VMMGR_DB_PATH" "$2"
             echo "Warn: Import will never check if services IP:PORT are unique, you will have to check it manually"
         ;;
         "import") # $2 = <full vm backup path>
             VMMGR_LOG "VMMGR" "EXPORT" "Importing VM into db from $2"
-            Db_Import_VM $VMMGR_DB_PATH $2
+            Db_Import_VM "$VMMGR_DB_PATH" "$2"
             echo "Warn: Import don't check if services IP:PORT are unique, you must check it manually"
         ;;
         "backup") # $2 = "list"
             if [ "$2" == "list" ]; then
-                for BKPFILE in $(ls --hide=README.md -r $VMMGR_DATA_PATH/DB_BKP/*.bkp); do
-                    basename $BKPFILE
+                readarray -d '' entries < <(printf '%s\0' "$VMMGR_DATA_PATH"/DB_BKP/*.bkp | sort -zVr)
+                for BKPFILE in "${entries[@]}"; do
+                    basename "$BKPFILE"
                 done
             fi
         ;;
         "restore") # $2 = 'last' or backup name (relative to $VMMGR_DATA_PATH/DB_BKP/
             VMMGR_LOG "VMMGR" "DB" "Restoring DB from backup $2"
             if [ "$2" == "last" ]; then
-                LATEST=$( ls -1r $VMMGR_DATA_PATH/DB_BKP/*-DB.bkp | head -1)
+                readarray -d '' entries < <(printf '%s\0' "$VMMGR_DATA_PATH"/DB_BKP/*.bkp | sort -zVr)
+                LATEST=${entries[0]};
                 if [ -r "$LATEST" ]; then
-                    cp $LATEST $VMMGR_DB_PATH/VMMGR_.db
+                    cp "$LATEST" "$VMMGR_DB_PATH"/VMMGR_.db
                 else
                     echo "no latest backup found"
                 fi
             else
-                BKP=$( ls $VMMGR_DATA_PATH/DB_BKP/$2)
+                BKP=$( ls "$VMMGR_DATA_PATH"/DB_BKP/"$2")
                 if [ -r "$BKP" ]; then
-                    cp $BKP $VMMGR_DATA_PATH/DB/VMMGR_.db
+                    cp "$BKP" "$VMMGR_DATA_PATH"/DB/VMMGR_.db
                 else
                     echo "no latest backup found"
                 fi
@@ -95,22 +97,23 @@ function VM_DB_Manage() {
         "purge") # no $2 args
             VMMGR_LOG "VMMGR" "DB" "Purge DB BACKUPS"
             if [ "$DBMAXAGE" ]; then
-                for BKPFILE in $(ls --hide=README.md -r $VMMGR_DATA_PATH/DB_BKP/*DB.bkp); do
-                BKPNAME=$(basename $BKPFILE)
+                for BKPFILE in "$VMMGR_DATA_PATH"/DB_BKP/*.bkp; do
+                BKPNAME=$(basename "$BKPFILE")
                     BKPDATE=${BKPNAME%%_*}
-                    BKPDATE=$(date -d $BKPDATE +%s)
+                    BKPDATE=$(date -d "$BKPDATE" +%s)
                     CURDATE=$(date --date "$DBMAXAGE days ago" +%s)
-                    if [ $BKPDATE -lt $CURDATE ]; then
-                        rm $BKPFILE
+                    if [ "$BKPDATE" -lt "$CURDATE" ]; then
+                        rm "$BKPFILE"
                     fi
                 done
             fi
             if [ "$DBMAXBACKUP" ]; then
                 BKPCOUNT=0
-                for BKPFILE in $(ls --hide=README.md -r $VMMGR_DATA_PATH/DB_BKP/*.bkp); do
-                    BKPCOUNT=$(( $BKPCOUNT + 1 ))
-                    if [ $BKPCOUNT -gt $DBMAXBACKUP ]; then
-                       rm $BKPFILE
+                readarray -d '' entries < <(printf '%s\0' "$VMMGR_DATA_PATH"/DB_BKP/*.bkp | sort -zVr)
+                for BKPFILE in "${entries[@]}"; do
+                    BKPCOUNT=$(( BKPCOUNT + 1 ))
+                    if [ $BKPCOUNT -gt "$DBMAXBACKUP" ]; then
+                       rm "$BKPFILE"
                     fi
                 done
             fi
@@ -123,17 +126,17 @@ function VM_DB_Manage() {
 # Args: None
 function Auto_Backup_Db() {
     LATEST=""
-    if [ -r $VMMGR_DATA_PATH/DB_BKP/*-DB.latest.bkp ]; then
-        LATEST=$( ls $VMMGR_DATA_PATH/DB_BKP/*-DB.latest.bkp)
+    if [ -r "$(find "$VMMGR_DATA_PATH"/DB_BKP/ -name '*-DB.latest.bkp')" ]; then
+        LATEST=$( ls "$VMMGR_DATA_PATH"/DB_BKP/*-DB.latest.bkp)
         if [ -r "$LATEST" ]; then
-            if [ "$(sha1sum $LATEST | awk '{print $1}')" != "$(sha1sum $VMMGR_DB_PATH/VMMGR_.db | awk '{print $1}')" ]; then
-                TARGET=$(basename $LATEST)
-                mv $LATEST $VMMGR_DATA_PATH/DB_BKP/${TARGET%%.latest.bkp}.bkp
+            if [ "$(sha1sum "$LATEST" | awk '{print $1}')" != "$(sha1sum "$VMMGR_DB_PATH"/VMMGR_.db | awk '{print $1}')" ]; then
+                TARGET=$(basename "$LATEST")
+                mv "$LATEST" "$VMMGR_DATA_PATH"/DB_BKP/"${TARGET%%.latest.bkp}".bkp
             fi
         fi
     fi
     if [ ! -r "$LATEST" ]; then
-        cp $VMMGR_DB_PATH/VMMGR_.db $VMMGR_DATA_PATH/DB_BKP/$(date '+%Y-%m-%d_%H-%M-%S')-DB.latest.bkp;
+        cp "$VMMGR_DB_PATH"/VMMGR_.db "$VMMGR_DATA_PATH"/DB_BKP/"$(date '+%Y-%m-%d_%H-%M-%S')"-DB.latest.bkp;
         VMMGR_LOG "VMMGR" "DB" "changed, new DB Backup."
     fi
 }
