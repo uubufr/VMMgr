@@ -295,29 +295,13 @@ function Start_VM_From_Config() {
     PIDDIR=/run/VMMGR
     [ -d $PIDDIR ] || PIDDIR=$VMMGR_DATA_PATH
     if [ "$VMMGR_TEST" == "TEST" ]; then
-        echo "qemu-system-x86_64 -pidfile $PIDDIR/$NAME -name $NAME $UUID $CORE $MEMORY $FIRMWARE ${!QEMU_TEMPLATE} ${!SPICETPL} $AUDIO ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS $SCSIDISKS $PH -writeconfig $VMMGR_DATA_PATH/QEMU_CONFIGS/$NAME" $PDEV
+        echo "qemu-system-x86_64 -pidfile $PIDDIR/$NAME -name $NAME $UUID $CORE $MEMORY $FIRMWARE ${!QEMU_TEMPLATE} ${!SPICETPL} $AUDIO ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS $SCSIDISKS $PH $PDEV"
     else
-        WCONFIG="-writeconfig $VMMGR_DATA_PATH/QEMU_CONFIGS/$NAME"
         VMMGR_LOG "$1" "SETTING" "$1: all done, starting!"
-        qemu-system-x86_64 -pidfile $PIDDIR/$NAME -name $NAME $UUID $CORE $MEMORY $FIRMWARE ${!QEMU_TEMPLATE} $NETARRAY ${!SPICETPL} $AUDIO ${!VNCTPL} $QMPTPL $TELNETTPL $VIRTIODISKS $SCSIDISKS $PH $WCONFIG $PDEV
+        qemu-system-x86_64 -pidfile $PIDDIR/$NAME -name $NAME $UUID $CORE $MEMORY $FIRMWARE ${!QEMU_TEMPLATE} $NETARRAY ${!SPICETPL} $AUDIO ${!VNCTPL} $QMPTPL $TELNETTPL $VIRTIODISKS $SCSIDISKS $PH $PDEV
         
         sleep 1
         
-        # Fix Duplicated ID compat_monitor0 #
-        VMMGR_LOG "$1" "SETTING" "Update qemu config file: $VMMGR_DATA_PATH/QEMU_CONFIGS/$NAME"
-        sed -i 's/compat_monitor0/compat_monitor1/g' $VMMGR_DATA_PATH/QEMU_CONFIGS/$NAME
-        
-        # insert missing options, the following options are not included in qemu config:
-        # pidfile, uuid, display, soundhw, daemonize, no-user-config, nodefaults, display
-        # we add uuid, soundhw and display as comments
-        
-        DISPLAY=${!QEMU_TEMPLATE}; DISPLAY=${DISPLAY##*-display}; DISPLAY=${DISPLAY%%-*}
-        if [ "$DISPLAY" != "" ]; then ADDED="# display $DISPLAY\n"; fi
-        SOUND=${!QEMU_TEMPLATE}; SOUND=${SOUND##*-soundhw}; SOUND=${SOUND%%-*}
-        if [ "$SOUND" != "" ]; then ADDED="$ADDED# soundhw $SOUND\n"; fi
-        if [ "${!CPU}" != "" ]; then ADDED="$ADDED# cpu ${!CPU}\n"; fi
-        sed -i -e "s/^\(\# qemu config file\)$/\1\n$ADDED/" $VMMGR_DATA_PATH/QEMU_CONFIGS/$NAME
-
         if [ "$VNCPWD" != "" ] && [ "$(echo  ${!VNCTPL} | grep "password")" != "" ] ; then
             VMMGR_LOG "$1" "PASSWD" "Setting VNC password"
             ### VNC PASSWORD ###
@@ -488,7 +472,6 @@ function VM_Delete() {
             "conf")
                 VMMGR_LOG "$2" "DELETE" "Deleting $1 config files"
                 rm $VMMGR_DATA_PATH/VM_CONFIGS/$2
-                rm $VMMGR_DATA_PATH/QEMU_CONFIGS/$1
             ;;
             "disks")
                 VMMGR_LOG "$2" "DELETE" "Deleting vm $1 disks"
