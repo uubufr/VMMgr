@@ -241,6 +241,13 @@ function Install_VMMGR() {
     if [ ! -d /etc/systemd/system/VMMgr_.target.wants ]; then
         mkdir /etc/systemd/system/VMMgr_.target.wants
     fi
+    
+    # /run/VMMGR
+    cat > /etc/tmpfiles.d/vmmgr.conf <<EOF
+d /run/VMMGR 0770 qemu qemu
+EOF
+    systemd-tmpfiles --create
+    
     VMMGR_LOG "VMMGR" "INSTALL" "VMMgr is installed on your system."
 }
 
@@ -269,6 +276,10 @@ function Uninstall_VMMGR() {
     rm /usr/local/bin/VMMgr_Launcher
     rm /usr/local/bin/VMMgr_USB-daemon
     rm /usr/local/lib/VMMgr_{CPUs,Db,Disks,Functions,Networks}
+    
+    rm /etc/tmpfiles.d/vmmgr.conf
+    systemd-tmpfiles --remove
+    
     VMMGR_LOG "VMMGR" "UNINSTALL" "VMMgr is removed on your system except:"
     VMMGR_LOG "VMMGR" "UNINSTALL" "/etc/VMMGR directory will not be deleted"
     VMMGR_LOG "VMMGR" "UNINSTALL" "/var/lib/VMMGR, VM configs and templates will not be deleted"
