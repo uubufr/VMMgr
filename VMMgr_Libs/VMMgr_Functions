@@ -14,18 +14,6 @@
 # List_All_VM: Get the list of VMs
 # VM_Delete: Delete a vm
 # set_DNS: register vm name with IP
-# Set_Run_Dir: create /run/VMMGR dir
-
-# Function Set_Run_Dir
-# Description: create /run/VMMGR dir
-# Args: None
-function Set_Run_Dir() {
-    if [ ! -d /run/VMMGR ]; then
-        sudo mkdir /run/VMMGR
-        sudo chown -R qemu:qemu /run/VMMGR
-        sudo chmod -R 770 /run/VMMGR
-    fi
-}
 
 # Function : Check_Existing_VM
 # Description: Check on DB if VM already exists
