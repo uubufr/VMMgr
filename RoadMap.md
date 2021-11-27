@@ -36,6 +36,4 @@
 
 - Tuned: tuned for guest
 
-- Add /etc/VMMGR/{DATA,Templates} in order to make distinction with package profiles in /var/lib/VMMGR
-
 - Add Better group management (interactive machine list/order/delay)
