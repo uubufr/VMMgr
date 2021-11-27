@@ -6,33 +6,28 @@
 # Description: VMMgr_Launcher main entry for VM management
 
 
-### except install and uninstall, we never run as root:
 MYID=$(id -u)
-RUNERROR=0
+### Install/uninstall only with root ###
 if [ "$MYID" == "0" ]; then
-        if [ "$1" == "install" ] || [ "$1" == "uninstall" ]; then
-                echo "${1^}ing VMMGR..."
-        else
-                echo "Error, except 'install' and 'uninstall' commands, I refuse to run as root."
-                RUNERROR=1
-        fi
+  if [ "$1" == "install" ] || [ "$1" == "uninstall" ]; then
+    echo "${1^}ing VMMGR..."
+  else
+    echo "Error, except 'install' and 'uninstall' commands, I refuse to run as root."; exit -1
+  fi
+  # load local lib if exists
+  [ -r $(dirname $0)/VMMgr_.conf ] && . $(dirname $0)/VMMgr_.conf
+### all other command never has root ###
 else
-        if [ "$1" == "install" ] || [ "$1" == "uninstall" ]; then
-                echo "Error, '$1' commands need root privileges"
-                RUNERROR=1
-        fi
-fi
-if [ "$RUNERROR" == 1 ]; then
-        exit -1
-fi
-
-if [ -r /etc/VMMGR/VMMgr_.conf ]; then
- . /etc/VMMGR/VMMgr_.conf
-elif [ -r $(dirname $0)/VMMgr_.conf ]; then
- . $(dirname $0)/VMMgr_.conf
-else
- echo "No config VMMgr_.conf found, abording..."
- exit -1
+  if [ "$1" == "install" ] || [ "$1" == "uninstall" ]; then
+    echo "Error, '$1' commands need root privileges"; exit -1
+  fi
+  if [ -r /etc/VMMGR/VMMgr_.conf ]; then
+    . /etc/VMMGR/VMMgr_.conf
+  elif [ -r $(dirname $0)/VMMgr_.conf ]; then
+    . $(dirname $0)/VMMgr_.conf
+  else
+    echo "No config VMMgr_.conf found, abording..."; exit -1
+  fi
 fi
 
 # Loading Libs
@@ -42,7 +37,6 @@ if [ -r $VMMGR_LIB_PATH/VMMgr_Functions ]; then
     . $VMMGR_LIB_PATH/VMMgr_Networks
     . $VMMGR_LIB_PATH/VMMgr_Disks
     . $VMMGR_LIB_PATH/VMMgr_CPUs
-    . $VMMGR_LIB_PATH/VMMgr_Install
     . $VMMGR_LIB_PATH/VMMgr_Group
     . $VMMGR_LIB_PATH/VMMgr_Dbm
     . $VMMGR_LIB_PATH/VMMgr_Physical
@@ -50,13 +44,9 @@ if [ -r $VMMGR_LIB_PATH/VMMgr_Functions ]; then
     . $VMMGR_LIB_PATH/VMMgr_Devices
 fi
 
-# If DB not exists
-if [ $MYID != 0 ]; then
-    Set_Db $VMMGR_DB_PATH
-fi
+### If DB not exists ###
+if [ $MYID != 0 ]; then Set_Db $VMMGR_DB_PATH; fi
 
-# /run/VMMGR
-Set_Run_Dir
 
 case "$1" in
     "check")
@@ -64,10 +54,11 @@ case "$1" in
         Check_System
         ;;
     "install")
-        . ./VMMgr_Libs/VMMgr_Install
+        . $VMMGR_LIB_PATH/VMMgr_Install
         Install_VMMGR
         ;;
     "uninstall")
+        . $VMMGR_LIB_PATH/VMMgr_Install
         Uninstall_VMMGR
         ;;
     "create")
@@ -80,7 +71,7 @@ case "$1" in
             if [ ! "$2" ] || [ ! "$3" ]; then
                 echo "Usage $0 <vm name> <template>"
             elif [ "$(echo $2 | grep "-")" ]; then
-                echo "Error, VM name contain '-' character, please use '_' or other char instead"
+                echo "Error, VM name contain '-' character, please use '_' instead"
             elif [ ! -r $VMMGR_DATA_PATH/Templates/$3 ] || [ ! -r $VMMGR_CONFIG_PATH/Template/$3 ]; then
                 echo "Error, template $3 doesn't exists"
             else
