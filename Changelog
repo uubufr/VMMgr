@@ -8,6 +8,8 @@ add some text when starting a group
 add fw_cfg to share vmconfig (as an example) with your vm (seen in /sys/firmware/qemu_fw_cfg/opt/)
 add ssh command
 add edit command to open your vmconfig with vi
+add TPM2 support needed for Windows 11
+drop qemuconfig (writeconfig/readconfig options), this feature has been removed on qemu 6.0
 
 0.93:
 Add differed USB devices
