@@ -4,6 +4,8 @@
 # Autor: Sylvain Girod ( uubu at gmx dot fr )
 # Version: 0.05
 # Description: VMMgr_Launcher main entry for VM management
+#
+# This is the entry point for VMMGR, type
 
 
 MYID=$(id -u)
@@ -383,7 +385,7 @@ case "$1" in
         delete: [disks[-conf[-db]]] delete VM
         group: <list|start|stop|enable|disable> group management
         list <all|running|stopped|enabled|disabled> list vms
-        db <reconf|todb|import|export|list|purge>
+        db <reconf|todb|import|export|backup list|restore|purge>
         ssh <set|update|delete> <vmname> <IP> [ <ssh hostname> ]: register IP and hostname for ssh access
         usb <DEVICE:VENDOR>: connect usb device at runtime
         usb-daemon <vm name>: monitor missing usb devices and re-add it once plugged again
