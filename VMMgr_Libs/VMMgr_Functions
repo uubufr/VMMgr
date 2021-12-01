@@ -279,7 +279,6 @@ function Start_VM_From_Config() {
     fi
 
     ### Ok! Now we can start VM ###
-    Set_Run_Dir
     PIDDIR=/run/VMMGR
     [ -d $PIDDIR ] || PIDDIR=$VMMGR_DATA_PATH
     if [ "$VMMGR_TEST" == "TEST" ]; then
