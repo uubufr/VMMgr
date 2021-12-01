@@ -1,5 +1,8 @@
 Changelog:
 
+0.95
+
+
 0.94
 correct disabling s2,s3 for q35
 add audiodev instead QEMU_AUDIO_DRV var
