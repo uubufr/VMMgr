@@ -39,6 +39,7 @@ if [ -r $VMMGR_LIB_PATH/VMMgr_Functions ]; then
     . $VMMGR_LIB_PATH/VMMgr_Networks
     . $VMMGR_LIB_PATH/VMMgr_Disks
     . $VMMGR_LIB_PATH/VMMgr_CPUs
+    . $VMMGR_LIB_PATH/VMMgr_Install
     . $VMMGR_LIB_PATH/VMMgr_Group
     . $VMMGR_LIB_PATH/VMMgr_Dbm
     . $VMMGR_LIB_PATH/VMMgr_Physical
