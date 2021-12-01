@@ -54,9 +54,9 @@
 #   $1: Db Path (parent dir)
 function Set_Db() {
  DBVERSION=1
- if [ ! -r $1/VMMGR_.db ]; then
+ if [ ! -r "$1"/VMMGR_.db ]; then
     VMMGR_LOG "VMMGR" "DB" "Creating Database"
-    sqlite3 $1/VMMGR_.db <<EOF
+    sqlite3 "$1"/VMMGR_.db <<EOF
 
 CREATE TABLE VMMGR(
    VERSION INTERGER NOT NULL
@@ -135,9 +135,9 @@ CREATE TABLE GROUPS(
 );
 EOF
 
-    echo "INSERT INTO VMMGR ( VERSION ) values ( '$DBVERSION' );" | sqlite3 $1/VMMGR_.db
+    echo "INSERT INTO VMMGR ( VERSION ) values ( '$DBVERSION' );" | sqlite3 "$1"/VMMGR_.db
  fi
- Db_Check_SCHEMA $1 $DBVERSION
+ Db_Check_SCHEMA "$1" "$DBVERSION"
 }
 
 # Function: Db_Create_VM
@@ -149,12 +149,12 @@ EOF
 #   $4: UUID
 #   $5: Group
 function Db_Create_VM() {
- EXISTS=$(echo "select VMiD from VM where Name='$2';" | sqlite3 $1/VMMGR_.db)
+ EXISTS=$(echo "select VMiD from VM where Name='$2';" | sqlite3 "$1"/VMMGR_.db)
  if [ "$EXISTS" == "" ]; then
-  echo "insert into VM ( Name, Config, Enabled, UUID, MemberOf) values ('$2', '$3','0', '$4', '$5');" | sqlite3 $1/VMMGR_.db
-  echo "select VMiD from VM where Name='$2';"| sqlite3 $1/VMMGR_.db
+  echo "insert into VM ( Name, Config, Enabled, UUID, MemberOf) values ('$2', '$3','0', '$4', '$5');" | sqlite3 "$1"/VMMGR_.db
+  echo "select VMiD from VM where Name='$2';"| sqlite3 "$1"/VMMGR_.db
  else
-  echo $EXISTS
+  echo "$EXISTS"
  fi
 }
 
@@ -164,13 +164,13 @@ function Db_Create_VM() {
 #   $1: Db Path (parent dir)
 #   $2: VM name
 function Db_Delete_VM() {
- EXISTS=$(echo "select VMiD from VM where Name='$2';" | sqlite3 $1/VMMGR_.db)
+ EXISTS=$(echo "select VMiD from VM where Name='$2';" | sqlite3 "$1"/VMMGR_.db)
  if [ ! "$EXISTS" == "" ]; then
-    echo "delete from SPICE where VMiD='$EXISTS';" | sqlite3 $1/VMMGR_.db
-    echo "delete from QMP where VMiD='$EXISTS';" | sqlite3 $1/VMMGR_.db
-    echo "delete from TELNET where VMiD='$EXISTS';" | sqlite3 $1/VMMGR_.db
-    echo "delete from VM where VMiD='$EXISTS';" | sqlite3 $1/VMMGR_.db
-    echo "delete from MAC where VMiD='$EXISTS';" | sqlite3 $1/VMMGR_.db
+    echo "delete from SPICE where VMiD='$EXISTS';" | sqlite3 "$1"/VMMGR_.db
+    echo "delete from QMP where VMiD='$EXISTS';" | sqlite3 "$1"/VMMGR_.db
+    echo "delete from TELNET where VMiD='$EXISTS';" | sqlite3 "$1"/VMMGR_.db
+    echo "delete from VM where VMiD='$EXISTS';" | sqlite3 "$1"/VMMGR_.db
+    echo "delete from MAC where VMiD='$EXISTS';" | sqlite3 "$1"/VMMGR_.db
  fi
 }
 
@@ -179,7 +179,7 @@ function Db_Delete_VM() {
 # Args:
 #   $1: Db Path (parent dir)
 function Db_List_VMs() {
- echo "select Name from VM;" | sqlite3 $1/VMMGR_.db
+ echo "select Name from VM;" | sqlite3 "$1"/VMMGR_.db
 }
 
 # Function: Db_Filter_VMs
@@ -189,7 +189,7 @@ function Db_List_VMs() {
 #   $2: field
 #   $3: value
 function Db_Filter_VMs() {
-    echo "select Name from VM where $2='$3';" | sqlite3 $1/VMMGR_.db
+    echo "select Name from VM where $2='$3';" | sqlite3 "$1"/VMMGR_.db
 }
 
 # Function Db_isEnabled_VM
@@ -198,7 +198,7 @@ function Db_Filter_VMs() {
 #   $1: Db Path (parent dir)
 #   $2: Vm Name
 function Db_isEnabled_VM() {
- echo "select Enabled from VM where Name='$2';" | sqlite3 $1/VMMGR_.db
+ echo "select Enabled from VM where Name='$2';" | sqlite3 "$1"/VMMGR_.db
 }
 
 # Function Db_Enable_VM
@@ -207,9 +207,9 @@ function Db_isEnabled_VM() {
 #   $1: Db Path (parent dir)
 #   $2: Vm Name
 function Db_Enable_VM() {
- EXISTS=$(echo "select VMiD from VM where Name='$2';" | sqlite3 $1/VMMGR_.db)
+ EXISTS=$(echo "select VMiD from VM where Name='$2';" | sqlite3 "$1"/VMMGR_.db)
  if [ ! "$EXISTS" == "" ]; then
-    echo "update VM SET Enabled=1 where VMiD='$EXISTS';" | sqlite3 $1/VMMGR_.db
+    echo "update VM SET Enabled=1 where VMiD='$EXISTS';" | sqlite3 "$1"/VMMGR_.db
  fi
 }
 
@@ -219,9 +219,9 @@ function Db_Enable_VM() {
 #   $1: Db Path (parent dir)
 #   $2: Vm Name
 function Db_Disable_VM() {
- EXISTS=$(echo "select VMiD from VM where Name='$2';" | sqlite3 $1/VMMGR_.db)
+ EXISTS=$(echo "select VMiD from VM where Name='$2';" | sqlite3 "$1"/VMMGR_.db)
  if [ ! "$EXISTS" == "" ]; then
-    echo "update VM SET Enabled=0 where VMiD='$EXISTS';" | sqlite3 $1/VMMGR_.db
+    echo "update VM SET Enabled=0 where VMiD='$EXISTS';" | sqlite3 "$1"/VMMGR_.db
  fi
 }
 
@@ -231,7 +231,7 @@ function Db_Disable_VM() {
 #   $1: Db Path (parent dir)
 #   $2: VM name
 function Db_Get_VM_Config() {
- echo "select Config from VM where Name='$2';" | sqlite3 $1/VMMGR_.db
+ echo "select Config from VM where Name='$2';" | sqlite3 "$1"/VMMGR_.db
 }
 
 # Function: Db_Set_IPPORT
@@ -243,9 +243,9 @@ function Db_Get_VM_Config() {
 #   $4: IP
 #   $5: PORT
 function Db_Set_IPPORT() {
- EXISTS=$(echo "select VMiD from VM where Name='$2';" | sqlite3 $1/VMMGR_.db)
+ EXISTS=$(echo "select VMiD from VM where Name='$2';" | sqlite3 "$1"/VMMGR_.db)
  if [ ! "$EXISTS" == "" ]; then
-  echo "insert into ${3^^*} (VMiD, IP, PORT ) values ( '$EXISTS', '$4', '$5');" | sqlite3 $1/VMMGR_.db
+  echo "insert into ${3^^*} (VMiD, IP, PORT ) values ( '$EXISTS', '$4', '$5');" | sqlite3 "$1"/VMMGR_.db
  fi
 }
 
@@ -257,9 +257,9 @@ function Db_Set_IPPORT() {
 #   $2: VM name
 #   $3: service (spice, telnet, qmp)
 function Db_Get_IPPORT() {
- EXISTS=$(echo "select VMiD from VM where Name='$2';" | sqlite3 $1/VMMGR_.db)
+ EXISTS=$(echo "select VMiD from VM where Name='$2';" | sqlite3 "$1"/VMMGR_.db)
  if [ ! "$EXISTS" == "" ]; then
-  echo "select IP, PORT from ${3^^*} where VMiD='$EXISTS';" | sqlite3 $1/VMMGR_.db
+  echo "select IP, PORT from ${3^^*} where VMiD='$EXISTS';" | sqlite3 "$1"/VMMGR_.db
  fi
 }
 
@@ -270,7 +270,7 @@ function Db_Get_IPPORT() {
 #   $2: service (spice, telnet, qmp)
 #   $3: Port number
 function Db_Search_PORT() {
-        echo "select PORT from ${2^^*} where PORT='$3';" | sqlite3 $1/VMMGR_.db
+        echo "select PORT from ${2^^*} where PORT='$3';" | sqlite3 "$1"/VMMGR_.db
 }
 
 # Function Db_Set_MAC
@@ -281,17 +281,17 @@ function Db_Search_PORT() {
 #   $2: VM Name
 #   $3: Net device number
 function Db_Set_MAC() {
- VMID=$(echo "select VMiD from VM where Name='$2';" | sqlite3 $1/VMMGR_.db)
+ VMID=$(echo "select VMiD from VM where Name='$2';" | sqlite3 "$1"/VMMGR_.db)
  if [ ! "$VMID" == "" ]; then
-    EXISTS=$(echo "select printf('%06X', SUBMAC) from MAC where VMiD='$VMID' AND NETID='$3';" | sqlite3 $1/VMMGR_.db)
+    EXISTS=$(echo "select printf('%06X', SUBMAC) from MAC where VMiD='$VMID' AND NETID='$3';" | sqlite3 "$1"/VMMGR_.db)
     if [ "$EXISTS" == "" ]; then
-        SUBMAC=$(echo "select SUBMAC from MAC ORDER BY SUBMAC DESC LIMIT 1;" | sqlite3 $1/VMMGR_.db)
+        SUBMAC=$(echo "select SUBMAC from MAC ORDER BY SUBMAC DESC LIMIT 1;" | sqlite3 "$1"/VMMGR_.db)
         if [ "$SUBMAC" == "" ]; then SUBMAC=0; else SUBMAC=$(( $SUBMAC + 1 )); fi
-        echo "insert into MAC (VMiD, SUBMAC, NETID) values ('$VMID', '$SUBMAC', '$3');" | sqlite3 $1/VMMGR_.db
-        EXISTS=$(echo "select printf('%06X', SUBMAC) from MAC where VMiD='$VMID' AND NETID='$3';" | sqlite3 $1/VMMGR_.db)
+        echo "insert into MAC (VMiD, SUBMAC, NETID) values ('$VMID', '$SUBMAC', '$3');" | sqlite3 "$1"/VMMGR_.db
+        EXISTS=$(echo "select printf('%06X', SUBMAC) from MAC where VMiD='$VMID' AND NETID='$3';" | sqlite3 "$1"/VMMGR_.db)
     fi
  fi
- echo $EXISTS
+ echo "$EXISTS"
 }
 
 # Function: Db_Get_Network
@@ -300,7 +300,7 @@ function Db_Set_MAC() {
 #   $1: Db Path (parent dir)
 #   $2: Iface
 function Db_Get_Network() {
- echo "select * from NETWORKS where IFACE='$2';" | sqlite3 $1/VMMGR_.db
+ echo "select * from NETWORKS where IFACE='$2';" | sqlite3 "$1"/VMMGR_.db
 }
 
 # Function: Db_Create_Network
@@ -312,7 +312,7 @@ function Db_Get_Network() {
 #   $5: Last IP available
 #   $6: Iface Name
 function Db_Create_Network() {
- echo "insert into NETWORKS (IP, PREFIX, MINIP, MAXIP, LAST, IFACE) values ('$2', '$3', '$4', '$5', '$4', '$6');" | sqlite3 $1/VMMGR_.db
+ echo "insert into NETWORKS (IP, PREFIX, MINIP, MAXIP, LAST, IFACE) values ('$2', '$3', '$4', '$5', '$4', '$6');" | sqlite3 "$1"/VMMGR_.db
 }
 
 # Function: Db_Set_Network_IP
@@ -323,7 +323,7 @@ function Db_Create_Network() {
 #   $2: Network Name
 #   $3: IP for this bridge
 function Db_Set_Network_IP() {
-    echo "update NETWORKS SET BRIP='$3' where IFACE='$2'" | sqlite3 $1/VMMGR_.db
+    echo "update NETWORKS SET BRIP='$3' where IFACE='$2'" | sqlite3 "$1"/VMMGR_.db
 }
 
 # Function: Db_Get_SVC
@@ -333,9 +333,9 @@ function Db_Set_Network_IP() {
 #   $2: VM name
 #   $3: service (spice, telnet, qmp)
 function Db_Get_SVC() {
- EXISTS=$(echo "select VMiD from VM where Name='$2';" | sqlite3 $1/VMMGR_.db)
+ EXISTS=$(echo "select VMiD from VM where Name='$2';" | sqlite3 "$1"/VMMGR_.db)
  if [ ! "$EXISTS" == "" ]; then
-  echo "select * from ${3^^*} where VMiD='$EXISTS';" | sqlite3 $1/VMMGR_.db
+  echo "select * from ${3^^*} where VMiD='$EXISTS';" | sqlite3 "$1"/VMMGR_.db
  fi
 }
 
@@ -351,9 +351,9 @@ function Db_Get_SVC() {
 #   $7: NETWORK
 #   $8: TYPE
 function Db_Set_SVC() {
- EXISTS=$(echo "select VMiD from VM where Name='$2';" | sqlite3 $1/VMMGR_.db)
+ EXISTS=$(echo "select VMiD from VM where Name='$2';" | sqlite3 "$1"/VMMGR_.db)
  if [ ! "$EXISTS" == "" ]; then
-  echo "insert into ${3^^*} (VMiD, IP, PORT, IPVER, NETWORK, TYPE ) values ( '$EXISTS', '$4', '$5', '$6', '$7', '$8' );" | sqlite3 $1/VMMGR_.db
+  echo "insert into ${3^^*} (VMiD, IP, PORT, IPVER, NETWORK, TYPE ) values ( '$EXISTS', '$4', '$5', '$6', '$7', '$8' );" | sqlite3 "$1"/VMMGR_.db
  fi
 }
 
@@ -364,7 +364,7 @@ function Db_Set_SVC() {
 #   $2: Network name
 #   $3: Last IP
 function Db_Update_Net_NextIP() {
-    echo "update NETWORKS SET LAST='$3' WHERE IFACE='$2';" | sqlite3 $1/VMMGR_.db
+    echo "update NETWORKS SET LAST='$3' WHERE IFACE='$2';" | sqlite3 "$1"/VMMGR_.db
 }
 
 # Function Get_Db_UUID
@@ -373,7 +373,7 @@ function Db_Update_Net_NextIP() {
 #   $1: Db Path (parent dir)
 #   $2: VM name
 function Get_Db_UUID() {
-    echo "select UUID from VM where Name='$2';" | sqlite3 $1/VMMGR_.db
+    echo "select UUID from VM where Name='$2';" | sqlite3 "$1"/VMMGR_.db
 }
 
 # Function Db_Get_Groups
@@ -381,7 +381,7 @@ function Get_Db_UUID() {
 # Args:
 #   $1: Db Path (parent dir)
 function Db_Get_Groups() {
-        echo "select NAME from GROUPS;" | sqlite3 $1/VMMGR_.db
+        echo "select NAME from GROUPS;" | sqlite3 "$1"/VMMGR_.db
 }
 
 # Function: Db_Get_Group_Member
@@ -391,7 +391,7 @@ function Db_Get_Groups() {
 #   $2: Group name
 function Db_Get_Group_Member() {
     if [ "$2" ]; then
-        echo "select NAME from VM where MemberOf='$2';" | sqlite3 $1/VMMGR_.db
+        echo "select NAME from VM where MemberOf='$2';" | sqlite3 "$1"/VMMGR_.db
     fi
 }
 
@@ -402,13 +402,13 @@ function Db_Get_Group_Member() {
 #   $2: VM name
 #   $3: Group Name
 function Db_Set_Group() {
-    RESULT=$(echo "select NAME from GROUPS WHERE NAME='$3';" | sqlite3 $1/VMMGR_.db)
+    RESULT=$(echo "select NAME from GROUPS WHERE NAME='$3';" | sqlite3 "$1"/VMMGR_.db)
     if [ "$RESULT" ]; then
-        MEMEXIST=$(echo "select MEMBERS from GROUPS WHERE NAME='$3';" | sqlite3 $1/VMMGR_.db)
+        MEMEXIST=$(echo "select MEMBERS from GROUPS WHERE NAME='$3';" | sqlite3 "$1"/VMMGR_.db)
         MEMEXIST="$MEMEXIST $2"
-        echo "update GROUPS SET MEMBERS='$MEMEXIST' WHERE NAME='$3';" | sqlite3 $1/VMMGR_.db
+        echo "update GROUPS SET MEMBERS='$MEMEXIST' WHERE NAME='$3';" | sqlite3 "$1"/VMMGR_.db
     else
-        echo "insert into GROUPS (NAME, ENABLED, MEMBERS) values ( '$3', '0', '$2' );" | sqlite3 $1/VMMGR_.db
+        echo "insert into GROUPS (NAME, ENABLED, MEMBERS) values ( '$3', '0', '$2' );" | sqlite3 "$1"/VMMGR_.db
     fi
 }
 
@@ -418,9 +418,9 @@ function Db_Set_Group() {
 #   $1: Db Path (parent dir)
 #   $2: Group name
 function Db_Enable_Group() {
-    RESULT=$(echo "select NAME from GROUPS WHERE NAME='$2';" | sqlite3 $1/VMMGR_.db)
+    RESULT=$(echo "select NAME from GROUPS WHERE NAME='$2';" | sqlite3 "$1"/VMMGR_.db)
     if [ "$RESULT" ]; then
-        echo "update GROUPS SET ENABLED='1' WHERE NAME='$2';" | sqlite3 $1/VMMGR_.db
+        echo "update GROUPS SET ENABLED='1' WHERE NAME='$2';" | sqlite3 "$1"/VMMGR_.db
     fi
 }
 
@@ -430,9 +430,9 @@ function Db_Enable_Group() {
 #   $1: Db Path (parent dir)
 #   $2: Group name
 function Db_Disable_Group() {
-    RESULT=$(echo "select NAME from GROUPS WHERE NAME='$2';" | sqlite3 $1/VMMGR_.db)
+    RESULT=$(echo "select NAME from GROUPS WHERE NAME='$2';" | sqlite3 "$1"/VMMGR_.db)
     if [ "$RESULT" ]; then
-        echo "update GROUPS SET ENABLED='0' WHERE NAME='$2';" | sqlite3 $1/VMMGR_.db
+        echo "update GROUPS SET ENABLED='0' WHERE NAME='$2';" | sqlite3 "$1"/VMMGR_.db
     fi
 }
 
@@ -442,7 +442,7 @@ function Db_Disable_Group() {
 #   $1: Db Path (parent dir)
 #   $2: Group name
 function Db_IsEnabled_Group() {
-    echo "select ENABLED from GROUPS WHERE NAME='$2';" | sqlite3 $1/VMMGR_.db
+    echo "select ENABLED from GROUPS WHERE NAME='$2';" | sqlite3 "$1"/VMMGR_.db
 }
 
 # Function: Db_Get_MemberOf
@@ -451,7 +451,7 @@ function Db_IsEnabled_Group() {
 #   $1: Db Path (parent dir)
 #   $2: VM name
 function Db_Get_MemberOf() {
-    echo "select MemberOf from VM WHERE NAME='$2';" | sqlite3 $1/VMMGR_.db
+    echo "select MemberOf from VM WHERE NAME='$2';" | sqlite3 "$1"/VMMGR_.db
 }
 
 # Function: Db_Export_VM
@@ -461,18 +461,18 @@ function Db_Get_MemberOf() {
 #   $2: VM name
 function Db_Export_VM() {
     BKPFILE="$VMMGR_DATA_PATH/VM_BKP/$2-$(date '+%Y-%m-%d_%H-%M-%S').bkp"
-    RESULT=$(echo "select VMiD from VM WHERE NAME='$2';" | sqlite3 $1/VMMGR_.db)
+    RESULT=$(echo "select VMiD from VM WHERE NAME='$2';" | sqlite3 "$1"/VMMGR_.db)
     if [ "$RESULT" ]; then
-        echo "VM|"$(echo "SELECT Name, Config, Enabled, UUID, MemberOf FROM VM where VMiD='$RESULT';" | sqlite3 $1/VMMGR_.db) > $BKPFILE
+        echo "VM|"$(echo "SELECT Name, Config, Enabled, UUID, MemberOf FROM VM where VMiD='$RESULT';" | sqlite3 "$1"/VMMGR_.db) > $BKPFILE
         for TABLE in $(echo "SPICE TELNET QMP VNC"); do
-            DATA=$(echo "SELECT IP, PORT, IPVER, NETWORK, TYPE FROM $TABLE where VMiD='$RESULT';" | sqlite3 $1/VMMGR_.db)
+            DATA=$(echo "SELECT IP, PORT, IPVER, NETWORK, TYPE FROM $TABLE where VMiD='$RESULT';" | sqlite3 "$1"/VMMGR_.db)
             if [ "$DATA" ]; then
-                echo "$TABLE|$DATA" >> $BKPFILE
+                echo "$TABLE|$DATA" >> "$BKPFILE"
             fi
         done
-        DATA=$(echo "SELECT SUBMAC, NETID FROM MAC WHERE VMiD='$RESULT';" | sqlite3 $1/VMMGR_.db)
+        DATA=$(echo "SELECT SUBMAC, NETID FROM MAC WHERE VMiD='$RESULT';" | sqlite3 "$1"/VMMGR_.db)
         if [ "$DATA" ]; then
-            echo "MAC|$DATA" >> $BKPFILE
+            echo "MAC|$DATA" >> "$BKPFILE"
         fi
     else
         echo "VM $2 not found in database"
@@ -486,26 +486,26 @@ function Db_Export_VM() {
 #   $2: VM export file
 function Db_Import_VM() {
     IFS=\| read -r VM NAME CONF ENABLED UUID GROUP <<< $(cat "$2" | grep "^VM|")
-    RESULT=$(echo "select VMiD from VM WHERE NAME='$NAME';" | sqlite3 $1/VMMGR_.db)
+    RESULT=$(echo "select VMiD from VM WHERE NAME='$NAME';" | sqlite3 "$1"/VMMGR_.db)
     if [ "$RESULT" ]; then
         echo "Error, VM with name $NAME already exists"
     else
-        echo "INSERT INTO VM ( Name, Config, Enabled, UUID, MemberOf) values ('$NAME', '$CONF','$ENABLED', '$UUID', '$GROUP');" | sqlite3 $1/VMMGR_.db
-        RESULT=$(echo "select VMiD from VM WHERE NAME='$NAME';" | sqlite3 $1/VMMGR_.db)
+        echo "INSERT INTO VM ( Name, Config, Enabled, UUID, MemberOf) values ('$NAME', '$CONF','$ENABLED', '$UUID', '$GROUP');" | sqlite3 "$1"/VMMGR_.db
+        RESULT=$(echo "select VMiD from VM WHERE NAME='$NAME';" | sqlite3 "$1"/VMMGR_.db)
         if [ ! "$RESULT" ]; then
             echo "Error importing VM $VMANE"
         else
             for TABLE in $(echo "SPICE TELNET QMP VNC"); do
                 IFS=\| read -r TBL IP PORT IPVER NETWORK TYPE <<< $(cat "$2" | grep "^$TABLE|")
                 if [ "$TBL" ]; then
-                    echo "INSERT INTO $TABLE ( VMid, IP, PORT, IPVER, NETWORK, TYPE) values ('$RESULT', '$IP', '$PORT', '$IPVER', '$NETWORK', '$TYPE');" | sqlite3 $1/VMMGR_.db
+                    echo "INSERT INTO $TABLE ( VMid, IP, PORT, IPVER, NETWORK, TYPE) values ('$RESULT', '$IP', '$PORT', '$IPVER', '$NETWORK', '$TYPE');" | sqlite3 "$1"/VMMGR_.db
                 fi
             done
             MACS=$(cat "$2" | grep "^MAC|")
             if [ "$MACS" ]; then
                 for MAC in $MACS; do
                     IFS=\| read -r TBL SUBMAC NETID <<< $(echo $MAC)
-                    echo "INSERT INTO MAC ( VMid, SUBMAC, NETID ) values ('$RESULT', '$SUBMAC', '$NETID' );" | sqlite3 $1/VMMGR_.db
+                    echo "INSERT INTO MAC ( VMid, SUBMAC, NETID ) values ('$RESULT', '$SUBMAC', '$NETID' );" | sqlite3 "$1"/VMMGR_.db
                 done
             fi
         fi
@@ -520,7 +520,7 @@ function Db_Import_VM() {
 #   $3: SSH IP
 #   $4: Hostname (optional, use VM name if undefined)
 function Db_Set_SSH() {
-    echo "update VM SET SSHIP='$3' , SSHHOSTNAME='${4-$1}' WHERE NAME='$2';" | sqlite3 $1/VMMGR_.db
+    echo "update VM SET SSHIP='$3' , SSHHOSTNAME='${4-$1}' WHERE NAME='$2';" | sqlite3 "$1"/VMMGR_.db
 }
 
 # Function: Db_Get_SSH
@@ -529,7 +529,7 @@ function Db_Set_SSH() {
 #   $1: Db Path (parent dir)
 #   $2: VM name
 function Db_Get_SSH() {
-    echo "SELECT SSHIP,SSHHOSTNAME from VM WHERE NAME='$2';" | sqlite3 $1/VMMGR_.db
+    echo "SELECT SSHIP,SSHHOSTNAME from VM WHERE NAME='$2';" | sqlite3 "$1"/VMMGR_.db
 }
 
 # Function: Db_Delete_SSH
@@ -538,7 +538,7 @@ function Db_Get_SSH() {
 #   $1: Db Path (parent dir)
 #   $2: VM name
 function Db_Delete_SSH() {
-    echo "update VM SET SSHIP='' , SSHHOSTNAME='' WHERE NAME='$2';" | sqlite3 $1/VMMGR_.db
+    echo "update VM SET SSHIP='' , SSHHOSTNAME='' WHERE NAME='$2';" | sqlite3 "$1"/VMMGR_.db
 }
 
 # Function: Db_Check_SCHEMA
@@ -547,11 +547,11 @@ function Db_Delete_SSH() {
 #   $1: Db Path (parent dir)
 #   $2: Last DB Version
 function Db_Check_SCHEMA() {
-    TABLE=$(echo "SELECT name FROM sqlite_master WHERE type='table' AND name='VMMGR';" | sqlite3 $1/VMMGR_.db)
+    TABLE=$(echo "SELECT name FROM sqlite_master WHERE type='table' AND name='VMMGR';" | sqlite3 "$1"/VMMGR_.db)
     if [ "$TABLE" == "" ]; then
         Db_Update_SCHEMA $1 0 $2
     else
-        VERSION=$(echo "SELECT VERSION FROM VMMGR;" | sqlite3 $1/VMMGR_.db)
+        VERSION=$(echo "SELECT VERSION FROM VMMGR;" | sqlite3 "$1"/VMMGR_.db)
         if [ "$VERSION" != $2 ]; then
             Db_Update_SCHEMA $1 $VERSION $2
         fi
@@ -567,7 +567,7 @@ function Db_Check_SCHEMA() {
 function Db_Update_SCHEMA() {
     VMMGR_LOG "VMMGR" "DB" "Updating DB from version $2 to $3"
    for DBUPD in $(seq $(( $2 + 1 )) $3); do
-    cat $1/../DB_UPDATES/VERSION-$DBUPD | sqlite3 $1/VMMGR_.db
+    cat $1/../DB_UPDATES/VERSION-$DBUPD | sqlite3 "$1"/VMMGR_.db
    done
 }
 
@@ -578,7 +578,7 @@ function Db_Update_SCHEMA() {
 #   $2: Table name
 function Db_Drop_USB_Table() {
     VMMGR_LOG "$2" "DB" "Droping table $2"
-    echo "DROP TABLE IF EXISTS '$2';" | sqlite3 $1/VMMGR_.db
+    echo "DROP TABLE IF EXISTS '$2';" | sqlite3 "$1"/VMMGR_.db
 }
 
 # Function: Db_Create_USB_Table
@@ -589,7 +589,7 @@ function Db_Drop_USB_Table() {
 function Db_Create_USB_Table() {
     Db_Drop_USB_Table $1 "USB-$2"
     VMMGR_LOG "$2" "DB" "Creating table 'USB-$2'"
-    sqlite3 $1/VMMGR_.db <<EOF
+    sqlite3 "$1"/VMMGR_.db <<EOF
 
 CREATE TABLE 'USB-$2'(
     VD TEXT NOT NULL,
@@ -606,7 +606,7 @@ EOF
 #   $2: vm name
 #   $3: Device:Vendor
 function Db_Get_USB-VDs() {
-    echo "select VD from 'USB-$2';" | sqlite3 $1/VMMGR_.db
+    echo "select VD from 'USB-$2';" | sqlite3 "$1"/VMMGR_.db
 }
 
 # Function: Db_Get_USB-ID
@@ -616,7 +616,7 @@ function Db_Get_USB-VDs() {
 #   $2: vm name
 #   $3: Device:Vendor
 function Db_Get_USB-ID() {
-    echo "select ID from 'USB-$2' WHERE VD='$3';" | sqlite3 $1/VMMGR_.db
+    echo "select ID from 'USB-$2' WHERE VD='$3';" | sqlite3 "$1"/VMMGR_.db
 }
 
 # Function: Db_Search_USB-ID
@@ -626,7 +626,7 @@ function Db_Get_USB-ID() {
 #   $2: vm name
 #   $3: Device ID
 function Db_Search_USB-ID() {
-    echo "select ID from 'USB-$2' WHERE ID='$3';"  | sqlite3 $1/VMMGR_.db
+    echo "select ID from 'USB-$2' WHERE ID='$3';"  | sqlite3 "$1"/VMMGR_.db
 }
 
 # Function: Db_Add_USB-device
@@ -638,10 +638,10 @@ function Db_Search_USB-ID() {
 #   $4: Product name
 #   $5: USB ID
 function Db_Add_USB-device() {
-    EXISTS=$(echo "select VD from 'USB-$2' WHERE VD='$3';" | sqlite3 $1/VMMGR_.db)
+    EXISTS=$(echo "select VD from 'USB-$2' WHERE VD='$3';" | sqlite3 "$1"/VMMGR_.db)
     if [ "$EXISTS" == "" ]; then
         VMMGR_LOG "$2" "DB" "Adding USB device to $2"
-        echo "INSERT INTO 'USB-$2' ( VD, PRODUCT, ID ) values ( '$3', '$4', '$5' );" | sqlite3 $1/VMMGR_.db
+        echo "INSERT INTO 'USB-$2' ( VD, PRODUCT, ID ) values ( '$3', '$4', '$5' );" | sqlite3 "$1"/VMMGR_.db
     fi
 }
 
@@ -653,5 +653,5 @@ function Db_Add_USB-device() {
 #   $3: Vendor:Device
 function Db_Delete_USB-device() {
     VMMGR_LOG "$2" "DB" "removing USB device to $2"
-    echo "delete from 'USB-$2' where VD='$3';" | sqlite3 $1/VMMGR_.db
+    echo "delete from 'USB-$2' where VD='$3';" | sqlite3 "$1"/VMMGR_.db
 }
