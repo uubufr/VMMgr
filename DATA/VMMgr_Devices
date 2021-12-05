@@ -40,11 +40,9 @@ MOUSE="-device virtio-mouse-pci"
 KEYBOARD="-device virtio-keyboard-pci"
 TABLET="-device virtio-tablet-pci"
 
-
 ### DVDROM:
 IDEDVD="-drive if=none,id=DVD,readonly=on -device ide-cd,drive=DVD"
 SCSIDVD="-device virtio-scsi-pci,id=scsi0 -drive if=none,id=SDVD,readonly=on -device scsi-cd,wwn=0x5000aa0102030405,bus=scsi0.0,channel=0,scsi-id=1,lun=0,drive=SDVD,id=scsiDVD"
-
 
 ### First Graphical Card
 QXL="-device qxl-vga,id=qxl-video0,vgamem_mb=32,ram_size_mb=64,vram_size_mb=64,max_outputs=1"
@@ -76,7 +74,8 @@ WINDOWSCLOCK="-rtc base=localtime,clock=vm,driftfix=none -global kvm-pit.lost_ti
 
 ### Sound card
 #> -soundhw is deprecated
-SOUND="-soundhw hda"
+#SOUND="-soundhw hda"
+SOUND="-device intel-hda -device hda-duplex"
 AUDIOSPICE="-audiodev driver=spice,id=audio1"
 
 ### No Display, used when we access to vm using vnc or spice:
