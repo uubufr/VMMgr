@@ -101,6 +101,9 @@ TPM2="-chardev socket,id=chrtpm,path=/var/lib/VMMGR/TPM2/$NAME.sock -tpmdev emul
 ### fw_cfg
 FW="-fw_cfg name=opt/GuestInfo,file=$VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF"
 
+### MicroVM
+MICROKNL="-kernel $KERNELPATH -append $KERNELAPPEND -global virtio-mmio.force-legacy=off"
+#"--onpci /hello"
 
 ### DEVICE TEMPLATES ###
 LINUXBASE="$COMMON $BOOT $S34 $PCI $USB $MOUSE $KEYBOARD $TABLET $IDEDVD $QXL $WATCHDOG $BALLOON $RNG $OVERCOMMIT $UNIXCLOCK $NODISPLAY $VMGENID $PVPANIC $VMCORE $FW"
@@ -109,3 +112,4 @@ WINDOWSBASE="$COMMON $BOOT S34 $PCI $USB $MOUSE $KEYBOARD $IDEDVD $QXL $WATCHDOG
 ### This allow to dedicate a physical graphical card, See: https://github.com/uubufr/VMMgr/wiki/3.9---Assign-Physical-hardware
 ### we also remove all unsigned virtio driver
 WINDOWSPHYSICAL="$COMMON $MEMALLOC $BOOT $S34 $PCI $USB $TABLET $IDEDVD $VFIOGPU $WATCHDOG $OVERCOMMIT $WINDOWSCLOCK $SOUND $VMGENID $NODISPLAY $TPM2"
+MICROVM="$COMMON $MICROKNL $MEMALLOC $PCI $QXL $OVERCOMMIT $NODISPLAY $VMGENID"
