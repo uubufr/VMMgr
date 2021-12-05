@@ -463,8 +463,8 @@ function Db_Export_VM() {
     BKPFILE="$VMMGR_DATA_PATH/VM_BKP/$2-$(date '+%Y-%m-%d_%H-%M-%S').bkp"
     RESULT=$(echo "select VMiD from VM WHERE NAME='$2';" | sqlite3 "$1"/VMMGR_.db)
     if [ "$RESULT" ]; then
-        echo "VM|"$(echo "SELECT Name, Config, Enabled, UUID, MemberOf FROM VM where VMiD='$RESULT';" | sqlite3 "$1"/VMMGR_.db) > $BKPFILE
-        for TABLE in $(echo "SPICE TELNET QMP VNC"); do
+        echo "VM|""$(echo "SELECT Name, Config, Enabled, UUID, MemberOf FROM VM where VMiD='$RESULT';" | sqlite3 "$1"/VMMGR_.db)" > "$BKPFILE"
+        for TABLE in SPICE TELNET QMP VNC; do
             DATA=$(echo "SELECT IP, PORT, IPVER, NETWORK, TYPE FROM $TABLE where VMiD='$RESULT';" | sqlite3 "$1"/VMMGR_.db)
             if [ "$DATA" ]; then
                 echo "$TABLE|$DATA" >> "$BKPFILE"
@@ -485,7 +485,8 @@ function Db_Export_VM() {
 #   $1: Db Path (parent dir)
 #   $2: VM export file
 function Db_Import_VM() {
-    IFS=\| read -r VM NAME CONF ENABLED UUID GROUP <<< $(cat "$2" | grep "^VM|")
+    IFS=\| read -r VM NAME CONF ENABLED UUID GROUP <<< "$(grep "^VM|" "$2")"
+    unset "$VM"
     RESULT=$(echo "select VMiD from VM WHERE NAME='$NAME';" | sqlite3 "$1"/VMMGR_.db)
     if [ "$RESULT" ]; then
         echo "Error, VM with name $NAME already exists"
@@ -495,16 +496,16 @@ function Db_Import_VM() {
         if [ ! "$RESULT" ]; then
             echo "Error importing VM $VMANE"
         else
-            for TABLE in $(echo "SPICE TELNET QMP VNC"); do
-                IFS=\| read -r TBL IP PORT IPVER NETWORK TYPE <<< $(cat "$2" | grep "^$TABLE|")
+            for TABLE in SPICE TELNET QMP VNC; do
+                IFS=\| read -r TBL IP PORT IPVER NETWORK TYPE <<< "$(grep "^$TABLE|" "$2")"
                 if [ "$TBL" ]; then
                     echo "INSERT INTO $TABLE ( VMid, IP, PORT, IPVER, NETWORK, TYPE) values ('$RESULT', '$IP', '$PORT', '$IPVER', '$NETWORK', '$TYPE');" | sqlite3 "$1"/VMMGR_.db
                 fi
             done
-            MACS=$(cat "$2" | grep "^MAC|")
+            MACS=$(grep "^MAC|" "$2")
             if [ "$MACS" ]; then
                 for MAC in $MACS; do
-                    IFS=\| read -r TBL SUBMAC NETID <<< $(echo "$MAC")
+                    IFS=\| read -r TBL SUBMAC NETID <<< "$MAC"
                     echo "INSERT INTO MAC ( VMid, SUBMAC, NETID ) values ('$RESULT', '$SUBMAC', '$NETID' );" | sqlite3 "$1"/VMMGR_.db
                 done
             fi
@@ -567,7 +568,7 @@ function Db_Check_SCHEMA() {
 function Db_Update_SCHEMA() {
     VMMGR_LOG "VMMGR" "DB" "Updating DB from version $2 to $3"
    for DBUPD in $(seq $(( $2 + 1 )) "$3"); do
-    cat "$1"/../DB_UPDATES/VERSION-"$DBUPD" | sqlite3 "$1"/VMMGR_.db
+    sqlite3 "$1"/VMMGR_.db < "$1"/../DB_UPDATES/VERSION-"$DBUPD"
    done
 }
 
