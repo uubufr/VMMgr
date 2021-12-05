@@ -33,3 +33,4 @@ SMP4NUMA=$(Set_Custom_SMP 4 1 4 $MEM on)
 
 ### Machines ###
 MACHINE35="q35,accel=kvm"
+MACHINEMICROVM="microvm,-option-roms=off,pit=off,pic=off,rtc=off -no-reboot"
