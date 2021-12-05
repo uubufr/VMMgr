@@ -99,7 +99,7 @@ TPM2="-chardev socket,id=chrtpm,path=/var/lib/VMMGR/TPM2/$NAME.sock -tpmdev emul
 ### ccid
 
 ### fw_cfg
-FW="-fw_cfg name=init/GuestInfo,file=$VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF"
+FW="-fw_cfg name=opt/GuestInfo,file=$VMMGR_DATA_PATH/VM_CONFIGS/$VMCONF"
 
 
 ### DEVICE TEMPLATES ###
