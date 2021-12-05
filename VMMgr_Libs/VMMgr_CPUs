@@ -19,8 +19,8 @@
 # Description: Get Number of Physical CPU
 # Args: none
 function Get_Nb_Sockets() {
-    for cpu in $(ls -1d /sys/devices/system/cpu/cpu[0-9]*); do
-        cat $cpu/topology/physical_package_id
+    for cpu in /sys/devices/system/cpu/cpu[0-9]*; do
+        cat "$cpu"/topology/physical_package_id
     done
 }
 
@@ -28,7 +28,7 @@ function Get_Nb_Sockets() {
 # Description: Get all cpus on the system
 # Args: none
 function Get_Total_CPUs() {
-    ls -1d /sys/devices/system/cpu/cpu[0-9]* | wc -l
+    find /sys/devices/system/cpu/ -name "cpu[0-9]*" | wc -l
 }
 
 
@@ -37,9 +37,9 @@ function Get_Total_CPUs() {
 # Args:
 #   $1: Physical ID
 function Get_Core_Number() {
-    for cpu in $(ls -1d /sys/devices/system/cpu/cpu[0-9]*); do
-        if [ "$(cat $cpu/topology/physical_package_id)" == $1 ]; then
-            cat $cpu/topology/core_id
+    for cpu in /sys/devices/system/cpu/cpu[0-9]*; do
+        if [ "$(cat "$cpu"/topology/physical_package_id)" == "$1" ]; then
+            cat "$cpu"/topology/core_id
         fi
     done
 }
@@ -49,7 +49,7 @@ function Get_Core_Number() {
 # Args:
 #   $1: cpu number
 function Get_Core_Threads() {
-    cat /sys/devices/system/cpu/cpu$1/topology/thread_siblings_list
+    cat /sys/devices/system/cpu/cpu"$1"/topology/thread_siblings_list
 }
 
 # Function: Get_Core_Id
@@ -57,7 +57,7 @@ function Get_Core_Threads() {
 # Args:
 #   $1: cpu number
 function Get_Core_Id() {
-    cat /sys/devices/system/cpu/cpu$1/topology/core_id
+    cat /sys/devices/system/cpu/cpu"$1"/topology/core_id
 }
 
 # Function: Map_SMP_1CPU
@@ -75,11 +75,11 @@ function Map_SMP_1CPU() {
     else
         HYPERTHREAD=2
     fi
-    SMP=$(echo "-smp ${1:-1},cores=$SOCKETCORES,threads=$HYPERTHREAD,sockets=1,maxcpus=$(( $SOCKETCORES * $HYPERTHREAD * $NBSOCKETS ))")
+    SMP=$(echo "-smp ${1:-1},cores=$SOCKETCORES,threads=$HYPERTHREAD,sockets=1,maxcpus=$(( SOCKETCORES * HYPERTHREAD * NBSOCKETS ))")
     if [ "$3" == "" ] || [ "$3" == "off" ]; then
-        SMP="$SMP $(Set_NUMA_NODE 1 $2 )"
+        SMP="$SMP $(Set_NUMA_NODE 1 "$2" )"
     elif [ "$3" == "on" ]; then
-        SMP="$SMP $(Set_NUMA_NODE $SOCKETCORES $2)"
+        SMP="$SMP $(Set_NUMA_NODE "$SOCKETCORES" "$2")"
     fi
     echo "$SMP"
 }
@@ -101,7 +101,7 @@ function Set_Custom_SMP() {
     MAXCPUS=$(( $1 * HYPERTHREAD * $2 ))
     SMP=$(echo "-smp ${4:-$MAXCPUS},cores=$1,threads=$HYPERTHREAD,sockets=$2,maxcpus=$MAXCPUS")
     if [ "$5" == "" ] || [ "$5" == "off" ]; then
-        SMP="$SMP $(Set_NUMA_NODE 1 $3)"
+        SMP="$SMP $(Set_NUMA_NODE 1 "$3")"
     elif [ "$5" == "on" ]; then
         SMP="$SMP $(Set_NUMA_NODE "$1" "$3")"
     fi
@@ -119,12 +119,12 @@ function Set_Custom_SMP() {
 function Set_NUMA_NODE() {
     MEMNB=$(( $2 / $1 ))
     if [ "$1" == "1" ]; then
-        echo "-object memory-backend-ram,id=ram0,size="$MEMNB"G,merge=on,dump=off,prealloc=no -numa node,nodeid=0,memdev=ram0 -numa cpu,node-id=0,socket-id=0"
+        echo "-object memory-backend-ram,id=ram0,size=$MEMNB\G,merge=on,dump=off,prealloc=no -numa node,nodeid=0,memdev=ram0 -numa cpu,node-id=0,socket-id=0"
     else
         NUMANODES=""
         MEMDEVS=""
         for i in $(seq 0 $(( $1 - 1)) ); do
-            MEMDEVS="$MEMDEVS -object memory-backend-ram,id=ram$i,size="$MEMNB"G,merge=on,dump=off,prealloc=no"
+            MEMDEVS="$MEMDEVS -object memory-backend-ram,id=ram$i,size=$MEMNB\G,merge=on,dump=off,prealloc=no"
             NUMANODES="$NUMANODES $(echo "-numa node,nodeid=$i,memdev=ram$i")"
         done
         for i in $(seq 0 $(( $1 - 1 )) ); do
