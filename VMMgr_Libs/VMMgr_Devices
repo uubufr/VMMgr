@@ -30,10 +30,10 @@ function Check_MEM() {
  fi
  #if [ "$3" ]; then SLOT="$3"; else SLOT=1; fi
  if [ "$MEM" -eq "$MAXMEM" ]; then
-    echo "-m $MEM\G"
+    echo "-m ""$MEM""G"
  else
     #echo "-m "$MEM"G,slots=$SLOT,maxmem=$MAXMEM""G"
-    echo "-m $MEM\G,maxmem=$MAXMEM\G"
+    echo "-m ""$MEM""G,maxmem=""$MAXMEM""G"
  fi
 }
 

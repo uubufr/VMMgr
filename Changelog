@@ -1,7 +1,9 @@
 Changelog:
 
 0.95
-
+pass scripts to shellcheck to ensure best practices as possible
+update soundhw with new syntax
+change fw_cfg to follow /opt/ naming
 
 0.94
 correct disabling s2,s3 for q35

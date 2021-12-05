@@ -567,7 +567,7 @@ function Db_Check_SCHEMA() {
 #   $3: Last Db Version
 function Db_Update_SCHEMA() {
     VMMGR_LOG "VMMGR" "DB" "Updating DB from version $2 to $3"
-   for DBUPD in $(seq $(( $2 + 1 )) "$3"); do
+   for DBUPD in $(seq $(( "$2" + 1 )) "$3"); do
     sqlite3 "$1"/VMMGR_.db < "$1"/../DB_UPDATES/VERSION-"$DBUPD"
    done
 }
