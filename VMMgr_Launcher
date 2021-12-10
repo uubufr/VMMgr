@@ -75,9 +75,7 @@ case "$1" in
                 echo "Usage $0 <vm name> <template>"
             elif [ "$(echo $2 | grep "-")" ]; then
                 echo "Error, VM name contain '-' character, please use '_' instead"
-            elif [ ! -r $VMMGR_DATA_PATH/Templates/$3 ] && [ ! -r $VMMGR_CONFIG_PATH/Template/$3 ]; then
-                echo "Error, template $3 doesn't exists"
-            else
+            elif [ -r $VMMGR_DATA_PATH/Templates/$3 ] && [ -r $VMMGR_CONFIG_PATH/Template/$3 ]; then
                 VMMGR_LOG "VMMGR" "CREATE" "Creating vm with name: $2 from template $3"
                 VMCONF=$(Check_Existing_VM $2)
                 [ -r $VMMGR_DATA_PATH/Templates/$3 ] && TEMPLATE=$VMMGR_DATA_PATH/Templates/$3
@@ -94,6 +92,8 @@ case "$1" in
                 VMMGR_LOG "VMMGR" "CREATE" "Setting group: $GROUP for new vm: $2"
                 VMID=$(Db_Create_VM $VMMGR_DB_PATH $2 $VMCONF $(cat /proc/sys/kernel/random/uuid) $GROUP)
                 Db_Set_Group $VMMGR_DB_PATH $2 $GROUP
+            else
+                echo "Error, template $3 doesn't exists"
             fi
         ;;
     "delete")
