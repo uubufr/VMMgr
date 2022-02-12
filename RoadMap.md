@@ -37,3 +37,5 @@
 - Tuned: tuned for guest
 
 - Add Better group management (interactive machine list/order/delay)
+
+- pass script to shellcheck

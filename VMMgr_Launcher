@@ -75,7 +75,7 @@ case "$1" in
                 echo "Usage $0 <vm name> <template>"
             elif [ "$(echo $2 | grep "-")" ]; then
                 echo "Error, VM name contain '-' character, please use '_' instead"
-            elif [ -r $VMMGR_DATA_PATH/Templates/$3 ] && [ -r $VMMGR_CONFIG_PATH/Template/$3 ]; then
+            elif [ -r $VMMGR_DATA_PATH/Templates/$3 ] || [ -r $VMMGR_CONFIG_PATH/Templates/$3 ]; then
                 VMMGR_LOG "VMMGR" "CREATE" "Creating vm with name: $2 from template $3"
                 VMCONF=$(Check_Existing_VM $2)
                 [ -r $VMMGR_DATA_PATH/Templates/$3 ] && TEMPLATE=$VMMGR_DATA_PATH/Templates/$3
