@@ -24,7 +24,7 @@ SPICESPORT="tls-port=$SPICEPORT,tls-ciphers=ECDHE-ECDSA-AES256-GCM-SHA384"
 SPICEMOUSE="agent-mouse=on"
 
 SPICEDTICKET="disable-ticketing=yes"
-SPICESECRET="-object secret,id=spicepwdid,data=$(echo $SPICEPWD | base64)",format=base64"
+SPICESECRET="-object secret,id=spicepwdid,data=$(echo $SPICEPWD | base64),format=base64"
 SPICETICKET="disable-ticketing=no,password-secret=spicepwdid"
 
 SPICECERTS="x509-key-file=/etc/pki/services/spice/$(hostname -f).key,x509-key-password=root,x509-cert-file=/etc/pki/services/spice/$(hostname -f).pem,x509-cacert-file=/etc/pki/services/spice/ca.pem,x509-dh-key-file=/etc/pki/services/spice/dhparam.pem"
