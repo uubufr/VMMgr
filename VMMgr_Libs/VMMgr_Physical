@@ -85,18 +85,24 @@ function SET_USB_PHYS() {
     if [ "$DEVFULLNAME" != "" ]; then
         echo "$DEVFULLNAME" | sudo tee ${2%/}/unbind 1>/dev/null
     fi
-    read -r d1 BUS d2 DEVICE d3 <<< $(lsusb -d $DEVICE)
-    ID=$(echo ${d3##*$1} | tr \  -  | tr -dc '[:alnum:]-\n\r')
-    if [ "$BUS" ]; then
-        SBUS=$(( 10#$BUS ))
-        DEVICE=${DEVICE%:}
-        SDEVICE=$(( 10#$DEVICE ))
-        echo "-device usb-host,id=$ID,hostbus=$SBUS,hostaddr=$SDEVICE"
-        sudo chown root:qemu /dev/bus/usb/$BUS/$DEVICE
-    fi
+    IFS="
+"
+    for DEVENTRY in $(lsusb -d $DEVICE); do
+        unset IFS
+        read -r d1 BUS d2 DEVICE d3 <<< "$(echo $DEVENTRY)"
+        ID=$(echo ${d3##*$1} | tr \  -  | tr -dc '[:alnum:]-\n\r')
+        if [ "$BUS" ]; then
+            SBUS=$(( 10#$BUS ))
+            DEVICE=${DEVICE%:}
+            SDEVICE=$(( 10#$DEVICE ))
+            echo "-device usb-host,id=$ID,hostbus=$SBUS,hostaddr=$SDEVICE"
+            sudo chown root:qemu /dev/bus/usb/$BUS/$DEVICE
+        fi
+    done
+    unset IFS
 }
 
-# Function SET_DIF_PHYS
+# Function SET_DIF_USB
 # Description: Connect usb device while vm at runtime
 # Args:
 #   $1: "VENDORID:DEVICEID"
@@ -108,13 +114,19 @@ function SET_DIF_USB() {
     if [ "$DEVFULLNAME" != "" ]; then
         echo "$DEVFULLNAME" | sudo tee ${2%/}/unbind 1>/dev/null
     fi
-    read -r d1 BUS d2 DEVICE d3 <<< $(lsusb -d $DEVICE);
-    ID=$(echo ${d3##*$1} | tr \  - | tr -dc '[:alnum:]-\n\r')
-    if [ "$BUS" ]; then
-        SBUS=$(( 10#$BUS ));
-        DEVICE=${DEVICE%:};
-        SDEVICE=$(( 10#$DEVICE ))
-        sudo chown root:qemu /dev/bus/usb/$BUS/$DEVICE
-        echo "device_add usb-host,id=$ID,hostbus=$SBUS,hostaddr=$SDEVICE"
-    fi;
+    IFS="
+"
+    for DEVENTRY in $(lsusb -d $DEVICE); do
+        unset IFS
+        read -r d1 BUS d2 DEVICE d3 <<< $(echo $DEVENTRY);
+        ID=$(echo ${d3##*$1} | tr \  - | tr -dc '[:alnum:]-\n\r')
+        if [ "$BUS" ]; then
+            SBUS=$(( 10#$BUS ));
+            DEVICE=${DEVICE%:};
+            SDEVICE=$(( 10#$DEVICE ))
+            sudo chown root:qemu /dev/bus/usb/$BUS/$DEVICE
+            echo "device_add usb-host,id=$ID,hostbus=$SBUS,hostaddr=$SDEVICE"
+        fi;
+    done
+    unset IFS
 }
