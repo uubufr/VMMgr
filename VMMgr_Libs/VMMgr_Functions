@@ -117,6 +117,11 @@ function Start_VM_From_Config() {
         echo "No config VMMgr_.conf found, abording..."
         return
     fi
+
+    # Creating main key #
+    MAINKEY=$(openssl rand -base64 32)h
+    MAINSEC="-object secret,id=secmain0,format=base64,data=$MAINKEY"
+
     . $2
     . $VMMGR_DATA_PATH/DATA/VMMgr_Devices
     [ -r $VMMGR_CONFIG_PATH/DATA/VMMgr_Devices ] && . $VMMGR_CONFIG_PATH/DATA/VMMgr_Devices
@@ -282,10 +287,10 @@ function Start_VM_From_Config() {
     PIDDIR=/run/VMMGR
     [ -d $PIDDIR ] || PIDDIR=$VMMGR_DATA_PATH
     if [ "$VMMGR_TEST" == "TEST" ]; then
-        echo "qemu-system-x86_64 -pidfile $PIDDIR/$NAME -name $NAME $UUID $CORE $MEMORY $FIRMWARE ${!QEMU_TEMPLATE} ${!SPICETPL} $AUDIO ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS $SCSIDISKS $PH $PDEV"
+        echo "qemu-system-x86_64 -pidfile $PIDDIR/$NAME -name $NAME $UUID $CORE $MEMORY $FIRMWARE $MAINSEC ${!QEMU_TEMPLATE} ${!SPICETPL} $AUDIO ${!VNCTPL} $QMPTPL $TELNETTPL $NETARRAY $VIRTIODISKS $SCSIDISKS $PH $PDEV"
     else
         VMMGR_LOG "$1" "SETTING" "$1: all done, starting!"
-        qemu-system-x86_64 -pidfile $PIDDIR/$NAME -name $NAME $UUID $CORE $MEMORY $FIRMWARE ${!QEMU_TEMPLATE} $NETARRAY ${!SPICETPL} $AUDIO ${!VNCTPL} $QMPTPL $TELNETTPL $VIRTIODISKS $SCSIDISKS $PH $PDEV
+        qemu-system-x86_64 -pidfile $PIDDIR/$NAME -name $NAME $UUID $CORE $MEMORY $FIRMWARE $MAINSEC ${!QEMU_TEMPLATE} $NETARRAY ${!SPICETPL} $AUDIO ${!VNCTPL} $QMPTPL $TELNETTPL $VIRTIODISKS $SCSIDISKS $PH $PDEV
         
         sleep 1
         
