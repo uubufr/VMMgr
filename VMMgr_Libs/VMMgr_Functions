@@ -119,7 +119,7 @@ function Start_VM_From_Config() {
     fi
 
     # Creating main key #
-    MAINKEY=$(openssl rand -base64 32)h
+    MAINKEY=$(openssl rand -base64 32) # à vérifier si besoin du 'h'
     MAINSEC="-object secret,id=secmain0,format=base64,data=$MAINKEY"
 
     . $2
@@ -220,10 +220,13 @@ function Start_VM_From_Config() {
     if [ "$BIOSTYPE" == "BIOS" ]; then
         FIRMWARE=$BIOS
     elif [ "$BIOSTYPE" == "UEFI" ]; then
-       FIRMWARE=$(Set_UEFI $NAME)
+       FIRMWARE=$(Set_UEFI $NAME off 0)
     elif [ "$BIOSTYPE" == "SECURE" ]; then
         [ ! -d $VMMGR_DATA_PATH/UEFI/$NAME/ ] && SETUPSECUREBOOT="1"
-        FIRMWARE=$(Set_UEFI $NAME on)
+        FIRMWARE=$(Set_UEFI $NAME on 0)
+    elif [ "$BIOSTYPE" == "SECURE4M" ]; then
+        [ ! -d $VMMGR_DATA_PATH/UEFI/$NAME/ ] && SETUPSECUREBOOT="1"
+        FIRMWARE=$(Set_UEFI $NAME on 1)
     fi
     VMMGR_LOG "$1" "SETTING" "$1: BIOS: $FIRMWARE"
     
