@@ -56,9 +56,9 @@ function Set_UEFI() {
         sudo chmod 660 "$VMMGR_DATA_PATH"/UEFI/"$NAME"/*
     fi
     if [ "$3" == "0" ]; then
-      $OVMFNAME=$(rpm -ql edk2-ovmf | grep OVMF_CODE$SECURE.fd | head -1)
+      OVMFNAME=$(rpm -ql edk2-ovmf | grep OVMF_CODE$SECURE.fd | head -1)
     else
-      $OVMFNAME=$(rpm -ql edk2-ovmf | grep ovmf-4m/OVMF_CODE$SECURE.fd | head -1)
+      OVMFNAME=$(rpm -ql edk2-ovmf | grep ovmf-4m/OVMF_CODE$SECURE.fd | head -1)
     fi
 
     echo "-drive if=pflash,format=raw,readonly=on,file=$OVMFNAME -drive if=pflash,format=raw,file=$VMMGR_DATA_PATH/UEFI/$NAME/OVMF_VARS$SECURE.fd -global isa-debugcon.iobase=0x402 -debugcon file:$VMMGR_DATA_PATH/UEFI/$NAME/OVMF_LOG.log"

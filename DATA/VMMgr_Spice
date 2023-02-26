@@ -33,7 +33,7 @@ SPICESECRET="-object secret,id=spicepwdid,keyid=secmain0,format=base64,data=$(pr
 
 SPICETICKET="disable-ticketing=no,password-secret=spicepwdid"
 
-SPICECERTS="x509-key-file=/etc/pki/services/spice/$(hostname -f).key,x509-key-password=root,x509-cert-file=/etc/pki/services/spice/$(hostname -f).pem,x509-cacert-file=/etc/pki/services/spice/ca.pem,x509-dh-key-file=/etc/pki/services/spice/dhparam.pem"
+SPICECERTS="x509-key-file=/etc/pki/services/spice/$(hostnamectl hostname).key,x509-key-password=root,x509-cert-file=/etc/pki/services/spice/$(hostnamectl hostname).pem,x509-cacert-file=/etc/pki/services/spice/ca.pem,x509-dh-key-file=/etc/pki/services/spice/dhparam.pem"
 
 SPICECHANDEFAULT="$SPICEMODE-channel=default"
 SPICECHANMAIN="$SPICEMODE-channel=main"

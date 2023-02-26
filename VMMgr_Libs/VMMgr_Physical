@@ -130,3 +130,15 @@ function SET_DIF_USB() {
     done
     unset IFS
 }
+
+# Function SET_VF_NET
+# Description: Connect an SR-IOV VF to the VM
+# Args:
+#  $1: VF number (ex: 17:10.1)
+function SET_VF_NET() {
+  DEVICE=$(lspci -vv  -s $1 | grep "IOMMU group:" | awk '{ print $3}')
+  if [ -f $DEVICE ]; then
+  sudo chown root:qemu /dev/vfio/$DEVICE
+  sudo chmod 660 /dev/vfio/$DEVICE
+  echo "-device vfio-pci,host=$1,multifunction=on"
+}

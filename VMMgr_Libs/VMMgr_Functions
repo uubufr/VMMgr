@@ -268,8 +268,17 @@ function Start_VM_From_Config() {
             VMMGR_LOG "$1" "SETTING" "$1: DECONNECTING USB device: $SUSB from the system"
         done
     fi
-    
-    PDEV="$PK $PM $PU $SU"
+
+    SV=""
+    if [ "$NETVF" ]; then
+      SV="-device intel-iommu,intremap=off,caching-mode=on,device-iotlb=on,aw-bits=48 "
+      for NETIF in ${NETVF[@]}; do
+        SV="$SV $(SET_SRIOV_VF $NETIF)
+        VMMGR_LOG "$1" "SETTING" "$1: SRVIO: Adding Virtual Function $NETIF on vm"
+      done
+    fi
+     
+    PDEV="$PK $PM $PU $SU $SU"
     unset PKEYBOARD PMOUSE PUSB PHD
     
 ### TPM2 ###
