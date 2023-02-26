@@ -137,7 +137,7 @@ function SET_DIF_USB() {
 #  $1: VF number (ex: 17:10.1)
 function SET_VF_NET() {
   DEVICE=$(lspci -vv -s "$1" | grep "IOMMU group:" | awk '{ print $3}')
-  if [ -f "$DEVICE" ]; then
+  if [ -c "$DEVICE" ]; then
     sudo chown root:qemu /dev/vfio/$DEVICE
     sudo chmod 660 /dev/vfio/$DEVICE
     echo "-device vfio-pci,host=$1,multifunction=on"

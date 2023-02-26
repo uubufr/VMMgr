@@ -17,7 +17,7 @@ COMMON="-daemonize -no-user-config -nodefaults -msg timestamp=on"
 BOOT="-boot menu=on,strict=off,splash=$VMMGR_DATA_PATH/UEFI/splash640.bmp,splash-time=2000"
 BIOS256BIN=$(rpm -ql qemu-system-x86-core | grep "bios-256k.bin")
 [ "$BIOS256BIN" == "" ] && BIOS256BIN=$(rpm -ql seabios-bin | grep "bios-256k.bin")
-BIOS="-bios $(rpm -ql $BIOS256BIN -L $(dirname $BIOS256BIN)"
+BIOS="-bios $(rpm -ql $BIOS256BIN) -L $(dirname $BIOS256BIN)"
 
 # Keyboard
 KEY_LANG="-k fr"
