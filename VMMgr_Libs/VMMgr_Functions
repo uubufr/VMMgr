@@ -119,7 +119,7 @@ function Start_VM_From_Config() {
     fi
 
     # Creating main key #
-    MAINKEY=$(openssl rand -base64 32) # à vérifier si besoin du 'h'
+    MAINKEY=$(openssl rand -base64 32)
     MAINSEC="-object secret,id=secmain0,format=base64,data=$MAINKEY"
 
     . $2
@@ -273,7 +273,7 @@ function Start_VM_From_Config() {
     if [ "$NETVF" ]; then
       SV="-device intel-iommu,intremap=off,caching-mode=on,device-iotlb=on,aw-bits=48 "
       for NETIF in ${NETVF[@]}; do
-        SV="$SV $(SET_SRIOV_VF $NETIF)
+        SV="$SV $(SET_VF_NET $NETIF)"
         VMMGR_LOG "$1" "SETTING" "$1: SRVIO: Adding Virtual Function $NETIF on vm"
       done
     fi

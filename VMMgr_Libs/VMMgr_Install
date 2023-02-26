@@ -77,12 +77,12 @@ function Check_Requirements() {
         echo ""
     
     else
-        PACKAGES=$(Check_Softwares "qemu-system-x86|sqlite|edk2-ovmf|virt-viewer|qemu-img|telnet" 0)
+        PACKAGES=$(Check_Softwares "qemu-system-x86|sqlite|edk2-ovmf|virt-viewer|qemu-img|telnet|bc" 0)
         if [ "$PACKAGES" ]; then
             echo "You must install the following packages: $PACKAGES"
             echo ""
         fi
-        PACKAGES=$(Check_Softwares "NetworkManager|openvswitch|virglrenderer|dpdk|tuned|swtpm|libtpms" 0)
+        PACKAGES=$(Check_Softwares "NetworkManager|openvswitch|virglrenderer|dpdk|tuned|swtpm|libtpms|pciutils" 0)
         if [ "$PACKAGES" ]; then
             echo "You can install the following optionals packages: $PACKAGES"
             echo ""
