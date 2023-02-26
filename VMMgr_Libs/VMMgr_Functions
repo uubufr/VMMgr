@@ -278,7 +278,7 @@ function Start_VM_From_Config() {
       done
     fi
      
-    PDEV="$PK $PM $PU $SU $SU"
+    PDEV="$PK $PM $PU $SU $SV"
     unset PKEYBOARD PMOUSE PUSB PHD
     
 ### TPM2 ###

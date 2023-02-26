@@ -151,7 +151,6 @@ function Check_Requirements() {
 #   2: Check perms on /dev/net/tun, /dev/vhost-net and /dev/kvm
 #   3: Set cap_net_admin on qemu-system_x86_64
 function Check_System() {
-    if [ $(Check_Sudo) -eq 0 ]; then
         if [ "$(modinfo vhost-net -F intree)" != "Y" ]; then
             sudo modprobe vhost vhost-net
         fi
@@ -191,9 +190,6 @@ function Check_System() {
             sudo chown -R qemu:qemu /run/VMMGR
             sudo chmod -R 770 /run/VMMGR
         fi
-    else
-        echo "Unable to Check System, please verify sudo rules"
-    fi
 }
 
 # Function: Install_VMMGR
