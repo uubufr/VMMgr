@@ -45,12 +45,16 @@ function Check_MEM() {
 #   $3: (bool) 4M version
 function Set_UEFI() {
     VMMGR_LOG "$1" "SETTING" "Prepare UEFI for $1"
-    SECURE=""
+    local SECURE=""
+    local SUB=""
+
     [ "$2" == "on" ] && SECURE=".secboot"
-        
+    [ "$2" == "on" ] && SUB="-4m"
+
+
     if [ ! -d "$VMMGR_DATA_PATH/UEFI/$NAME/" ]; then 
         mkdir -p "$VMMGR_DATA_PATH/UEFI/$NAME/"
-        cp "$(rpm -ql edk2-ovmf | grep OVMF_VARS$SECURE.fd | head -1)" "$VMMGR_DATA_PATH/UEFI/$NAME/"
+        cp "$(rpm -ql edk2-ovmf | grep ovmf$SUB/OVMF_VARS$SECURE.fd)" "$VMMGR_DATA_PATH/UEFI/$NAME/"
         touch "$VMMGR_DATA_PATH/UEFI/$NAME/OVMF_LOG.log"
         sudo chown -R qemu:qemu "$VMMGR_DATA_PATH/UEFI/$NAME/"
         sudo chmod 660 "$VMMGR_DATA_PATH"/UEFI/"$NAME"/*
@@ -58,7 +62,7 @@ function Set_UEFI() {
     if [ "$3" == "0" ]; then
       OVMFNAME=$(rpm -ql edk2-ovmf | grep OVMF_CODE$SECURE.fd | head -1)
     else
-      OVMFNAME=$(rpm -ql edk2-ovmf | grep ovmf-4m/OVMF_CODE$SECURE.fd | head -1)
+      OVMFNAME=$(rpm -ql edk2-ovmf | grep ovmf$SUB/OVMF_CODE$SECURE.fd | head -1)
     fi
 
     echo "-drive if=pflash,format=raw,readonly=on,file=$OVMFNAME -drive if=pflash,format=raw,file=$VMMGR_DATA_PATH/UEFI/$NAME/OVMF_VARS$SECURE.fd -global isa-debugcon.iobase=0x402 -debugcon file:$VMMGR_DATA_PATH/UEFI/$NAME/OVMF_LOG.log"

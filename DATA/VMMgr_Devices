@@ -96,7 +96,7 @@ PANIC="-device pvpanic"
 VMCORE="-device vmcoreinfo"
 
 ### TPM2
-TPM2="-chardev socket,id=chrtpm,path=/var/lib/VMMGR/TPM2/$NAME.sock -tpmdev emulator,id=tpm2,chardev=chrtpm -device tpm-tis,tpmdev=tpm2"
+TPM2="-chardev socket,id=chrtpm,path=/var/lib/VMMGR/TPM2/$NAME/$NAME.sock -tpmdev emulator,id=tpm2,chardev=chrtpm -device tpm-tis,tpmdev=tpm2"
 
 ### ccid
 
