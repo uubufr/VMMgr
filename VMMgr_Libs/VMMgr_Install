@@ -77,7 +77,7 @@ function Check_Requirements() {
         echo ""
     
     else
-        PACKAGES=$(Check_Softwares "qemu-system-x86|sqlite|edk2-ovmf|virt-viewer|qemu-img|telnet|bc" 0)
+        PACKAGES=$(Check_Softwares "qemu-system-x86|sqlite|edk2-ovmf|virt-viewer|qemu-img|telnet|bc|bind-utils" 0)
         if [ "$PACKAGES" ]; then
             echo "You must install the following packages: $PACKAGES"
             echo ""
