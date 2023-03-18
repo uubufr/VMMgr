@@ -7,6 +7,7 @@ change fw_cfg to follow /opt/ naming
 avoid Check_Sudo for start and group commands
 Add SR-IOV support
 Support for UEFI 4m for windows 11
+Expose PCI USB root controler
 
 0.94
 correct disabling s2,s3 for q35
