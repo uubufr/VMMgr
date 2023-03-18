@@ -277,8 +277,30 @@ function Start_VM_From_Config() {
         VMMGR_LOG "$1" "SETTING" "$1: SRVIO: Adding Virtual Function $NETIF on vm"
       done
     fi
-     
-    PDEV="$PK $PM $PU $SU $SV"
+
+    PPCIS="" 
+    if [ "$PPCI" ]; then
+      if [ ! "$SV" ]; then
+        SV="-device intel-iommu,intremap=off,caching-mode=on,device-iotlb=on,aw-bits=48 "
+      fi
+      for PPCIF in ${PPCI[@]}; do
+        PPCIS="$PPCIS $(SET_PCI_USB_ROOT $PPCIF)"
+        VMMGR_LOG "$1" "SETTING" "$1: PCI: Adding PCI USB host controler $PPCIF "
+      done
+    fi
+
+    NVV=""
+    if [ "$NVMEVF" ]; then
+      if [ ! "$SV" ]; then
+        SV="-device intel-iommu,intremap=off,caching-mode=on,device-iotlb=on,aw-bits=48 "
+      fi
+      for NVMEIF in ${NVMEVF[@]}; do
+        NVV="$NVV $(SET_VFIO_NVME $NVMEIF)"
+        VMMGR_LOG "$1" "SETTING" "$1: NVME: Adding VFIO NVMEIF on vm"
+      done
+    fi
+
+    PDEV="$PK $PM $PU $SU $SV $PPCIS $NVV"
     unset PKEYBOARD PMOUSE PUSB PHD
     
 ### TPM2 ###

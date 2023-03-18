@@ -140,7 +140,51 @@ function SET_VF_NET() {
   if [ -c "/dev/vfio/$DEVICE" ]; then
     sudo chown root:qemu /dev/vfio/$DEVICE
     sudo chmod 660 /dev/vfio/$DEVICE
-    echo "-device vfio-pci,host=$1,multifunction=on"
+    echo "-device vfio-pci,host=$1,multifunction=on,bus=root.1"
   fi
+}
+
+# Function SET_VFIO_NVME 
+# Description: Connect a NVME PCI
+# Args:
+#  $1: PCI ID|relocaltion number (ex: 17:10.1|bar3) > see x-msixrelocaltion
+function SET_VFIO_NVME() {
+  local NVDEV=${1%%|*}
+  local RELOC=${1##*|}
+#  DEVICE=$(lspci -s $NVDEV -D -n | awk '{print $1}')
+#  DRIVER=$(cat /sys/bus/pci/devices/$DEVICE/uevent | grep DRIVER | cut -d= -f2)
+#  if [ "$DRIVER" != "vfio-pci" ]; then
+#    echo "$DEVICE" | sudo tee /sys/bus/pci/drivers/$DRIVER/unbind 1>/dev/null
+#    echo "$DEVICE" | sudo tee /sys/bus/pci/drivers/vfio-pci/bind 1>/dev/null
+#    if [ "$?" != "0" ]; then 
+#      VENID=$(cat /sys/bus/pci/devices/$DEVICE/uevent | grep PCI_ID | cut -d= -f2)
+#      echo "${DEVICE%:*} ${DEVICE#*:}" | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
+#    fi
+#  fi
+  DEVICE=$(lspci -vv -s "$NVDEV" | grep "IOMMU group:" | awk '{ print $3}')
+  if [ -c "/dev/vfio/$DEVICE" ]; then
+    sudo chown root:qemu /dev/vfio/$DEVICE
+    sudo chmod 660 /dev/vfio/$DEVICE
+    echo "-device vfio-pci,host=$NVDEV,x-msix-relocation=$RELOC,bus=root.1"
+  fi
+}
+
+# Function: SET_PCI_USB_ROOT
+# Description: connect a usb root port
+# Args:
+#   $1: PCI ID
+function SET_PCI_USB_ROOT {
+  DEVICE=$(lspci -s $1 -D -n | awk '{print $1}')
+  DRIVER=$(cat /sys/bus/pci/devices/$DEVICE/uevent | grep DRIVER | cut -d= -f2)
+  if [ "$DRIVER" != "vfio-pci" ]; then
+    echo "$DEVICE" | sudo tee /sys/bus/pci/drivers/$DRIVER/unbind 1>/dev/null
+    echo "$DEVICE" | sudo tee /sys/bus/pci/drivers/vfio-pci/bind 1>/dev/null
+  fi
+  DEVICE=$(lspci -vv -s "$1" | grep "IOMMU group:" | awk '{ print $3}')
+  if [ -c "/dev/vfio/$DEVICE" ]; then
+    sudo chown root:qemu /dev/vfio/$DEVICE
+    sudo chmod 660 /dev/vfio/$DEVICE
+    echo "-device vfio-pci,host=$1,multifunction=on,bus=root.1"
+  fi    
 }
 
