@@ -82,20 +82,21 @@ function VMMGR_LOG() {
     VMNAME=$1
     VMPROC=""
     PIDDIR=/run/VMMGR
+    if [ "$MYID" == "0" ]; then SUDO=""; else SUDO="sudo"; fi
     [ -d $PIDDIR ] || PIDDIR=$VMMGR_DATA_PATH
     
     if [ -f $PIDDIR/$1 ]; then
-        VMPROC=$(sudo cat $PIDDIR/$1)
+        VMPROC=$($SUDO cat $PIDDIR/$1)
     fi
     VMMGRPROC=$$
     CDATE=$(date '+%A %d-%m-%Y %T')
     if [ "$VMNAME" == "VMMGR" ] || [ "$VMPROC" == "" ]; then
         echo "$CDATE VMMgr: [$2] pid=$VMMGRPROC euid=$(id -u) msg=$3" >>    $VMMGR_LOG_PATH/VMMgr.log
-        sudo chmod 660 $VMMGR_LOG_PATH/VMMgr.log
+        $SUDO chmod 660 $VMMGR_LOG_PATH/VMMgr.log
     else
         [ -w $VMMGR_LOG_PATH/$VMNAME-log ] ||  touch $VMMGR_LOG_PATH/$VMNAME-log
         echo "$CDATE VMMgr: [$2] pid=$VMPROC euid=$(id -u) msg=$3" >> $VMMGR_LOG_PATH/$VMNAME-log
-        sudo chmod 660 $VMMGR_LOG_PATH/$VMNAME-log
+        $SUDO chmod 660 $VMMGR_LOG_PATH/$VMNAME-log
     fi
 }
 

@@ -394,12 +394,14 @@ case "$1" in
         ;;
 esac
 
-### Auto Backup DB ###
-if [ "$1" == "install" ] || [ "$1" == "check" ]; then
-    VMMGR_LOG "VMMGR" "SYSTEM" "action $1 done!"
-else
-    Auto_Backup_Db
-fi
+if [ "$MYID" != "0" ]; then
+  ### Auto Backup DB ###
+  if [ "$1" == "install" ] || [ "$1" == "check" ]; then
+      VMMGR_LOG "VMMGR" "SYSTEM" "action $1 done!"
+  else
+      Auto_Backup_Db
+  fi
 
-### Recheck Perms ###
-sudo chown -R qemu:qemu $VMMGR_DATA_PATH && sudo chmod -R 770 $VMMGR_DATA_PATH
+  ### Recheck Perms ###
+  sudo chown -R qemu:qemu $VMMGR_DATA_PATH && sudo chmod -R 770 $VMMGR_DATA_PATH
+fi

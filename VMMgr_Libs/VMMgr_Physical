@@ -165,7 +165,7 @@ function SET_VFIO_NVME() {
   if [ -c "/dev/vfio/$DEVICE" ]; then
     sudo chown root:qemu /dev/vfio/$DEVICE
     sudo chmod 660 /dev/vfio/$DEVICE
-    echo "-device vfio-pci,host=$NVDEV,x-msix-relocation=$RELOC,bus=root.1"
+    echo "-device vfio-pci,host=$NVDEV,x-msix-relocation=$RELOC"
   fi
 }
 
